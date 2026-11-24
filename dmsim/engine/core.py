@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import contextlib
+import itertools
 import os
 
 from ..cards.defs import CardDef, Face, Rules
@@ -26,6 +27,7 @@ from .turn import TurnMixin
 
 
 CHECK = os.environ.get("DMSIM_CHECK") == "1"
+_ENGINE_SEQ = itertools.count()   # 対戦（Engine 系統）ごとの通し番号。_gtoken の採番用
 _MUTABLE_CHARS = ("civs", "types", "races", "keywords", "allow", "deny", "require", "break_opts", "cost_may",
                   "no_leave", "cross_reduce", "battle_indestructible_filters")   # chars() の結果のうち、呼び出し側が書き換えうる可変の値
 
@@ -47,6 +49,10 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         self._adding = set()
         self._link_merging = False
         self._xcache = rules.__dict__.setdefault("_affects_others_cache", {})   # 定義だけで決まるので複製間で共有
+        # 盤面に依存するキャッシュ（Phase 8 の指紋キャッシュ等）の名前空間。_xcache は
+        # Rules 共有なので、cid は対戦ごとに振り直され、盤面キーが他対戦と衝突しうる。
+        # 盤面キーは必ずこのトークンを前置すること（Phase 9 で発見・修正）
+        self._gtoken = next(_ENGINE_SEQ)
         self.check = CHECK if check is None else check   # タスクの形を毎回検査する（テスト・開発者モード用）
         self.s = state
         self._pw_busy = False
@@ -85,6 +91,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def clone(self) -> "Engine":
         e = Engine(self.rules, self.s.clone(), step_limit=self.step_limit, turn_limit=self.turn_limit,
                    check=self.check)
+        e._gtoken = self._gtoken   # 複製は同じ対戦なので盤面キャッシュの名前空間を共有する
         e.log = list(self.log)
         return e
 

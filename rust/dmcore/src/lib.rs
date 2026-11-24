@@ -1,12 +1,14 @@
 //! DMSIM コア（Rust 試作）。Python 版との境界は「状態そのもの」: State は Rust 側が持ち、
 //! Python からは clone / digest / to_json / from_json と、準備（new_game）だけを呼ぶ。
 mod engine;
+mod model;
 mod rules;
 mod setup;
 mod state;
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::types::PyBytes;
 use state::GameState;
 
 #[pyclass(name = "State")]
@@ -141,10 +143,157 @@ impl PyEngine {
     }
 }
 
+/// バッチ実行用の簡易 RNG（xorshift64*）。方策の乱択専用で、対戦内部の乱数（状態の rng）とは別。
+pub(crate) struct BatchRng(pub u64);
+
+impl BatchRng {
+    pub(crate) fn next(&mut self) -> u64 {
+        let mut x = self.0;
+        x ^= x >> 12;
+        x ^= x << 25;
+        x ^= x >> 27;
+        self.0 = x;
+        x.wrapping_mul(0x2545F4914F6CDD1D)
+    }
+    fn below(&mut self, n: u64) -> u64 {
+        if n <= 1 { 0 } else { self.next() % n }
+    }
+}
+
+/// 組み込み方策で1つの決定に答える。policy: "first"（最小数を先頭から）| "random"（一様乱択、Python の random_policy と同じ分布）
+fn batch_answer(d: &serde_json::Value, policy: &str, rng: &mut BatchRng) -> Vec<i64> {
+    let n = d["options"].as_array().map_or(0, |a| a.len()) as i64;
+    let min = d["min"].as_i64().unwrap_or(1).clamp(0, n);
+    let max = d["max"].as_i64().unwrap_or(min).clamp(min, n);
+    if policy == "random" {
+        let k = min + rng.below((max - min + 1) as u64) as i64;
+        let mut idx: Vec<i64> = (0..n).collect();
+        for i in 0..k as usize {
+            let j = i + rng.below((n as usize - i) as u64) as usize;
+            idx.swap(i, j);
+        }
+        idx.truncate(k as usize);
+        idx
+    } else {
+        (0..min).collect()
+    }
+}
+
+/// 複数局を Rust 内部で一括実行する（Phase 3: バッチ並行API）。
+/// rules_json は1回だけパースし、局ごとに状態だけ差し替える。決定ごとの Python 往復は無い。
+/// 戻り: JSON 配列。各要素は {winner, turn, decisions} または {error}。
+#[pyfunction]
+fn run_batch(py: Python<'_>, rules_json: &str, states_json: &str, policy: &str, seed: u64) -> PyResult<String> {
+    let rules_s = rules_json.to_string();
+    let states_s = states_json.to_string();
+    let policy_s = policy.to_string();
+    let out = py.allow_threads(move || -> Result<String, String> {
+        let r: rules::Rules = serde_json::from_str(&rules_s).map_err(|e| e.to_string())?;
+        let rules = std::sync::Arc::new(r);
+        let states: Vec<String> = serde_json::from_str(&states_s).map_err(|e| e.to_string())?;
+        let mut results: Vec<serde_json::Value> = Vec::with_capacity(states.len());
+        for (i, sj) in states.iter().enumerate() {
+            let mut rng = BatchRng((seed ^ (i as u64).wrapping_mul(0x9E3779B97F4A7C15)) | 1);
+            let one = (|| -> Result<serde_json::Value, engine::EngErr> {
+                let s: GameState = serde_json::from_str(sj).map_err(|e| engine::EngErr::Illegal(e.to_string()))?;
+                let mut e = engine::Engine::new(s, rules.clone())?;
+                let mut decisions: i64 = 0;
+                while let Some(d) = e.advance()? {
+                    if decisions >= 100_000 {
+                        return Err(engine::EngErr::Illegal("decision limit".into()));
+                    }
+                    let ans = batch_answer(&d, &policy_s, &mut rng);
+                    e.answer(ans)?;
+                    decisions += 1;
+                }
+                let res = e.s.result.clone().unwrap_or(serde_json::Value::Null);
+                Ok(serde_json::json!({
+                    "winner": res["winner"].clone(),
+                    "turn": res["turn"].clone(),
+                    "decisions": decisions,
+                }))
+            })();
+            results.push(match one {
+                Ok(v) => v,
+                Err(e) => serde_json::json!({"error": format!("{e:?}")}),
+            });
+        }
+        Ok(serde_json::Value::Array(results).to_string())
+    });
+    out.map_err(PyValueError::new_err)
+}
+
+/// Phase 7: エンコードのパリティ確認用（1局面分の特徴を JSON で返す）。
+#[pyfunction]
+fn encode_state_features(rules_json: &str, state_json: &str, player: i64, vocab_json: &str) -> PyResult<String> {
+    let r: rules::Rules = serde_json::from_str(rules_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let s: GameState = serde_json::from_str(state_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let defns: Vec<String> = serde_json::from_str(vocab_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let vocab = model::Vocab::build(&r, &defns);
+    Ok(model::state_json(&model::encode_state(&s, player, &vocab)).to_string())
+}
+
+/// Phase 7: 選択肢エンコードのパリティ確認用。
+#[pyfunction]
+fn encode_options_features(rules_json: &str, state_json: &str, decision_json: &str, vocab_json: &str) -> PyResult<String> {
+    let r: rules::Rules = serde_json::from_str(rules_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let s: GameState = serde_json::from_str(state_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let d: serde_json::Value = serde_json::from_str(decision_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let defns: Vec<String> = serde_json::from_str(vocab_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let vocab = model::Vocab::build(&r, &defns);
+    Ok(model::opts_json(&model::encode_options(&s, &d, &vocab)).to_string())
+}
+
+/// Phase 7: モデル方策で複数局を一括実行し、学習用の軌跡まで返す。
+/// weights_json は dmsim.ai.model.Model のパラメータ（tolist した dict）。
+/// 戻り: 単一バイト列 [u32 メタJSON長][メタJSON][軌跡バイナリ]。軌跡の並びは
+/// model.rs の run_game_model のコメント参照（JSON 化すると律速になるため）。
+#[pyfunction]
+fn run_batch_model(py: Python<'_>, rules_json: &str, states_json: &str, weights_json: &str, vocab_json: &str, seed: u64) -> PyResult<Py<PyBytes>> {
+    let rules_s = rules_json.to_string();
+    let states_s = states_json.to_string();
+    let weights_s = weights_json.to_string();
+    let vocab_s = vocab_json.to_string();
+    let out = py.allow_threads(move || -> Result<(String, Vec<u8>), String> {
+        let r: rules::Rules = serde_json::from_str(&rules_s).map_err(|e| e.to_string())?;
+        let rules = std::sync::Arc::new(r);
+        let defns: Vec<String> = serde_json::from_str(&vocab_s).map_err(|e| e.to_string())?;
+        let vocab = model::Vocab::build(&rules, &defns);
+        let wv: serde_json::Value = serde_json::from_str(&weights_s).map_err(|e| e.to_string())?;
+        let w = model::Weights::from_json(&wv);
+        let states: Vec<String> = serde_json::from_str(&states_s).map_err(|e| e.to_string())?;
+        let mut results: Vec<serde_json::Value> = Vec::with_capacity(states.len());
+        let mut buf: Vec<u8> = Vec::new();
+        for (i, sj) in states.iter().enumerate() {
+            let one = (|| -> Result<serde_json::Value, engine::EngErr> {
+                let s: GameState = serde_json::from_str(sj).map_err(|e| engine::EngErr::Illegal(e.to_string()))?;
+                let mut e = engine::Engine::new(s, rules.clone())?;
+                Ok(model::run_game_model(&mut e, &w, &vocab,
+                    seed ^ (i as u64).wrapping_mul(0x9E3779B97F4A7C15), &mut buf))
+            })();
+            results.push(match one {
+                Ok(v) => v,
+                Err(e) => serde_json::json!({"error": format!("{e:?}"), "traj": []}),
+            });
+        }
+        Ok((serde_json::Value::Array(results).to_string(), buf))
+    });
+    let (meta, buf) = out.map_err(PyValueError::new_err)?;
+    let mut all = Vec::with_capacity(4 + meta.len() + buf.len());
+    all.extend_from_slice(&(meta.len() as u32).to_le_bytes());
+    all.extend_from_slice(meta.as_bytes());
+    all.extend_from_slice(&buf);
+    Ok(PyBytes::new(py, &all).unbind())
+}
+
 #[pymodule]
 fn dmcore(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyState>()?;
     m.add_class::<PyEngine>()?;
+    m.add_function(wrap_pyfunction!(run_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(encode_state_features, m)?)?;
+    m.add_function(wrap_pyfunction!(encode_options_features, m)?)?;
+    m.add_function(wrap_pyfunction!(run_batch_model, m)?)?;
     m.add("Unsupported", m.py().get_type::<Unsupported>())?;
     Ok(())
 }
