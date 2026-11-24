@@ -163,7 +163,7 @@ def collect_games_rust(rules, vocab: Vocab, model: Model, deck_a, deck_b,
 def train_iters(rules, vocab: Vocab, model: Model, deck_a, deck_b,
                 iters: int, games_per_iter: int, seed: int = 0,
                 lr: float = 3e-3, log=print, workers: int = 1,
-                collect: str = "python") -> list[dict]:
+                collect: str = "python", demo: list | None = None) -> list[dict]:
     hist = []
     for it in range(iters):
         if collect == "rust":
@@ -177,6 +177,8 @@ def train_iters(rules, vocab: Vocab, model: Model, deck_a, deck_b,
         else:
             batch, winners = collect_games(rules, vocab, model, deck_a, deck_b,
                                            games_per_iter, seed=seed + it)
+        if demo:   # 発見の還元（Phase 11）: 探索の教材を毎 iter 混ぜる
+            batch = batch + demo
         loss, grads = model.loss_and_grads(batch)
         model.step(grads, lr=lr)
         wr = np.mean([1.0 if w == 0 else 0.0 for w in winners]) if winners else 0.0
