@@ -8,7 +8,7 @@
 |---|---|---|
 | 1 | 2p対戦ベンチ新設（サガミラー、局/秒・決定/秒・Rust適用率） | 完了（本PR） |
 | 2 | Rust追随と最適化（digest不一致の解消、ルールバンドルの再パース削減） | 完了（本PR） |
-| 3 | バッチ並行API（Rust内部で複数局を一括実行） | 未着手 |
+| 3 | バッチ並行API（Rust内部で複数局を一括実行） | 完了（本PR） |
 | 4 | 方策エンコーダ（DSL→共通特徴トークン）＋小型Transformer＋価値ヘッド＋自己対戦RL。通常デッキの追加もここ | 未着手 |
 
 ## Phase 1: 2p対戦ベンチ（tools/bench_2p.py）
@@ -98,3 +98,29 @@ python tools/bench_2p.py --games 20 --engine auto     → 8.01 games/s, 810 deci
 
 - 勝敗は Python / Rust で同一（P0=9 P1=11、先攻勝率0.35）。Rust適用率は
   20局全て wrapped され最後まで維持（フォールバックなし）。
+
+## Phase 3: バッチ並行API（dmcore.run_batch）
+
+- `dmcore.run_batch(rules_json, states_json, policy, seed)`: ルール一式は1回だけ
+  パースし、複数局を Rust 内部で最後まで実行して {winner, turn, decisions} の
+  配列を返す。決定ごとの Python↔Rust 往復が無く、GIL を解放して実行する
+  （呼び出し側のマルチプロセス／スレッド並行と併用できる）。
+- 組み込み方策: "random"（Python の random_policy と同じ一様乱択の分布。
+  乱数列は Rust 側 RNG のため駆動方式とは一致しない）と "first"
+  （最小数を先頭から。決定的で、駆動方式と結果が完全一致することを
+  tests/test_batch.py で検証）。
+- Python 側: rustcore.run_batch(rules, states, policy, seed) と
+  tools/bench_2p.py の --engine batch。
+- 未対応の語彙に当たった局は {error} を返し、他の局は完走する
+  （局単位で結果が欠けない）。
+
+### 実測（2026-11-24、このVM: 共有1.5CPU、サガミラー・ランダム方策）
+
+```
+--games 100 --engine batch → 13.78 games/s, 1408 decisions/s（102 decisions/game）
+--games 100 --engine auto  →  9.91 games/s, 1009 decisions/s（駆動方式・Rust）
+--games 20  --engine auto  →  8.01 games/s,  810 decisions/s（Phase 2 時点）
+```
+
+- 駆動方式比で約1.4倍。残りの上限はエンジン本体の解釈実行で、Phase 4 の
+  自己対戦では本APIをプロセス並行と組み合わせて使う想定。
