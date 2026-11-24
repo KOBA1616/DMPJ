@@ -223,7 +223,8 @@ def _simple_when(w) -> bool:
         return False
     subj = w.get("subject", "self")
     if subj != "self" and not (isinstance(subj, dict) and set(subj) == {"owner"} and subj["owner"] in ("you", "opp")
-                               and w.get("event") == "move" and w.get("from") in _OK_ZONES - {"bz"}):
+                               and w.get("event") == "move" and isinstance(w.get("from"), str)
+                               and w.get("from") in _OK_ZONES - {"bz"}):
         return False   # subject はこのカードか、持ち主だけの指定（バトルゾーン以外から動いたカード。lki を使わない）
     if w.get("event") not in _OK_EVENTS or w.get("player", "you") not in ("you", "opp"):
         return False
@@ -466,7 +467,7 @@ class RustSession:
         if spec.get("kind", "new_game") != "new_game":
             raise dmcore.Unsupported("scenario")
         st = new_game(rules, spec["decks"], spec.get("seed", 1), spec.get("first_player", 0))
-        return cls(dmcore.Engine.open(st.to_json(), json.dumps(bundle or rules_bundle(rules))))
+        return cls(_open_core(st.to_json(), json.dumps(bundle) if bundle is not None else _bundle_json(rules)))
 
     def decision(self):
         t = self.eng.advance()
@@ -521,6 +522,22 @@ def _bundle_json(rules) -> str:
     if b is None or b[0] is not rules:
         b = _BUNDLES[k] = (rules, json.dumps(rules_bundle(rules)))
     return b[1]
+
+
+_TEMPLATES: dict = {}
+
+
+def _open_core(state_json: str, bundle_json: str):
+    """dmcore.Engine を開く。ルール一式（11MB 級の JSON）のパースが局ごとの支配的コストなので、
+    同じバンドルではテンプレートを1つだけ開いて with_state（状態だけ差し替え・ルールは共有）で使い回す。"""
+    import hashlib
+    k = hashlib.sha1(bundle_json.encode()).hexdigest()
+    t = _TEMPLATES.get(k)
+    if t is None:
+        c = dmcore.Engine.open(state_json, bundle_json)
+        _TEMPLATES[k] = c
+        return c
+    return t.with_state(state_json)
 
 
 def enabled() -> bool:
@@ -585,6 +602,69 @@ def _fresh_build() -> bool:
     return _FRESH
 
 
+def run_batch(rules, states, policy: str = "random", seed: int = 1) -> list[dict]:
+    """複数局を Rust 内部で一括実行する（Phase 3）。states は初期 GameState の並び。
+    policy: "random"（一様乱択）| "first"（最小数を先頭から）。戻りは局ごとの
+    {winner, turn, decisions} または {error} のリスト。決定ごとの Python 往復が無い。"""
+    if dmcore is None:
+        raise RuntimeError("dmcore が無い")
+    states_json = json.dumps([s.to_json() for s in states])
+    out = dmcore.run_batch(_bundle_json(rules), states_json, policy, seed)
+    return json.loads(out)
+
+
+def run_batch_model(rules, states, model, vocab_ids, seed: int = 1) -> list[dict]:
+    """Phase 7: モデル方策を Rust に埋め込んで複数局を一括実行し、軌跡まで返す。
+    model は dmsim.ai.model.Model（プーリング版）。戻りは局ごとの
+    {winner, turn, decisions, traj} または {error, traj}。traj の各要素は
+    {st, op, choice, player} で、st/op は numpy 配列に復元済み。
+    軌跡は Rust からバイナリで受け取る（JSON だと文字列化が律速になる）。"""
+    if dmcore is None:
+        raise RuntimeError("dmcore が無い")
+    import numpy as np
+    weights = {k: v.tolist() for k, v in model.p.items()}
+    states_json = json.dumps([s.to_json() for s in states])
+    raw = dmcore.run_batch_model(
+        _bundle_json(rules), states_json, json.dumps(weights),
+        json.dumps(list(vocab_ids)), seed)
+    mlen = int.from_bytes(raw[:4], "little")
+    results = json.loads(raw[4:4 + mlen])
+    buf = raw[4 + mlen:]
+    i32 = np.frombuffer(buf, dtype="<i4")
+    f32 = np.frombuffer(buf, dtype="<f4")
+    off = 0  # バイト単位のオフセットではなく要素単位で数える（両ビュー共通）
+
+    def take_i(n):
+        nonlocal off
+        out = i32[off // 4: off // 4 + n].copy()
+        off += 4 * n
+        return out
+
+    def take_f(n):
+        nonlocal off
+        out = f32[off // 4: off // 4 + n].copy()
+        off += 4 * n
+        return out
+
+    for r in results:
+        traj = []
+        for m in r.get("traj", []):
+            t, o, k = m["t"], m["o"], m["k"]
+            traj.append({
+                "st": {"tok_defn": take_i(t),
+                       "tok_num": take_f(t * 8).reshape(t, 8),
+                       "tok_zone": take_i(t),
+                       "glob": take_f(12)},
+                "op": {"opt_defn": take_i(o),
+                       "opt_num": take_f(o * 6).reshape(o, 6),
+                       "min": m["min"], "max": m["max"], "kind": "?"},
+                "choice": take_i(k).tolist(),
+                "player": m["player"],
+            })
+        r["traj"] = traj
+    return results
+
+
 def supports(rules, state) -> bool:
     """この局の札がすべて Rust で動くか（_is_plain）。未対応の札が1枚でもあれば False。"""
     cards = rules.cards
@@ -641,7 +721,7 @@ class RustEngine:
         self._py = None                                 # 読み取り用の Python Engine（状態が動いたら作り直す）
         self._raw = None                                # skel_raw の写し（状態が動いたら捨てる）
         self._fb = None                                 # Python に戻した後の Engine（__init__ の最初で None にしておく: log が読む）
-        self._c = _core if _core is not None else dmcore.Engine.open(state.to_json(), _bundle_json(rules))
+        self._c = _core if _core is not None else _open_core(state.to_json(), _bundle_json(rules))
 
     @property
     def log(self):
