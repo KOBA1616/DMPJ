@@ -284,3 +284,14 @@ docs/speedup-proposals.md §3.7 に詳細。要点:
   Phase 8 の潜在バグを発見し、対戦ごとの名前空間（_gtoken）で修正。
 - 効果: _collect_triggers の累積時間が約 -28〜29%（サガ・天門）。
   収集全体では数%。
+
+## Phase 10: モデルの torch 化と Colab 本番運用
+- dmsim/ai/model_torch.py: numpy 版 Model と同じ構造・パラメータ名/形状の
+  torch 版。学習は決定を padded テンソルにまとめて autograd で一括計算
+  （損失の意味論は numpy 版と同一）。保存形式（npz）も同一で相互に読める。
+  selfplay_train.py に --model torch を追加（rust 収集とは併用不可）。
+- 検証は torch のある Colab で tests/test_ai_torch.py（numpy 版との
+  loss/勾配パリティ等）を実行する。この VM には torch が無いため
+  ローカルでは skip される。
+- Colab ノートブックに、torch 学習セル（本番規模）と files.download に
+  よるモデル回収セルを追加。
