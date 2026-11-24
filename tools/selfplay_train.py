@@ -35,6 +35,8 @@ def main(argv=None):
     ap.add_argument("--model", choices=["pool", "attn", "torch"], default="pool",
                     help="pool: ゾーン別プーリング / attn: 注意機構つき / torch: torch 版（学習をバッチ化、要 torch）")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--init", default=None,
+                    help="既存の npz から重みを読み込んで続きを学習する（中断耐性用）")
     ap.add_argument("--lr", type=float, default=3e-3)
     ap.add_argument("--out", default="workspace_ai/model.npz")
     a = ap.parse_args(argv)
@@ -53,6 +55,9 @@ def main(argv=None):
             a.collect = "python"
     else:
         model = Model(len(vocab), seed=a.seed)
+    if a.init:
+        model = type(model).load(a.init)
+        print(f"init: {a.init} から重みを読み込んだ")
     print(f"vocab={len(vocab)} params={sum(v.size for v in model.p.values())}")
 
     opponents = [s.strip() for s in a.opponents.split(",") if s.strip()]
