@@ -234,6 +234,52 @@ class Model:
             grads[k] /= n
         return total / n, grads
 
+    def bc_loss_and_grads(self, batch: list[dict]):
+        """模倣学習（BC）専用の損失と勾配（Phase 18）。
+
+        loss_and_grads と違い、方策の勾配の重みを常に 1 に固定し
+        （= 教師の選択の log 確率を最大化）、価値ヘッドには触れない。
+        個数ヘッドも教師の個数に合わせる。"""
+        grads = {k: np.zeros_like(v) for k, v in self.p.items()}
+        total = 0.0
+        for item in batch:
+            st, op, choice = item["st"], item["op"], item["choice"]
+            scores, value, count_logits, cache = self.forward(st, op)
+            tcache, hcache, ctx = cache
+            dscores = np.zeros_like(scores)
+            rest = list(range(len(scores)))
+            logp = 0.0
+            for c in choice:
+                sc = scores[rest]
+                z = sc - sc.max()
+                pr = np.exp(z)
+                pr /= pr.sum()
+                logp += float(np.log(pr[rest.index(c)] + 1e-12))
+                for jj, idx in enumerate(rest):
+                    dscores[idx] += pr[jj]
+                dscores[c] -= 1.0
+                rest.remove(c)
+            dcount = np.zeros(MAXK + 1, np.float32)
+            mn, mx = op["min"], op["max"]
+            logp_k = 0.0
+            if mn != mx and len(choice) >= mn:
+                lo, pr = self._count_dist(count_logits, mn, mx)
+                kk = min(len(choice), MAXK)
+                if lo <= kk <= min(mx, MAXK):
+                    logp_k = float(np.log(pr[kk - lo] + 1e-12))
+                    for jj in range(len(pr)):
+                        dcount[lo + jj] += pr[jj]
+                    dcount[kk] -= 1.0
+            logp += logp_k
+            total += -logp
+            dctx = self._heads_backward(grads, op, ctx, hcache, dscores,
+                                        dcount, 0.0)
+            self._trunk_backward(grads, st, tcache, dctx)
+        n = max(1, len(batch))
+        for k in grads:
+            grads[k] /= n
+        return total / n, grads
+
     def step(self, grads, lr: float = 3e-3):
         self._adam_t += 1
         t = self._adam_t

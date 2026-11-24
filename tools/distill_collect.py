@@ -75,6 +75,9 @@ def main() -> int:
     ap.add_argument("--per-game", type=int, default=5)
     ap.add_argument("--sample-p", type=float, default=0.5)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--policy-model", default=None,
+                    help="P0 の方策に使うモデル（expert iteration 用）。"
+                         "省略時は貪欲方策")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -85,11 +88,20 @@ def main() -> int:
     greedy = greedy_policy()
     items: list[dict] = []
 
+    pol0 = greedy
+    if args.policy_model:
+        import numpy as np
+
+        from dmsim.ai.demo import model_policy
+        from dmsim.ai.model import Model
+        pm = Model.load(args.policy_model)
+        pol0 = model_policy(pm, vocab, np.random.default_rng(args.seed))
+
     for g in range(args.games):
         rng = random.Random(args.seed + g)
         eng = Engine.new_game(rules, [deck, deck], args.seed + g,
                               first_player=g % 2)
-        pols = [greedy, random_policy(rng)]
+        pols = [pol0, random_policy(rng)]
         made = 0
         for _ in range(4000):
             if eng.s.result is not None:
