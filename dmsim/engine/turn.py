@@ -831,7 +831,7 @@ class TurnMixin:
         mana_boost（scope 適用前）と mana_all_civs の bz 発生源を集める。
         出すカードには依存しない（scope は呼び出し側で適用）ため盤面指紋で
         キャッシュし、check モードでは毎回フレッシュ計算と照合する。"""
-        key = ("mb_src", p, self._board_sig())
+        key = ("mb_src", self._gtoken, p, self._board_sig())
         hit = self._xcache.get(key)
         if hit is not None and not self.check:
             return hit
