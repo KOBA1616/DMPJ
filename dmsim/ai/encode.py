@@ -50,7 +50,9 @@ class Vocab:
             self.static[i] = [
                 (getattr(cd, "cost", 0) or 0) / 10.0,
                 (getattr(cd, "power", 0) or 0) / 10000.0,
-                1.0 if getattr(cd, "is_creature", False) else 0.0,
+                # Phase 7 で発見したバグ修正: 以前は getattr(cd, "is_creature") が
+                # メソッドオブジェクト（常に真）を返し、全カードで 1.0 になっていた。
+                1.0 if "creature" in (getattr(cd, "types", None) or []) else 0.0,
                 1.0 if "spell" in (getattr(cd, "types", None) or []) else 0.0,
                 len(getattr(cd, "civs", None) or []) / 2.0,
             ]

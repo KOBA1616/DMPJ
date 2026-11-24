@@ -138,12 +138,39 @@ def evaluate(rules, vocab: Vocab, model: Model, deck_a, deck_b,
             "win_rate": wins / n if n else 0.0, "opponent": opponent}
 
 
+def collect_games_rust(rules, vocab: Vocab, model: Model, deck_a, deck_b,
+                       games: int, seed: int = 0):
+    """Phase 7: 方策を Rust に埋め込んだ一括収集（dmcore.run_batch_model）。
+    軌跡の特徴は Rust 側エンコード（Python 版とパリティ検証済み）。
+    戻りは collect_games と同じ (batch, winners)。"""
+    from dmsim.engine import rustcore
+    states = [rustcore.new_game(rules, [deck_a, deck_b], seed + g, g % 2)
+              for g in range(games)]
+    results = rustcore.run_batch_model(rules, states, model, vocab.ids, seed=seed)
+    batch, winners = [], []
+    for r in results:
+        if "error" in r:
+            raise RuntimeError(f"run_batch_model: {r['error']}")
+        winners.append(r["winner"])
+        for t in r["traj"]:
+            batch.append({
+                "st": t["st"], "op": t["op"], "choice": t["choice"],
+                "ret": 1.0 if r["winner"] == t["player"] else -1.0,
+            })
+    return batch, winners
+
+
 def train_iters(rules, vocab: Vocab, model: Model, deck_a, deck_b,
                 iters: int, games_per_iter: int, seed: int = 0,
-                lr: float = 3e-3, log=print, workers: int = 1) -> list[dict]:
+                lr: float = 3e-3, log=print, workers: int = 1,
+                collect: str = "python") -> list[dict]:
     hist = []
     for it in range(iters):
-        if workers > 1:
+        if collect == "rust":
+            batch, winners = collect_games_rust(
+                rules, vocab, model, deck_a, deck_b, games_per_iter,
+                seed=seed + it)
+        elif workers > 1:
             batch, winners = collect_games_parallel(
                 rules, vocab, model, deck_a, deck_b, games_per_iter,
                 seed=seed + it, workers=workers)

@@ -30,6 +30,8 @@ def main(argv=None):
                     help="評価相手（カンマ区切り: random / greedy / charge_only）")
     ap.add_argument("--workers", type=int, default=1,
                     help="収集の並列ワーカー数（2以上でマルチプロセス収集）")
+    ap.add_argument("--collect", choices=["python", "rust"], default="python",
+                    help="収集経路。rust は方策を Rust に埋め込んだ一括収集（Phase 7、pool モデルのみ）")
     ap.add_argument("--model", choices=["pool", "attn"], default="pool",
                     help="pool: ゾーン別プーリング / attn: 注意機構つき")
     ap.add_argument("--seed", type=int, default=0)
@@ -57,7 +59,7 @@ def main(argv=None):
               f"({before[opp]['wins']}W/{before[opp]['losses']}L/{before[opp]['draws']}D)")
 
     train_iters(rules, vocab, model, deck, deck, a.iters, a.games_per_iter,
-                seed=a.seed, lr=a.lr, workers=a.workers)
+                seed=a.seed, lr=a.lr, workers=a.workers, collect=a.collect)
 
     for opp in opponents:
         after[opp] = evaluate(rules, vocab, model, deck, deck, a.eval_games,

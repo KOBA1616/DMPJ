@@ -55,27 +55,23 @@ class Model:
         emb_tok = p["emb"][st["tok_defn"]]                       # [T, D]
         x = np.concatenate([emb_tok, st["tok_num"]], axis=1)     # [T, D+TOK]
         h = _tanh(x @ p["W1"].T + p["b1"])                       # [T, H_TOK]
+        # ゾーン別プーリング（Phase 7 でベクトル化。旧実装はゾーンごとのマスクループ）
         zone_vecs = np.zeros((len(ZONES), H_TOK), np.float32)
-        for z in range(len(ZONES)):
-            m = st["tok_zone"] == z
-            if m.any():
-                zone_vecs[z] = h[m].mean(axis=0)
+        np.add.at(zone_vecs, st["tok_zone"], h)
+        cnt = np.bincount(st["tok_zone"], minlength=len(ZONES)).astype(np.float32)
+        zone_vecs /= np.maximum(cnt, 1.0)[:, None]
         ctx_in = np.concatenate([zone_vecs.reshape(-1), st["glob"]])
         ctx = _tanh(ctx_in @ p["Wc"].T + p["bc"])                # [H_CTX]
-        return ctx, (x, h, ctx_in, ctx)
+        return ctx, (x, h, ctx_in, ctx, cnt)
 
     def _trunk_backward(self, grads, st: dict, tcache, dctx):
-        x, h, ctx_in, ctx = tcache
+        x, h, ctx_in, ctx, cnt = tcache
         p = self.p
         dctx_in = (dctx * (1 - ctx ** 2)) @ p["Wc"]
         grads["Wc"] += (dctx * (1 - ctx ** 2))[:, None] * ctx_in[None, :]
         grads["bc"] += dctx * (1 - ctx ** 2)
         dzone = dctx_in[:len(ZONES) * H_TOK].reshape(len(ZONES), H_TOK)
-        dh = np.zeros_like(h)
-        for z in range(len(ZONES)):
-            m = st["tok_zone"] == z
-            if m.any():
-                dh[m] += dzone[z] / m.sum()
+        dh = dzone[st["tok_zone"]] / cnt[st["tok_zone"]][:, None]
         self._token_backward(grads, st, x, h, dh)
 
     def _token_backward(self, grads, st: dict, x, h, dh):

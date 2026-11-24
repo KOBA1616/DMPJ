@@ -613,6 +613,58 @@ def run_batch(rules, states, policy: str = "random", seed: int = 1) -> list[dict
     return json.loads(out)
 
 
+def run_batch_model(rules, states, model, vocab_ids, seed: int = 1) -> list[dict]:
+    """Phase 7: モデル方策を Rust に埋め込んで複数局を一括実行し、軌跡まで返す。
+    model は dmsim.ai.model.Model（プーリング版）。戻りは局ごとの
+    {winner, turn, decisions, traj} または {error, traj}。traj の各要素は
+    {st, op, choice, player} で、st/op は numpy 配列に復元済み。
+    軌跡は Rust からバイナリで受け取る（JSON だと文字列化が律速になる）。"""
+    if dmcore is None:
+        raise RuntimeError("dmcore が無い")
+    import numpy as np
+    weights = {k: v.tolist() for k, v in model.p.items()}
+    states_json = json.dumps([s.to_json() for s in states])
+    raw = dmcore.run_batch_model(
+        _bundle_json(rules), states_json, json.dumps(weights),
+        json.dumps(list(vocab_ids)), seed)
+    mlen = int.from_bytes(raw[:4], "little")
+    results = json.loads(raw[4:4 + mlen])
+    buf = raw[4 + mlen:]
+    i32 = np.frombuffer(buf, dtype="<i4")
+    f32 = np.frombuffer(buf, dtype="<f4")
+    off = 0  # バイト単位のオフセットではなく要素単位で数える（両ビュー共通）
+
+    def take_i(n):
+        nonlocal off
+        out = i32[off // 4: off // 4 + n].copy()
+        off += 4 * n
+        return out
+
+    def take_f(n):
+        nonlocal off
+        out = f32[off // 4: off // 4 + n].copy()
+        off += 4 * n
+        return out
+
+    for r in results:
+        traj = []
+        for m in r.get("traj", []):
+            t, o, k = m["t"], m["o"], m["k"]
+            traj.append({
+                "st": {"tok_defn": take_i(t),
+                       "tok_num": take_f(t * 8).reshape(t, 8),
+                       "tok_zone": take_i(t),
+                       "glob": take_f(12)},
+                "op": {"opt_defn": take_i(o),
+                       "opt_num": take_f(o * 6).reshape(o, 6),
+                       "min": m["min"], "max": m["max"], "kind": "?"},
+                "choice": take_i(k).tolist(),
+                "player": m["player"],
+            })
+        r["traj"] = traj
+    return results
+
+
 def supports(rules, state) -> bool:
     """この局の札がすべて Rust で動くか（_is_plain）。未対応の札が1枚でもあれば False。"""
     cards = rules.cards
