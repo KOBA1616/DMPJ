@@ -2,8 +2,9 @@
 # 結果は data/combohunt/results.jsonl に追記（測った組は次回飛ばす）。失敗しても既存の定期処理には影響しない。
 name: combo-hunt
 on:
-  schedule:
-    - cron: "30 19 * * 1"   # 週1回（月曜）。無料枠対策で毎日から変更
+  # 自動探索は完全停止中（2026-11-25 ユーザー指示）。再開するときは schedule を戻す。
+  # schedule:
+  #   - cron: "30 19 * * 1"
   workflow_dispatch:
     inputs:
       top:
