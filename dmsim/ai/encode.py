@@ -14,6 +14,7 @@ encode_state(eng, player) -> {
 encode_options(eng, state_enc, decision) -> {
   "opt_defn": np.int32[O]      選択肢が参照する札の定義ID（複数は先頭、無い場合は 0）
   "opt_num":  np.float32[O, OPT_NUM]
+  "grp":      np.int32[O]      等価グループ id（意味キーが同じ選択肢は同値、Phase 26）
   "min": int, "max": int, "kind": str
 }
 """
@@ -133,6 +134,22 @@ def encode_state(eng, player: int, vocab: Vocab) -> dict:
     }
 
 
+def option_groups(keys) -> np.ndarray:
+    """選択肢の意味キー列 → 等価グループ id 列（初出順に 0,1,2,... と採番）。
+
+    等価性の定義は tools/dup_rate.py と同じ「エンジンが付ける option の
+    "key" が一致する」こと。そのキーの選択肢同士はエンジンの再生機構が
+    同じ手とみなす（盤面上の結果が同一）。
+    """
+    seen: dict[str, int] = {}
+    grp = np.empty(len(keys), dtype=np.int32)
+    for i, k in enumerate(keys):
+        if k not in seen:
+            seen[k] = len(seen)
+        grp[i] = seen[k]
+    return grp
+
+
 def _verb_band(key: str) -> float:
     head = key.split(":")[0]
     return (_VERBS.index(head) if head in _VERBS else len(_VERBS)) / len(_VERBS)
@@ -161,6 +178,9 @@ def encode_options(eng, decision: dict, vocab: Vocab) -> dict:
     return {
         "opt_defn": opt_defn,
         "opt_num": opt_num,
+        # キーが無い選択肢は他と衝突しない一意なキーで単独グループにする
+        "grp": option_groups([o["key"] if "key" in o else f"\x00{i}"
+                              for i, o in enumerate(opts)]),
         "min": int(decision["min"]), "max": int(decision["max"]),
         "kind": decision["kind"],
     }

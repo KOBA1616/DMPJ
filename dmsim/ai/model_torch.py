@@ -109,7 +109,11 @@ class TorchModel:
         return scores, value, count_logits, torch.as_tensor(opt_mask)
 
     # ---- 行動（numpy 版と同じサンプリング規則） ----
-    def act(self, st: dict, op: dict, rng, greedy: bool = False):
+    def act(self, st: dict, op: dict, rng, greedy: bool = False,
+            aggregate: bool = False):
+        if aggregate:
+            raise NotImplementedError(
+                "等価手の集約は TorchModel では未対応（numpy 版 Model を使うこと）")
         with torch.no_grad():
             scores, value, count_logits, _ = self._forward_batch([st], [op])
         scores = scores[0].numpy()
@@ -129,7 +133,11 @@ class TorchModel:
         return choice, (logp_pl + logp_k), float(value[0])
 
     # ---- 学習（REINFORCE + 価値ベースライン、バッチ一括） ----
-    def loss_and_grads(self, batch: list[dict], value_coef: float = 0.5):
+    def loss_and_grads(self, batch: list[dict], value_coef: float = 0.5,
+                       aggregate: bool = False):
+        if aggregate:
+            raise NotImplementedError(
+                "等価手の集約は TorchModel では未対応（numpy 版 Model を使うこと）")
         for v in self.t.values():
             if v.grad is not None:
                 v.grad = None
