@@ -69,7 +69,8 @@ def run_controls(budget: int) -> dict:
             convs = []
             for pc in cands:
                 cv = hunt3.judge_conversion3(rules, core, [pc["card"]], by_card,
-                                             engine_budget=budget, conv_budget=budget, seeds=(1,))
+                                             engine_budget=budget, conv_budget=budget, seeds=(1,),
+                                             delta=e2["delta"])
                 convs.append({"card": pc["card"], "name": pc["name"], "zones": pc["zones"],
                               "engine_type": pc["engine_type"], "pass": cv["pass"], "rows": cv["rows"]})
                 print(f"  変換候補 {pc['name']}: {'合格' if cv['pass'] else '不合格'}", flush=True)
@@ -120,10 +121,15 @@ def run_xenarch(budget: int, conv_per: int) -> dict:
     convs = []
     for pc in cands:
         cv = hunt3.judge_conversion3(rules, core, [pc["card"]], by_card,
-                                     engine_budget=budget, conv_budget=budget, seeds=(1,))
+                                     engine_budget=budget, conv_budget=budget, seeds=(1,),
+                                     delta=eng["delta"])
         convs.append({"card": pc["card"], "name": pc["name"], "zones": pc["zones"],
                       "pass": cv["pass"], "rows": cv["rows"]})
-        print(f"  {pc['name']}: {'合格（勝ち筋あり）' if cv['pass'] else '不合格'}", flush=True)
+        r0 = cv["rows"][0]
+        acc = r0.get("accum") or {}
+        print(f"  {pc['name']}: {'合格（勝ち筋あり）' if cv['pass'] else '不合格'}"
+              f"（蓄積: 推定{acc.get('laps_est')}周・{acc.get('turns')}ターン・停止={acc.get('stop_reason')}"
+              f"・変換段到達={not r0.get('decided_in_engine_phase')}・kill_turn={r0.get('kill_turn')}）", flush=True)
     return {"cards": cards, "names": ["絶望神サガ", "死神覇王 XENARCH"],
             "engine": _engine_summary(eng), "engine_rows": eng["rows"],
             "conversion": convs, "seconds": round(time.time() - t0, 1)}

@@ -3,7 +3,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.discovery.hunt3 import _identity, _reductions, engine_type, pair_conversions3  # noqa: E402
+from dmsim.discovery.hunt3 import (_accum_caps, _accum_stop_reason, _delta_zones,  # noqa: E402
+                                   _identity, _laps_estimate, _reductions, engine_type,
+                                   pair_conversions3)
 
 
 def test_reductions():
@@ -53,3 +55,46 @@ def test_pair_conversions_hand_engine():
 
 def test_pair_conversions_win_engine_needs_none():
     assert pair_conversions3({"deck:1": -1}, ["win"], _catalog()) == []
+
+
+# --- 蓄積段の停止条件（増分ベクトルから決まる汎用形） ---
+
+_SNAP0 = {"hand": 3, "graveyard": 5, "mana": 5, "deck": 30, "shield": 5, "bz": 0}
+_HAND_DELTA = {"deck:0": -1, "hand:0": 1}          # サガ+XENARCH（手札型）
+_GY_DELTA = {"deck:0": -1, "graveyard:0": 1}       # サガ単独（墓地型）
+
+
+def test_delta_zones():
+    gained, consumed = _delta_zones(_HAND_DELTA)
+    assert gained == {"hand": 1} and consumed == {"deck": 1}
+    gained, consumed = _delta_zones({"mana_untapped:0": 2, "deck:1": -1})
+    assert gained == {"mana": 2} and consumed == {}    # 相手側の増減は数えない
+    assert _delta_zones(None) == ({}, {})
+
+
+def test_accum_caps():
+    assert _accum_caps(_HAND_DELTA, _SNAP0, 12) == {"hand": 3 + 12}
+    assert _accum_caps(_GY_DELTA, _SNAP0, 12) == {"graveyard": 5 + 12}
+    assert _accum_caps(None, _SNAP0, 12) == {}
+
+
+def test_laps_estimate():
+    snap = {**_SNAP0, "hand": 13, "deck": 20}
+    assert _laps_estimate(_HAND_DELTA, _SNAP0, snap) == 10
+    snap = {**_SNAP0, "graveyard": 17, "deck": 18}
+    assert _laps_estimate(_GY_DELTA, _SNAP0, snap) == 12
+    assert _laps_estimate(None, _SNAP0, snap) == 0.0
+
+
+def test_accum_stop_reason():
+    # 周回上限に達したら止める
+    snap = {**_SNAP0, "hand": 15, "deck": 18}
+    assert _accum_stop_reason(_HAND_DELTA, _SNAP0, snap, 12) == "lap_cap"
+    # 減るゾーンがあと2周分まで減ったら止める（周回上限に届いていない局面で確認）
+    snap = {**_SNAP0, "hand": 8, "deck": 2}
+    assert _accum_stop_reason(_HAND_DELTA, _SNAP0, snap, 40) == "consumed_floor:deck"
+    # どちらでもなければ止めない
+    snap = {**_SNAP0, "hand": 8, "deck": 25}
+    assert _accum_stop_reason(_HAND_DELTA, _SNAP0, snap, 12) is None
+    # 増分が無ければ止める理由はない
+    assert _accum_stop_reason(None, _SNAP0, _SNAP0, 12) is None
