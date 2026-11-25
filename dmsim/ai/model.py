@@ -163,10 +163,21 @@ class Model:
         self._adam_v = {k: np.zeros_like(v) for k, v in self.p.items()}
         self._adam_t = 0
 
+    # ---- カード表現のフック（Phase 26-4） ----
+    # 埋め込みの参照と勾配の蓄積はこの2つに集約する。既定は ID 埋め込み
+    # テーブルそのもので、model_attr.AttrModel が「属性ベクトルの射影」
+    # に差し替える。他の部品（トランク、ヘッド、集約、特権分岐）は
+    # 表現の出所を知らない。
+    def _embed(self, idx):
+        return self.p["emb"][idx]
+
+    def _embed_grad(self, grads, idx, g):
+        np.add.at(grads["emb"], idx, g)
+
     # ---- トランク（局面ベクトルまで）。AttnModel が差し替える ----
     def _trunk(self, st: dict):
         p = self.p
-        emb_tok = p["emb"][st["tok_defn"]]                       # [T, D]
+        emb_tok = self._embed(st["tok_defn"])                    # [T, D]
         x = np.concatenate([emb_tok, st["tok_num"]], axis=1)     # [T, D+TOK]
         h = _tanh(x @ p["W1"].T + p["b1"])                       # [T, H_TOK]
         # ゾーン別プーリング（Phase 7 でベクトル化。旧実装はゾーンごとのマスクループ）
@@ -195,7 +206,7 @@ class Model:
         dx = dhp @ p["W1"]
         grads["W1"] += dhp.T @ x
         grads["b1"] += dhp.sum(axis=0)
-        np.add.at(grads["emb"], st["tok_defn"], dx[:, :D_EMB])
+        self._embed_grad(grads, st["tok_defn"], dx[:, :D_EMB])
 
     # ---- 特権分岐（学習時のみ: 相手の手札の集約 → 価値ヘッド専用入力） ----
     def _priv(self, st: dict):
@@ -207,7 +218,7 @@ class Model:
         defn = st.get("priv_defn")
         if defn is None or len(defn) == 0:
             return np.zeros(H_PRIV, np.float32), None
-        x = np.concatenate([p["emb"][defn], st["priv_num"]], axis=1)
+        x = np.concatenate([self._embed(defn), st["priv_num"]], axis=1)
         mx = x.mean(axis=0)
         pv = _tanh(mx @ p["Wpv"].T + p["bpv"])
         return pv, (x, mx, pv)
@@ -222,7 +233,7 @@ class Model:
         grads["bpv"] += du
         dmx = du @ p["Wpv"]
         dx = np.broadcast_to(dmx / len(x), x.shape)
-        np.add.at(grads["emb"], st["priv_defn"], dx[:, :D_EMB])
+        self._embed_grad(grads, st["priv_defn"], dx[:, :D_EMB])
 
     # ---- ヘッド（局面ベクトル→スコア/価値/個数） ----
     def _heads(self, ctx, op: dict, priv=None):
@@ -233,7 +244,7 @@ class Model:
         hv = _tanh(vin @ p["Wv1"].T + p["bv1"])
         value = float(hv @ p["wv2"][0] + p["bv2"][0])
         count_logits = ctx @ p["Wk"].T + p["bk"]                 # [MAXK+1]
-        emb_opt = p["emb"][op["opt_defn"]]                       # [O, D]
+        emb_opt = self._embed(op["opt_defn"])                    # [O, D]
         ox = np.concatenate([
             np.broadcast_to(ctx, (len(emb_opt), H_CTX)), emb_opt, op["opt_num"],
         ], axis=1)
@@ -253,7 +264,7 @@ class Model:
         grads["bo1"] += dho.sum(axis=0)
         dctx = dox[:, :H_CTX].sum(axis=0)
         demb_opt = dox[:, H_CTX:H_CTX + D_EMB]
-        np.add.at(grads["emb"], op["opt_defn"], demb_opt)
+        self._embed_grad(grads, op["opt_defn"], demb_opt)
         dhv = dvalue * p["wv2"][0] * (1 - hv ** 2)
         grads["wv2"][0] += dvalue * hv
         grads["bv2"][0] += dvalue
