@@ -16,14 +16,14 @@ from __future__ import annotations
 import numpy as np
 import torch
 
-from .encode import GLOB, OPT_NUM, TOK_NUM, ZONES
-from .model import D_EMB, H_CTX, H_MID, H_TOK, MAXK, Model
+from .encode import GLOB, OPT_NUM, TOK_NUM, TRACK, ZONES
+from .model import D_EMB, H_CTX, H_MID, H_PRIV, H_TOK, MAXK, Model, full_glob
 
 _PARAM_SHAPES = {
     "emb": None,  # (vocab, D_EMB)
     "W1": (H_TOK, D_EMB + TOK_NUM), "b1": (H_TOK,),
-    "Wc": (H_CTX, len(ZONES) * H_TOK + GLOB), "bc": (H_CTX,),
-    "Wv1": (H_MID, H_CTX), "bv1": (H_MID,),
+    "Wc": (H_CTX, len(ZONES) * H_TOK + GLOB + TRACK), "bc": (H_CTX,),
+    "Wv1": (H_MID, H_CTX + H_PRIV), "bv1": (H_MID,),
     "wv2": (1, H_MID), "bv2": (1,),
     "Wk": (MAXK + 1, H_CTX), "bk": (MAXK + 1,),
     "Wo1": (H_MID, H_CTX + D_EMB + OPT_NUM), "bo1": (H_MID,),
@@ -44,8 +44,8 @@ class TorchModel:
         self.t = {
             "emb": s(vocab_size, D_EMB),
             "W1": s(H_TOK, D_EMB + TOK_NUM), "b1": z(H_TOK),
-            "Wc": s(H_CTX, len(ZONES) * H_TOK + GLOB), "bc": z(H_CTX),
-            "Wv1": s(H_MID, H_CTX), "bv1": z(H_MID),
+            "Wc": s(H_CTX, len(ZONES) * H_TOK + GLOB + TRACK), "bc": z(H_CTX),
+            "Wv1": s(H_MID, H_CTX + H_PRIV), "bv1": z(H_MID),
             "wv2": s(1, H_MID), "bv2": z(1),
             "Wk": s(MAXK + 1, H_CTX), "bk": z(MAXK + 1),
             "Wo1": s(H_MID, H_CTX + D_EMB + OPT_NUM), "bo1": z(H_MID),
@@ -53,11 +53,16 @@ class TorchModel:
         }
         self.vocab_size = vocab_size
         self._opt: torch.optim.Adam | None = None
+        # torch 版が持たないパラメータ（特権分岐 Wpv/bpv）の往復保存用。
+        # load で拾い、save で戻す（torch 版の価値は特権なしで計算する）。
+        self._extra: dict = {}
 
     # numpy 版との互換: p はパラメータの numpy コピー（読み取り用）
     @property
     def p(self) -> dict:
-        return {k: v.detach().numpy().copy() for k, v in self.t.items()}
+        out = {k: v.detach().numpy().copy() for k, v in self.t.items()}
+        out.update({k: v.copy() for k, v in self._extra.items()})
+        return out
 
     # ---- バッチ forward ----
     def _forward_batch(self, sts: list[dict], ops: list[dict]):
@@ -69,7 +74,7 @@ class TorchModel:
         tok_num = np.zeros((B, T, TOK_NUM), np.float32)
         tok_zone = np.zeros((B, T), np.int64)
         tok_mask = np.zeros((B, T), np.float32)
-        glob = np.zeros((B, GLOB), np.float32)
+        glob = np.zeros((B, GLOB + TRACK), np.float32)
         opt_defn = np.zeros((B, O), np.int64)
         opt_num = np.zeros((B, O, OPT_NUM), np.float32)
         opt_mask = np.zeros((B, O), np.float32)
@@ -80,7 +85,7 @@ class TorchModel:
                 tok_num[i, :n] = st["tok_num"]
                 tok_zone[i, :n] = st["tok_zone"]
                 tok_mask[i, :n] = 1.0
-            glob[i] = st["glob"]
+            glob[i] = full_glob(st)
             m = len(op["opt_defn"])
             if m:
                 opt_defn[i, :m] = op["opt_defn"]
@@ -98,7 +103,9 @@ class TorchModel:
         zone_vecs = zone_vecs / cnt.clamp(min=1.0)
         ctx_in = torch.cat([zone_vecs.reshape(B, Z * H_TOK), torch.as_tensor(glob)], dim=1)
         ctx = torch.tanh(ctx_in @ t["Wc"].T + t["bc"])                     # [B, H_CTX]
-        hv = torch.tanh(ctx @ t["Wv1"].T + t["bv1"])
+        # 特権ベクトルは torch 版では常に 0（numpy 版の非特権の価値と一致）
+        vin = torch.cat([ctx, torch.zeros(B, H_PRIV)], dim=1)
+        hv = torch.tanh(vin @ t["Wv1"].T + t["bv1"])
         value = (hv @ t["wv2"][0] + t["bv2"][0])                           # [B]
         count_logits = ctx @ t["Wk"].T + t["bk"]                           # [B, MAXK+1]
         od = torch.as_tensor(opt_defn)
@@ -194,7 +201,9 @@ class TorchModel:
 
     # ---- 保存（numpy 版と同一形式） ----
     def save(self, path: str):
-        np.savez(path, **{k: v.detach().numpy() for k, v in self.t.items()})
+        out = {k: v.detach().numpy() for k, v in self.t.items()}
+        out.update(self._extra)
+        np.savez(path, **out)
 
     @classmethod
     def load(cls, path: str) -> "TorchModel":
@@ -203,5 +212,14 @@ class TorchModel:
         with torch.no_grad():
             for k in m.t:
                 if k in z:
-                    m.t[k].copy_(torch.as_tensor(z[k].astype(np.float32)))
+                    arr = z[k].astype(np.float32)
+                    if tuple(arr.shape) != tuple(m.t[k].shape):
+                        # 旧形式（幅が狭い Wc/Wv1）はゼロ埋めで移行（numpy 版と同じ）
+                        padded = np.zeros(tuple(m.t[k].shape), np.float32)
+                        sl = tuple(slice(0, s) for s in arr.shape)
+                        padded[sl] = arr
+                        arr = padded
+                    m.t[k].copy_(torch.as_tensor(arr))
+        m._extra = {k: z[k].astype(np.float32) for k in z.files
+                    if k not in m.t}
         return m
