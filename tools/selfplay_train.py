@@ -50,9 +50,9 @@ def main(argv=None):
     elif a.model == "torch":
         from dmsim.ai.model_torch import TorchModel
         model = TorchModel(len(vocab), seed=a.seed)
-        if a.collect == "rust":
-            print("torch モデルでは rust 収集を使えないため python 収集に切り替える")
-            a.collect = "python"
+        # Phase 25: rust 収集も使える。TorchModel.p が numpy 版 Model と同じ
+        # パラメータ dict を返すので、run_batch_model へそのまま渡せる
+        # （重みは npz 互換で、Rust 埋め込みモデルはパラメータ名/形状しか見ない）。
     else:
         model = Model(len(vocab), seed=a.seed)
     if a.init:
