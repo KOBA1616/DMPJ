@@ -286,6 +286,7 @@ class TurnSearch:
         self.value_fn = value_fn              # 葉の評価を差し替える関数 f(eng, me)（None なら evaluate）。勝敗を使わない局面評価の測定用
         self.order_fn = order_fn              # 候補の並べ替え f(eng, d, cands) -> cands（Phase 12: 学習方策による並べ替え用。None は従来どおり）
         self.me = me
+        self.deck_floor: int | None = None    # 自分の山札がこの枚数以下になる局面は探索しない（周回を回し切っての山札切れ自滅を避ける。None は無効）
         self.budget = budget
         self.w = weights or Weights()
         self.opp_policy = opp_policy
@@ -318,6 +319,9 @@ class TurnSearch:
         n = 0
         while (d := self._settle(eng)) is not None:
             n += 1
+            if self.deck_floor is not None and len(eng.s.zones["deck"][self.me]) <= self.deck_floor:
+                eng.s.result = {"winner": None, "reason": "deck_floor", "turn": eng.s.turn}
+                break
             if n > self.rollout_cap:
                 # 貪欲な手が同じ状況を繰り返して終わらない。エンジンの step_limit（約2万ステップ）まで回しても同じ結果
                 # （勝者なし・-WIN/2 の評価）になるので、数秒かかる空回しを打ち切る
@@ -370,6 +374,8 @@ class TurnSearch:
         d = self._settle(eng)
         if d is None:
             return self._eval(eng), eng, ()
+        if self.deck_floor is not None and len(eng.s.zones["deck"][self.me]) <= self.deck_floor:
+            return -WIN / 2, eng, ()
         if self._deadline is not None and self.left > 0 and time.monotonic() > self._deadline:
             self.left = 0                     # 時間切れ: 以降は予算切れと同じ扱い
         if self.left <= 0:

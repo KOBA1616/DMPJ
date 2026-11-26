@@ -128,7 +128,8 @@ def finish_result(res: GameResult, eng: Engine, me: int) -> None:
 def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_player: int = 0,
               max_turn: int = 4, budget: int = 200, weights: Weights | None = None,
               lock_rounds: int = 2, start: Engine | None = None, opp=None, value_fn=None,
-              lock_judge: LockJudge | None = None, pattern_loops: bool = True) -> tuple[GameResult, Engine]:
+              lock_judge: LockJudge | None = None, pattern_loops: bool = True,
+              deck_floor: int | None = None) -> tuple[GameResult, Engine]:
     """自分 = プレイヤー0。自分の max_turn ターン目が終わるまで回す。各ターンの後に判定役 lock_judge（既定 dmsim.eval.lockcheck.lock_probe）でロックを確かめる。
     start（dmsim.scenario.build で作った局面など）を渡すとそこから始める（deck / opp_deck / seed は使わない）。"""
     me = 0
@@ -141,6 +142,7 @@ def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_p
         opp_pol = opp.policy
     eng = rustcore.maybe_rust(eng)   # 全札が Rust で動く局は Rust で進める（既定で有効。DMSIM_RUST=0 で無効。未対応に当たれば Python に戻る）
     search = TurnSearch(me, budget, weights, opp_policy=opp_pol, value_fn=value_fn)
+    search.deck_floor = deck_floor
     judge = _resolve_lock_judge(lock_judge) if lock_rounds > 0 else None
 
     def take_turn(eng, ot):
