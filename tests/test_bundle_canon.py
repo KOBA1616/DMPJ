@@ -255,3 +255,40 @@ def test_zone_list_not_missed_by_recovery_check():
     assert hasattr(hunt2, "__name__")
     m = Z.Move(["mana", "graveyard"], "hand")
     assert m.from_any("graveyard")
+
+
+def test_choose_player_owner_is_any():
+    ops = [{"op": "choose_player", "as": "tp"},
+           {"op": "move", "select": {"zone": "graveyard", "owner": {"var": "tp"},
+                                     "count": "all"}, "to": "deck"}]
+    cov = BC.Coverage()
+    ms = BC.moves_of(ops, cov=cov)
+    assert ms[0].owner == "any" and ms[0].owner_may_be("you") \
+        and ms[0].owner_may_be("opp")
+    assert cov.owner_chosen == 1 and cov.owner_expr == 0
+
+
+def test_unbound_owner_var_stays_expression():
+    cov = BC.Coverage()
+    ms = BC.moves_of([{"op": "move", "select": {"zone": "hand",
+                       "owner": {"var": "zz"}}, "to": "deck"}], cov=cov)
+    assert isinstance(ms[0].owner, dict) and cov.owner_expr == 1
+
+
+def test_gachinko_classified_no_zone_change():
+    cov = BC.Coverage()
+    ops = [{"op": "gachinko", "until_lose": True, "as": "wins"},
+           {"op": "move", "select": {"zone": "hand", "count": {"var": "wins"}},
+            "to": "bz"}]
+    ms = BC.moves_of(ops, cov=cov)
+    assert [(m.src, m.dst) for m in ms] == [("hand", "bz")]
+    assert cov.excluded["gachinko:deck_rotation_no_zone_change"] == 1
+
+
+def test_full_rules_remaining_holes_are_named(built):
+    _, cov, _ = built
+    rep = cov.report()
+    assert rep["owner_expr_moves"] == 0
+    ex = rep["abilities_excluded"]
+    assert not any(k.startswith("composite_op:") for k in ex)
+    assert ex.get("move_under_to_event:g_neo_variable_dst", 0) > 0

@@ -90,7 +90,7 @@ def layout_of(c, cards, rules) -> tuple[dict, list]:
             z = p.zone or "bz"
         lay.setdefault(x, z)
         for m in b.moves:
-            if m.from_any("graveyard") and m.owner == "you" and not m.ref_self and not m.draw:
+            if m.from_any("graveyard") and m.owner_may_be("you") and not m.ref_self and not m.draw:
                 grave.append(dict(m.flt))
     for x in cards:
         if x not in lay:
@@ -698,7 +698,7 @@ def cheap_seeds(rules, by_card, ids, max_cost: int = 4) -> list[str]:
     pk = set(peaky(rules, cheap))
 
     def mover(i):
-        return any(m.owner == "you" and not m.blind and m.from_any("graveyard", "mana", "shield", "bz") and m.dst in ("hand", "bz")
+        return any(m.owner_may_be("you") and not m.blind and m.from_any("graveyard", "mana", "shield", "bz") and m.dst in ("hand", "bz")
                    for b in by_card[rules.cards[i].id] for m in b.moves)
     return [i for i in cheap if i in pk or mover(i)]
 

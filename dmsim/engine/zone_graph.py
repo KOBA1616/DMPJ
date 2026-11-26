@@ -52,6 +52,10 @@ class Move:
         """移動元ゾーンの候補（src がリストなら「どれか」の選択肢。文字列なら1つ）。"""
         return tuple(self.src) if isinstance(self.src, (list, tuple)) else (self.src,)
 
+    def owner_may_be(self, who: str) -> bool:
+        """持ち主が who でありうるか（"any" は choose_player で自分か相手を選ぶ）。"""
+        return self.owner == who or self.owner == "any"
+
     def from_any(self, *zones) -> bool:
         """移動元の候補のどれかが zones に入るか（リストの src を取りこぼさない）。"""
         return any(z in zones for z in self.src_zones())
