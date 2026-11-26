@@ -350,6 +350,8 @@ class EventMixin:
                     tc[k2] = tc.get(k2, 0) + 1
             elif ev == "block":   # ブロックの宣言1回（＝ブロックしたクリーチャー1体）につき1
                 self._hist_bump("block", rec["controller"])
+            elif ev == "battle_win":   # 第382弾: バトルに勝った側1体につき1（controller は勝者のコントローラ。相打ちでは両者ともレコードが出ない）
+                self._hist_bump("battle_win", rec["controller"])
             elif ev == "tap":
                 self._hist_bump("tap", rec["controller"])
             elif ev == "untap":   # 状態が実際に変わったアンタップだけがレコードになる（ターン開始の一括アンタップも数える。バンドB U18 の設計既定）
@@ -690,7 +692,10 @@ class EventMixin:
     def _stack(self, top: int, base: int, more: bool = False):
         """進化: base（とその下）を top の下に重ねる（801.1, 801.2）。同一のクリーチャーとして扱い、
         タップ状態と受けていた効果を引き継ぐ。進化クリーチャーは召喚酔いしない（801.3）。
-        more は2枚目以降の進化元（801.1b）。タップ状態は1枚でもタップなら進化後もタップ（801.2b）。"""
+        more は2枚目以降の進化元（801.1b）。タップ状態は1枚でもタップなら進化後もタップ（801.2b）。
+        位相は「進化元の状態の引き継ぎ」であると同時に「次に出るクリーチャーの出され方」でも
+        ある: 移動適用の時点で top 自身に付いていた入場タップ（enters_tapped のキーワード／
+        付与、「タップして置く」指定）も合成する（第384弾。片方でもタップならタップ）。"""
         s = self.s
         t, b = s.mut_card(top), s.mut_card(base)
         old = s.ref(base)
@@ -712,7 +717,7 @@ class EventMixin:
         for u in t.under:
             s.mut_card(u).top_of = top
         b.under = []
-        t.tapped = (t.tapped or b.tapped) if more else b.tapped
+        t.tapped = t.tapped or b.tapped
         t.entered_turn = -1
         new = s.ref(top)
         for ce in s.continuous:
@@ -1148,6 +1153,16 @@ class EventMixin:
             if when["subject"] == "self":
                 return env.get("self") is not None and subj == env["self"][0]
             lki = rec.get("lki") if rec.get("from") == "bz" or (isinstance(when.get("subject"), dict) and "exlife_of" in when["subject"]) else None
+            if when["event"] in ("tap", "untap") and isinstance(when["subject"], dict) \
+                    and "zone" not in when["subject"]:
+                # タップ／アンタップの subject は、ゾーン指定が無ければバトルゾーンのカードを指す
+                # （第436弾。「クリーチャーがタップした時」系の既存形はすべて bz 前提で、
+                # マナゾーンを見る形は第212弾以降 zone: mana を明示する規約。ターン開始の
+                # 一括アンタップはマナ分もイベント化されているため、指定なし形がマナに
+                # 誤発していた dm26rp2-s007 / dm25ex3-tf26 の不正確さもここで解消する）
+                z = lki["zone"] if lki else self.s.cards[subj].zone
+                if z != "bz":
+                    return False
             return self._subject_match(when["subject"], subj, env, lki)
         return True
 
