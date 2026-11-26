@@ -88,7 +88,7 @@ def setup_from_cards(rules, cards: dict[str, int], by_card: dict, *, mana_n: int
             n_gy = max(n_gy, 1)
         if any(b.prem is not None and b.prem.zone == "mana" for b in bs):
             n_mana = max(n_mana, 1)
-        if k >= 2 and "creature" in d.types and any(m.src == "graveyard" and m.dst == "bz"
+        if k >= 2 and "creature" in d.types and any(m.from_any("graveyard") and m.dst == "bz"
                                                     for b in bs for m in b.moves):
             n_gy = max(n_gy, 1)
         hint = (place_hint or {}).get(cid)
@@ -100,7 +100,7 @@ def setup_from_cards(rules, cards: dict[str, int], by_card: dict, *, mana_n: int
             zones[z] += [cid] * take
             k -= take
         zones["hand"] += [cid] * k
-    if any(m.src == "graveyard" and not m.ref_self
+    if any(m.from_any("graveyard") and not m.ref_self
            for cid in cards for b in by_card.get(cid, []) for m in b.moves):
         zones["graveyard"] += [GY_SEED] * 3
     for z, ids in (extra or {}).items():

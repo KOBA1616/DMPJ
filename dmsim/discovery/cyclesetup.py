@@ -39,8 +39,10 @@ def setup_from_cycle(rules, cycle, mana_n: int | None = None, opp_mana: int = 6,
             z = b.prem.zone
         zones.setdefault(z, []).append(b.card)
         for m in b.moves:                       # 回収・蘇生・マナからの移動は、元のゾーンに種札が要る
-            if m.owner != "opp" and m.src in ("graveyard", "mana") and not m.ref_self and not m.blind:
-                zones.setdefault(m.src, []).append(FILLER)
+            if m.owner != "opp" and m.from_any("graveyard", "mana") and not m.ref_self and not m.blind:
+                # src がリストなら候補のうち種札が要るゾーン（先頭の該当）に置く
+                zones.setdefault(next(z for z in m.src_zones()
+                                      if z in ("graveyard", "mana")), []).append(FILLER)
     mono = mono_mana(rules)
     n = mana_n if mana_n is not None else max(cost, len(civs), 4)
     cov = [mono[c] for c in civs if c in mono] or [next(iter(mono.values()))]
