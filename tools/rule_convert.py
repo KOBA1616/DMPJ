@@ -494,6 +494,16 @@ def reuse_same_text(row: dict, cards: list[dict]) -> dict | None:
 
 
 
+_METAMORPH = re.compile(r"メタモーフ\(自分のマナゾーンに(\d+)枚以上カードがあれば、このクリーチャーは次の能力を得る\)。?")
+
+
+def _metamorph_cond(line: str) -> dict | None:
+    """メタモーフのヘッダ行（行全体がヘッダの時だけ）から条件を取り出す。呪文形（「この呪文は次の能力を得る」）は
+    次の文が前の効果の置き換えになるため対象にしない（クリーチャー形だけ）。"""
+    m = _METAMORPH.fullmatch(unicodedata.normalize("NFKC", line).strip())
+    return {"cmp": [{"count": {"zone": "mana", "owner": "you"}}, ">=", int(m.group(1))]} if m else None
+
+
 def split(row: dict) -> tuple[list[str], str, list[dict]] | None:
     """原文からキーワード能力だけを取り出す（部分変換）。(キーワード名のリスト, キーワードを除いた原文, 数値つきキーワードの能力) を返す。
     キーワードが1つも見つからない・二面カード・取得が不完全な行は None。残りの原文はモデルに渡す（キーワードの分だけ短く、迷いが減る）。"""
@@ -505,7 +515,10 @@ def split(row: dict) -> tuple[list[str], str, list[dict]] | None:
     kws: list[str] = []
     extra: list[dict] = []
     rest: list[str] = []
+    pending: tuple[dict, int] | None = None      # メタモーフの (条件, rest に残したヘッダの位置)。次の能力を定型が所有した時にだけ使う
     for line in re.split(r"\s*[\n/／]\s*", _prenorm(row["text"])):
+        cond = _metamorph_cond(line)
+        before = len(extra)
         tokens = [x for x in _glue(re.sub(r"[（(][^）)]*[）)]", " ", line).split()) if norm(x) not in _noise()]
         sents = [x for t_ in tokens for x in re.split(r"(?<=。)", t_) if x]    # 句点で終わる文も1つずつ照合する
         tokens = [x for x in sents if norm(x) not in _noise()]       # 文の途中にある記号・ルールの念押し文も除く
@@ -534,6 +547,16 @@ def split(row: dict) -> tuple[list[str], str, list[dict]] | None:
                     kws.append(k)
         if tokens:
             rest.append(" ".join(tokens))
+        if cond is not None and tokens == ["メタモーフ"]:
+            pending = (cond, len(rest) - 1)     # ヘッダ行は注釈を除くと「メタモーフ」だけが残る。条件の伝達先が定型能力の時だけ rest からも外す
+        elif pending is not None and len(extra) > before:
+            # メタモーフが与える「次の能力」を定型が所有した: その行で得た能力に条件を付け、ヘッダは rest から外す。
+            # 次の能力が定型でない（rest に残る）場合は条件を付けず、ヘッダも rest に残してモデルに渡す（従来どおり）
+            c, idx = pending
+            for ab in extra[before:]:
+                ab["if"] = {"all": [ab["if"], copy.deepcopy(c)]} if "if" in ab else copy.deepcopy(c)
+            del rest[idx]
+            pending = None
     if "meteor_burn" in kws and re.search(r"メテオバーン\s*[-―ー－]?\s*(?:このクリーチャー|自分のクリーチャー)が攻撃", row.get("text") or ""):
         # 攻撃時型メテオバーン（「攻撃する時／攻撃できる時」に下のカードを墓地に置く誘発能力）は
         # 離脱置換キーワードではない。本文は rest に残るので、キーワードとして付けずモデルに誘発として変換させる

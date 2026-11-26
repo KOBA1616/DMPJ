@@ -1259,10 +1259,11 @@ def h_activate(eng, t):
     ans, d = eng.ask(t, p, "choose_cards", [eng._card_option(m) for m in untapped], n, n)
     if d:
         return d
-    for i in ans:
-        s.mut_card(untapped[i]).tapped = True
     eng._pop(t)
-    eng._push(eng._child(ab["effect"], {"you": p, "self": s.ref(cid), "vars": {}}))
+    # コストのマナタップもイベント化する（第436弾。効果より先に適用する）
+    evs = [{"ev": "tap", "subject": s.ref(untapped[i])} for i in ans]
+    eng._push(*([eng.ev_task(evs)] if evs else []),
+              eng._child(ab["effect"], {"you": p, "self": s.ref(cid), "vars": {}}))
     return None
 
 
@@ -1334,10 +1335,10 @@ def h_cross(eng, t):
     ans, dd = eng.ask(t, p, "pay_mana", opts)
     if dd:
         return dd
-    for c in opts[ans[0]]["cids"]:
-        s.mut_card(c).tapped = True
     s.mut_card(g[0]).crossed = list(tg)
     eng._pop(t)
+    if opts[ans[0]]["cids"]:   # 支払いのマナタップをイベント化する（第436弾）
+        eng._push(eng.ev_task([{"ev": "tap", "subject": s.ref(c)} for c in opts[ans[0]]["cids"]]))
     return None
 
 
@@ -1694,12 +1695,18 @@ def h_play(eng, t):
         ans, dd = eng.ask(t, p, "pay_mana", opts)
         if dd:
             return dd
-        for c in opts[ans[0]]["cids"] + t.get("tap", []):
+        for c in t.get("tap", []):
             s.mut_card(c).tapped = True
         # フォートE（第168弾）: 召喚コストとしてタップしたマナを記録する。
         # t["tap"] はハイパーエナジーでタップしたバトルゾーンのクリーチャー（マナではない）なので含めない
         t["summon_paid"] = list(opts[ans[0]]["cids"])
         t["paid_done"] = True   # 後段（バズレンダ等）の決定で再入しても二重に支払わない
+        if t["summon_paid"]:
+            # 支払いのマナタップをイベント化する（第436弾。mana_tap_trigger）。
+            # タップの適用と誘発の収集を済ませてから後段（バズレンダ等）へ進む。
+            # 誘発そのものの解決は通常の待機・解決窓（プレイ完了後）に回る
+            eng._push(eng.ev_task([{"ev": "tap", "subject": s.ref(c)} for c in t["summon_paid"]]))
+            return None
     if d.bazurenda and not t["free"]:   # バズレンダ: 追加でこのコストを好きな回数支払ってもよい
         while not t.get("bz_done"):
             cnt = t.get("bz_count", 0)
@@ -1722,10 +1729,13 @@ def h_play(eng, t):
                 ans, dd = eng.ask(t, p, "pay_mana", opts)
                 if dd:
                     return dd
-                for c in opts[ans[0]]["cids"]:
-                    s.mut_card(c).tapped = True
                 t.setdefault("summon_paid", []).extend(opts[ans[0]]["cids"])   # バズレンダの追加支払いも召喚のためのタップ
                 t["bz_paid_for"] = cnt
+                if opts[ans[0]]["cids"]:
+                    # 追加支払いのマナタップもイベント化する（第436弾）。進捗を刻んで再入する
+                    t["bz_count"] = cnt
+                    eng._push(eng.ev_task([{"ev": "tap", "subject": s.ref(c)} for c in opts[ans[0]]["cids"]]))
+                    return None
             t["bz_count"] = cnt + 1
     if d.tap_entry and d.is_creature() and not t.get("to_shield") and "tap_entry_yn" not in t:   # d は解決済みの面（第259弾の d.face(face) はツインパクトで壊れるため修正）
         # タップして出してもよい（第259弾）: 召喚時にタップ状態で出すか選ぶ
@@ -1771,10 +1781,14 @@ def h_play(eng, t):
                     if dd:
                         t["od_idx"], t["od_sub"] = idx, sub
                         return dd
-                    for i in ans:
-                        s.mut_card(pool[i]).tapped = True
-                    t.setdefault("summon_paid", []).extend(pool[i] for i in ans)   # O・ドライブの追加タップも召喚のためのタップ
+                    chosen = [pool[i] for i in ans]
+                    t.setdefault("summon_paid", []).extend(chosen)   # O・ドライブの追加タップも召喚のためのタップ
                     tapped_civs.append(cv)
+                    if chosen:
+                        # 追加タップもイベント化する（第436弾）。進捗を刻んで再入する
+                        t["od_idx"], t["od_sub"] = idx, sub + 1
+                        eng._push(eng.ev_task([{"ev": "tap", "subject": s.ref(c)} for c in chosen]))
+                        return None
                     sub += 1
                 t["od_sub"] = 0
             t["od_yn"] = None

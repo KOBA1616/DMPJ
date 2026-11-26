@@ -135,6 +135,33 @@ class SelectorMixin:
                 finally:
                     for c in added:
                         self._distinct_costing.discard(c)
+            if "distinct_race_count" in x:   # 対象カード群にある種族の種類数（多重種族はすべて数える。第405弾）
+                # distinct_type_count と同じ作法: 評価中のカードは印刷特性で見る（再入防止）
+                # {selector, exclude_races?} 形（第406弾）は、数えた種族名の集合から
+                # exclude_races を差し引く（種族名単位の除外。対象カード自体は候補に残る）
+                spec = x["distinct_race_count"]
+                sel = spec["selector"] if isinstance(spec, dict) and "selector" in spec else spec
+                exclude = set(spec.get("exclude_races") or ()) if isinstance(spec, dict) else set()
+                added = []
+                src = (env.get("self") or [None])[0]
+                if src is not None and src not in self._distinct_costing:
+                    self._distinct_costing.add(src)
+                    added.append(src)
+                try:
+                    races = set()
+                    for c in self.candidates(sel, env):
+                        if c in self._distinct_costing:
+                            races.update(self.fdef(c).races)
+                            continue
+                        self._distinct_costing.add(c)
+                        try:
+                            races.update(self.chars_ro(c)["races"])
+                        finally:
+                            self._distinct_costing.discard(c)
+                    return len(races - exclude)
+                finally:
+                    for c in added:
+                        self._distinct_costing.discard(c)
             if "total_cost" in x:   # 対象カード群のコストの合計（公開集合の保持。バンドC1 U39）
                 return sum(self.chars(c)["cost"] for c in self.candidates(x["total_cost"], env))
             if "total_power" in x:   # 対象カード群のパワーの合計（バンドC1 U39。U17 の「下のカードの合計パワー」でも使う）
@@ -205,7 +232,7 @@ class SelectorMixin:
         raise ValueError(f"bad expr {x}")
 
     # count_of が式として評価する単一キーの辞書（バンドB U18 の一般化: 履歴式も mod の count に書ける）
-    _EXPR_KEYS = {"count", "civ_count", "distinct_cost_count", "distinct_type_count", "link_count", "seals", "seals_on",
+    _EXPR_KEYS = {"count", "civ_count", "distinct_cost_count", "distinct_type_count", "distinct_race_count", "link_count", "seals", "seals_on",
                   "crossed_count",
                   "entered", "drew", "turn_count", "used_count", "prev_shield_added",
                   "var", "cost_of", "power_of", "name_of", "race", "races_of", "civs_of", "sum", "mul", "bundles", "declared",
@@ -225,6 +252,7 @@ class SelectorMixin:
     def _turn_count(self, spec: dict, env) -> int:
         """式 {turn_count: spec} の評価。記録は events の _record_history が turn_counters の hist: キーに集約する。
         kind: attack は攻撃クリーチャーの cid リスト（hist:attackers）から数える（other / filter 対応のため）。
+        distinct: true（第387弾）はリストを cid で重複排除してから数える（体数読み）。
         attack_by / attack_on はクリーチャー単位（ref で指す）。broke_by_self は env の self 固定（owner を持たない）。"""
         s = self.s
         kind = spec["kind"]
@@ -247,6 +275,8 @@ class SelectorMixin:
             total = 0
             for p in players:
                 lst = list(s.turn_counters.get(f"hist:attackers:{p}", []))
+                if spec.get("distinct"):   # 第387弾: 「攻撃したクリーチャー1体につき」は体数（同一クリーチャーの再攻撃は1体。公式QA 47928）
+                    lst = list(dict.fromkeys(lst))
                 if spec.get("other") and env.get("self"):
                     lst = [c for c in lst if c != env["self"][0]]
                 f = spec.get("filter")

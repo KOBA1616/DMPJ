@@ -4,7 +4,7 @@
     python tools/rule_register.py --dry-run  # 登録せず枚数だけ
 
 キーワードのみ・バニラ・定型の効果文・定型の呪文・同一原文の写しが対象。検査（parse_card）を通ったものだけ登録し、
-通らないものは触らない（モデルのジョブに回る）。auto_convert.py も開始時に同じ処理を行う。
+通らないものは触らない（モデル変換に回る）。
 """
 from __future__ import annotations
 

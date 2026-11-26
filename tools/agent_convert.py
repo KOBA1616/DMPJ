@@ -20,7 +20,6 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert_cards as cc  # noqa: E402
 import rule_convert  # noqa: E402
-from auto_convert import newest_key  # noqa: E402
 from dmsim.cards import cardstore  # noqa: E402
 from dmsim.cards.defs import DATA, load_tables  # noqa: E402
 
@@ -32,7 +31,7 @@ def todo_rows(order: str) -> list[dict]:
     rows = cc.load_rows([str(RAW)])
     done = cc.known_ids(OUT)
     failed = {r["id"] for r in cc.read_jsonl(REJ)}
-    key = {"id": lambda r: r["id"], "short": lambda r: len(r.get("text", "")), "newest": newest_key()}[order]
+    key = {"id": lambda r: r["id"], "short": lambda r: len(r.get("text", "")), "newest": cc.newest_key()}[order]
     return sorted((r for r in rows if r["id"] not in done and r["id"] not in failed), key=key)
 
 
