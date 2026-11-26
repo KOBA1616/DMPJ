@@ -613,6 +613,41 @@ def run_batch(rules, states, policy: str = "random", seed: int = 1) -> list[dict
     return json.loads(out)
 
 
+def rust_weights(model) -> dict:
+    """Rust 埋め込み方策に渡す重み dict（tolist 済み）を作る。
+
+    Rust の model.rs は ID 埋め込み＋旧形状（Wc=ゾーン平均+GLOB、Wv1=H_CTX 入力）を
+    前提とする。Python 側で広がった部分は次のように扱い、形状が合わなければ
+    黙って誤った値を返さずに ValueError にする。
+    - AttrModel（emb なし）: emb = attr @ Wattr.T + battr を実体化（厳密に同値）。
+    - Wc のトラッカー列: Rust のエンコードに track は無く Python 側もゼロ埋めなので捨てる。
+    - Wv1 の特権列: 対戦時は特権入力が無い（ゼロ）ので捨てる。
+    """
+    import numpy as np
+    p = dict(model.p)
+    if "emb" not in p:
+        if "Wattr" in p and hasattr(model, "attr"):
+            p["emb"] = model.attr @ p["Wattr"].T + p["battr"]
+        else:
+            raise ValueError("Rust 方策: emb が無い（未対応のモデル形状）")
+    from dmsim.ai.model import D_EMB, H_CTX, H_MID, H_TOK
+    from dmsim.ai.encode import GLOB, OPT_NUM, TOK_NUM, ZONES
+    need_wc = len(ZONES) * H_TOK + GLOB
+    wc, wv1 = np.asarray(p["Wc"]), np.asarray(p["Wv1"])
+    if wc.ndim != 2 or wc.shape[0] != H_CTX or wc.shape[1] < need_wc:
+        raise ValueError(f"Rust 方策: Wc の形状 {wc.shape} が不正（必要 ({H_CTX}, >={need_wc})）")
+    if wv1.ndim != 2 or wv1.shape[0] != H_MID or wv1.shape[1] < H_CTX:
+        raise ValueError(f"Rust 方策: Wv1 の形状 {wv1.shape} が不正（必要 ({H_MID}, >={H_CTX})）")
+    p["Wc"], p["Wv1"] = wc[:, :need_wc], wv1[:, :H_CTX]
+    expect = {"emb": (None, D_EMB), "W1": (H_TOK, D_EMB + TOK_NUM),
+              "Wo1": (H_MID, H_CTX + D_EMB + OPT_NUM)}
+    for k, (r, c) in expect.items():
+        sh = np.asarray(p[k]).shape
+        if len(sh) != 2 or sh[1] != c or (r is not None and sh[0] != r):
+            raise ValueError(f"Rust 方策: {k} の形状 {sh} が不正")
+    return {k: np.asarray(v).tolist() for k, v in p.items()}
+
+
 def run_batch_model(rules, states, model, vocab_ids, seed: int = 1) -> list[dict]:
     """Phase 7: モデル方策を Rust に埋め込んで複数局を一括実行し、軌跡まで返す。
     model は dmsim.ai.model.Model（プーリング版）。戻りは局ごとの
@@ -622,7 +657,7 @@ def run_batch_model(rules, states, model, vocab_ids, seed: int = 1) -> list[dict
     if dmcore is None:
         raise RuntimeError("dmcore が無い")
     import numpy as np
-    weights = {k: v.tolist() for k, v in model.p.items()}
+    weights = rust_weights(model)
     states_json = json.dumps([s.to_json() for s in states])
     raw = dmcore.run_batch_model(
         _bundle_json(rules), states_json, json.dumps(weights),
