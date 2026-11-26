@@ -161,7 +161,7 @@ impl BatchRng {
 }
 
 /// 組み込み方策で1つの決定に答える。policy: "first"（最小数を先頭から）| "random"（一様乱択、Python の random_policy と同じ分布）
-fn batch_answer(d: &serde_json::Value, policy: &str, rng: &mut BatchRng) -> Vec<i64> {
+pub(crate) fn batch_answer(d: &serde_json::Value, policy: &str, rng: &mut BatchRng) -> Vec<i64> {
     let n = d["options"].as_array().map_or(0, |a| a.len()) as i64;
     let min = d["min"].as_i64().unwrap_or(1).clamp(0, n);
     let max = d["max"].as_i64().unwrap_or(min).clamp(min, n);
@@ -286,11 +286,78 @@ fn run_batch_model(py: Python<'_>, rules_json: &str, states_json: &str, weights_
     Ok(PyBytes::new(py, &all).unbind())
 }
 
+/// Phase 25: 座席ごとの方策指定＋観測ダイジェストつきバッチ実行。
+/// seats_json: 局ごとの座席指定 [[{"kind":"first"|"random"} |
+/// {"kind":"model","model":<models_json の添字>}] × 2]。
+/// models_json: 重み JSON 文字列の配列（Model.p を tolist した dict）。
+/// zones_json: ダイジェストのゾーン順（Python の rules.zones のキー順）。
+/// observe が真なら、各決定への回答直後の状態ダイジェストを obs に付ける。
+/// 戻りのバイナリ形式は run_batch_model と同じ（軌跡はモデル座席の決定だけ）。
+#[pyfunction]
+#[pyo3(signature = (rules_json, states_json, seats_json, models_json, vocab_json, zones_json, seed, observe))]
+fn run_batch2(py: Python<'_>, rules_json: &str, states_json: &str, seats_json: &str, models_json: &str, vocab_json: &str, zones_json: &str, seed: u64, observe: bool) -> PyResult<Py<PyBytes>> {
+    let rules_s = rules_json.to_string();
+    let states_s = states_json.to_string();
+    let seats_s = seats_json.to_string();
+    let models_s = models_json.to_string();
+    let vocab_s = vocab_json.to_string();
+    let zones_s = zones_json.to_string();
+    let out = py.allow_threads(move || -> Result<(String, Vec<u8>), String> {
+        let r: rules::Rules = serde_json::from_str(&rules_s).map_err(|e| e.to_string())?;
+        let rules = std::sync::Arc::new(r);
+        let defns: Vec<String> = serde_json::from_str(&vocab_s).map_err(|e| e.to_string())?;
+        let vocab = model::Vocab::build(&rules, &defns);
+        let zones: Vec<String> = serde_json::from_str(&zones_s).map_err(|e| e.to_string())?;
+        let model_strs: Vec<String> = serde_json::from_str(&models_s).map_err(|e| e.to_string())?;
+        let mut weights: Vec<model::Weights> = Vec::with_capacity(model_strs.len());
+        for ms in &model_strs {
+            let wv: serde_json::Value = serde_json::from_str(ms).map_err(|e| e.to_string())?;
+            weights.push(model::Weights::from_json(&wv));
+        }
+        let seats_v: Vec<Vec<serde_json::Value>> = serde_json::from_str(&seats_s).map_err(|e| e.to_string())?;
+        let states: Vec<String> = serde_json::from_str(&states_s).map_err(|e| e.to_string())?;
+        let mut results: Vec<serde_json::Value> = Vec::with_capacity(states.len());
+        let mut buf: Vec<u8> = Vec::new();
+        for (i, sj) in states.iter().enumerate() {
+            let one = (|| -> Result<serde_json::Value, engine::EngErr> {
+                let s: GameState = serde_json::from_str(sj).map_err(|e| engine::EngErr::Illegal(e.to_string()))?;
+                let mut e = engine::Engine::new(s, rules.clone())?;
+                if seats_v[i].len() != 2 {
+                    return Err(engine::EngErr::Illegal("seats must have 2 entries".into()));
+                }
+                let mut seats: Vec<model::Seat> = Vec::with_capacity(2);
+                for spec in &seats_v[i] {
+                    seats.push(match spec["kind"].as_str().unwrap_or("first") {
+                        "random" => model::Seat::Random,
+                        "model" => model::Seat::Model(&weights[spec["model"].as_u64().unwrap_or(0) as usize]),
+                        _ => model::Seat::First,
+                    });
+                }
+                Ok(model::run_game_seats(&mut e, &seats, &vocab,
+                    seed ^ (i as u64).wrapping_mul(0x9E3779B97F4A7C15),
+                    if observe { Some(zones.as_slice()) } else { None }, &mut buf))
+            })();
+            results.push(match one {
+                Ok(v) => v,
+                Err(e) => serde_json::json!({"error": format!("{e:?}"), "traj": []}),
+            });
+        }
+        Ok((serde_json::Value::Array(results).to_string(), buf))
+    });
+    let (meta, buf) = out.map_err(PyValueError::new_err)?;
+    let mut all = Vec::with_capacity(4 + meta.len() + buf.len());
+    all.extend_from_slice(&(meta.len() as u32).to_le_bytes());
+    all.extend_from_slice(meta.as_bytes());
+    all.extend_from_slice(&buf);
+    Ok(PyBytes::new(py, &all).unbind())
+}
+
 #[pymodule]
 fn dmcore(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyState>()?;
     m.add_class::<PyEngine>()?;
     m.add_function(wrap_pyfunction!(run_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(run_batch2, m)?)?;
     m.add_function(wrap_pyfunction!(encode_state_features, m)?)?;
     m.add_function(wrap_pyfunction!(encode_options_features, m)?)?;
     m.add_function(wrap_pyfunction!(run_batch_model, m)?)?;

@@ -15594,3 +15594,3127 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第354弾の検証用フィクスチャ（ドラゴン・ゾンビの進化元）。"
+
+  - id: T1066
+    name: 試験用肝っ玉メリー
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 4000
+    races: [ドリームメイト]
+    mana: 1
+    text: "自分のビークル・ビーがブロックされた時、バトルの後、ブロックしたクリーチャーを破壊する。"
+    abilities:
+    - {kind: trigger, when: {event: block, attacker: {owner: you, filter: {race_has: ビークル・ビー}}}, effect: [{op: delayed_trigger, when: {event: attack_end, subject: {owner: you, filter: {race_has: ビークル・ビー}}}, duration: during_attack, effect: [{op: destroy, select: {ref: event.target}}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第355弾の対象（dm21-048 型）。block レコードの attacker 照合（第280弾の {owner: you} 先例＋filter）＋第319弾の delayed {attack_end, during_attack}＋発火レコードの event.target 破壊。"
+
+  - id: T1067
+    name: 試験用ビークル・ビー
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [ビークル・ビー]
+    mana: 1
+    text: "（試験用フィクスチャ: ビークル・ビーの攻撃クリーチャー）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第355弾の検証用フィクスチャ（ブロックされる側）。"
+
+  - id: T1068
+    name: 試験用大ブロッカー
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 4500
+    races: [ガーディアン]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第355弾の検証用フィクスチャ（バトルに勝って生き残るブロッカー。バトルの後の破壊で初めて墓地へ行く）。"
+
+  - id: T1069
+    name: 試験用ドリームメイト
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [ドリームメイト]
+    mana: 1
+    text: "（試験用フィクスチャ: ビークル・ビーでない攻撃クリーチャー）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第355弾の検証用フィクスチャ（対照: ブロックされても誘発しない）。"
+
+  - id: T1070
+    name: 試験用プランタ＝ランター
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 1000
+    races: [アビスロイヤル]
+    mana: 1
+    text: "ブロッカー\nこのクリーチャーが攻撃する時、その攻撃の後、このクリーチャーを破壊する。\n自分の超化獣クリーチャーがあれば、このクリーチャーに「スレイヤー」を与える。"
+    keywords: [blocker]
+    abilities:
+    - {kind: trigger, when: {event: attack, subject: self}, effect: [{op: delayed_trigger, when: {event: attack_end, subject: self}, duration: during_attack, effect: [{op: destroy, select: {ref: self}}]}]}
+    - {kind: static, affects: self, if: {exists: {zone: bz, owner: you, filter: {race_has: 超化獣}}}, mod: {grant: [slayer]}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第356弾の対象（dm24rp2-064 型）。自壊条項は第319弾形A（攻撃誘発→delayed {attack_end, subject: self, during_attack}→destroy self）そのもの。スレイヤー条項は条件つき static grant の登録先例 dm21-s04（static {affects: self, if: {exists: {...}}, mod: {grant: [...]}}）と同形で、照合を exists {zone: bz, owner: you, filter: {race_has: 超化獣}} に替えたもの。"
+
+  - id: T1071
+    name: 試験用超化獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [超化獣]
+    mana: 1
+    text: "（試験用フィクスチャ: 超化獣の味方）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第356弾の検証用フィクスチャ（スレイヤー付与の条件側）。"
+
+  - id: T1072
+    name: 試験用大アタッカー
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [アーマロイド]
+    mana: 1
+    text: "（試験用フィクスチャ: ブロックされる相手アタッカー）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第356弾の検証用フィクスチャ（パワー3000。T1070 のブロックでバトルに勝ち、スレイヤーがあればバトルの後に破壊される）。"
+
+  - id: T1073
+    name: 試験用ジョバンチュ
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 4000
+    races: [エンジェル・コマンド]
+    mana: 1
+    text: "ブロッカー\nこのクリーチャーは、相手プレイヤーを攻撃できない。\n自分のターンの終わりに、コスト９のカードを好きな枚数、自分の墓地から手札に戻す。"
+    keywords: [blocker, cannot_attack_player]
+    abilities:
+    - {kind: trigger, when: {event: turn_end, player: you}, effect: [{op: choose, select: {zone: graveyard, owner: you, filter: {cost_le: 9, cost_ge: 9}, count: any}, as: pick}, {op: move, select: {ref: pick, count: all}, to: hand, reason: return}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第357弾の対象（dmex08-049 十極 ジョバンチュのクリーチャー面型）。「好きな枚数戻す」は choose {count: any}（dm22-043・dm24ex1-sp7 の partial 先例）＋ move {ref: pick, count: all} の既存イディオム、コスト9ちょうどは filter {cost_le: 9, cost_ge: 9}（dmrp21-002 の partial で declared 値で使われた同形の固定値版）。ターン終了誘発 {event: turn_end, player: you} は dm10-041 等の登録先例どおり。追加語彙なし（ドリフト）。"
+
+  - id: T1074
+    name: 試験用コスト9カード
+    types: [creature]
+    civs: [light]
+    cost: 9
+    power: 9000
+    races: [エンジェル・コマンド]
+    mana: 1
+    text: "（試験用フィクスチャ: コスト9。T1073 の効果で墓地から手札に戻せる）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第357弾の検証用フィクスチャ（コスト9の戻し対象）。"
+
+  - id: T1075
+    name: 試験用コスト8カード
+    types: [creature]
+    civs: [light]
+    cost: 8
+    power: 8000
+    races: [エンジェル・コマンド]
+    mana: 1
+    text: "（試験用フィクスチャ: コスト8。T1073 の効果では戻せない）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第357弾の検証用フィクスチャ（コスト8の対照。フィルタで除外される）。"
+
+  - id: T1076
+    name: 試験用落下男
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 2000
+    races: [ヘドリアン]
+    mana: 1
+    text: "スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）\n相手のクリーチャーが、出たターンに攻撃する時、その攻撃の後、そのクリーチャーを破壊する。"
+    keywords: [slayer]
+    abilities:
+    - {kind: trigger, when: {event: attack, subject: {owner: opp, filter: {entered_this_turn: true}}}, effect: [{op: delayed_trigger, when: {event: attack_end, subject: {owner: opp, filter: {entered_this_turn: true}}}, duration: during_attack, effect: [{op: destroy, select: {ref: event.subject}}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第358弾の対象（dm22rp1-039 落下男型）。「出たターンに攻撃する時、その攻撃の後、そのクリーチャーを破壊する」は、攻撃誘発の第三者観測形 {event: attack, subject: {owner: opp, filter}}（dm30-041・dm24rp1-066 の登録先例）に第134弾の filter {entered_this_turn: true} を重ね、第319弾形A／第355弾の delayed_trigger {when: {event: attack_end, subject: 同形}, duration: during_attack} → destroy {select: {ref: event.subject}} で組む。追加語彙なし（ドリフト）。"
+
+  - id: T1077
+    name: 試験用アタッカー
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [アーマロイド]
+    mana: 1
+    text: "スピードアタッカー（試験用フィクスチャ: パワー3000のアタッカー。T1076 の検証で攻撃役に使う）"
+    keywords: [speed_attacker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第358弾の検証用フィクスチャ（出たターンに攻撃する相手クリーチャー役／前ターンからいる対照役）。出たターンに攻撃するには召喚酔いを免れる必要があるためスピードアタッカーを持つ（落下男の条項が現実に狙うのも SA 等で出たターンに攻撃するクリーチャー）。"
+
+  - id: T1078
+    name: 試験用小ブロッカー
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 1000
+    races: [ガーディアン]
+    mana: 1
+    text: "ブロッカー"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第358弾の検証用フィクスチャ（パワー1000のブロッカー。T1077 にバトルで負けるが、T1077 はバトルの後に T1076 の効果で破壊される）。"
+
+  - id: T1079
+    name: 試験用パナオン
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 1000
+    races: [サイバーロード]
+    mana: 1
+    text: "ブロッカー\nこのクリーチャーは攻撃することができない。\nこのクリーチャーがブロックする時、バトルの後、ブロックされたクリーチャーを持ち主の手札に戻す。"
+    keywords: [blocker, cannot_attack]
+    abilities:
+    - {kind: trigger, when: {event: block, subject: self}, effect: [{op: delayed_trigger, when: {event: attack_end, target: self}, duration: during_attack, effect: [{op: move, select: {ref: event.subject}, to: hand, reason: return}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第359弾の対象（dm27-042 パナオン型）。「ブロックする時、バトルの後、ブロックされたクリーチャーを持ち主の手札に戻す」は、第320弾の block 照合 {event: block, subject: self}（ブロッカー自身、dm20-045 先例）＋第319弾形Bの delayed_trigger {when: {event: attack_end, target: self}, duration: during_attack}（dmr06-043・dm22rp2x-061 の登録形）で組み、戻す対象は attack_end レコードの event.subject（攻撃したクリーチャー。第358弾が破壊対象に使った参照と同一）。追加語彙なし（ドリフト）。"
+
+  - id: T1080
+    name: 試験用強アタッカー
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [アーマロイド]
+    mana: 1
+    text: "（試験用フィクスチャ: パワー3000のアタッカー。T1079 にブロックされバトルに勝つが、バトルの後に手札に戻される）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第359弾の検証用フィクスチャ（バトルに勝つ攻撃役）。"
+
+  - id: T1081
+    name: 試験用弱アタッカー
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 500
+    races: [アーマロイド]
+    mana: 1
+    text: "（試験用フィクスチャ: パワー500のアタッカー。T1079 にブロックされバトルに負けて破壊されるため、戻しは no-op になる）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第359弾の検証用フィクスチャ（バトルに負ける攻撃役）。"
+
+  - id: T1082
+    name: 試験用対照ブロッカー
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 1000
+    races: [ガーディアン]
+    mana: 1
+    text: "ブロッカー"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第359弾の検証用フィクスチャ（T1079 の代わりにブロックする対照役。T1079 の誘発が起きないことの確認に使う）。"
+
+  # ---- 語彙パイロット第360弾: breaks_plus_one（ドリフト） ----
+  - id: T1083
+    name: 試験用ファイナル・ドラグアーマー
+    types: [cross_gear]
+    civs: [fire]
+    cost: 3
+    mana: 1
+    text: "クロスギア\nこれをクロスしたクリーチャーは「パワーアタッカー+5000」を得、シールドをもう1枚ブレイクし、種族にアーマード・ドラゴンを追加する。"
+    abilities:
+    - {kind: static, affects: crossed, mod: {power_when: {amount: 5000, when: attacking}, breaks_add: 1, add_races: [アーマード・ドラゴン]}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第360弾の対象（dm14-s08 ファイナル・ドラグアーマー型）。「シールドをもう1枚ブレイクする」は既存の相対ブレイク mod breaks_add: 1（breaks_add 統一機構。tests/test_vocab_breaks_add.py のヘッダが breaks_plus_one をその対象名として明記）で表せる。ホストへの常在付与は第22・224弾の affects: crossed 型で、partial が既に持つ static の mod に breaks_add: 1 を足すだけ（power_when / add_races は partial の既存分）。追加語彙なし（ドリフト）。"
+
+  - id: T1084
+    name: 試験用ホスト
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [ヒューマノイド]
+    mana: 1
+    text: "（試験用フィクスチャ: パワー2000のホスト役。T1083 をクロスすると攻撃時7000になり、シールドを2枚ブレイクし、種族にアーマード・ドラゴンが追加される）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第360弾の検証用フィクスチャ（クロス先のホスト役）。"
+
+  - id: T1085
+    name: 試験用強ブロッカー
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 6000
+    races: [ガーディアン]
+    mana: 1
+    text: "ブロッカー（試験用フィクスチャ: パワー6000のブロッカー。素の T1084（2000）には勝つが、クロスして攻撃時7000になった T1084 にはバトルで負ける）"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第360弾の検証用フィクスチャ（power_when のバトル確認用ブロッカー）。"
+
+  # ---- 語彙パイロット第361弾: deck_milled_trigger（ドリフト） ----
+  - id: T1086
+    name: 試験用ジャック・ライガー
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 4
+    power: 6000
+    races: [ゴースト]
+    mana: 1
+    evolve_from: {race_has: E・ソウル}
+    text: "進化-自分の(E・ソウル)クリーチャー１体の上に置く。\nこのクリーチャーが自分の山札から墓地に置かれた時、このクリーチャーを墓地から手札に加えてもよい。\nW・ブレイカー"
+    keywords: [double_breaker]
+    abilities:
+    - {kind: trigger, zone: graveyard, when: {event: move, from: deck, to: graveyard, subject: self}, effect: [{op: may, body: [{op: move, select: {ref: self, count: 1}, to: hand, reason: return}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第361弾の対象（dm36-023 奈落の魔黒ジャック・ライガー型）。「自分の山札から墓地に置かれた時」は move 誘発 {from: deck, to: graveyard, subject: self}＋zone: graveyard で、登録先例 dm22ex1-110（ミル→出す）と同形。効果は may→move {ref: self} to hand。進化元 (E・ソウル) は evolve_from {race_has: E・ソウル}（ソウルは races に載る。dm36-025 の登録形）。追加語彙なし（ドリフト）。"
+
+  - id: T1087
+    name: 試験用ミル獣
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 1000
+    races: [サイバーロード]
+    mana: 1
+    text: "このクリーチャーがバトルゾーンに出た時、自分の山札の上から１枚を墓地に置く。（試験用フィクスチャ: T1086 をミルするための役）"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: mill, owner: you, count: 1}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第361弾の検証用フィクスチャ（自分の山札を1枚ミルする役）。"
+
+  - id: T1088
+    name: 試験用Eソウル獣
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 2000
+    races: [ゴースト, E・ソウル]
+    mana: 1
+    text: "（試験用フィクスチャ: E・ソウルを持つ進化元役。T1086 の進化先確認と闇マナ役を兼ねる）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第361弾の検証用フィクスチャ（E・ソウルの進化元役）。"
+
+  # ---- 語彙パイロット第362弾: entry_turn_attack_restriction（ドリフト） ----
+  - id: T1089
+    name: 試験用アカシック
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 3000
+    races: [マジック・コマンド, マーメイド]
+    mana: 1
+    text: "相手のクリーチャーは出たターン、自分や自分のクリーチャーを攻撃できない。"
+    abilities:
+    - {kind: static, affects: {zone: bz, owner: opp, filter: {types: [creature], entered_this_turn: true}}, mod: {deny: [attack_player, attack_creature]}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第362弾の対象（dm23bd6-003 アカシック・B クリーチャー面型）。「出たターン攻撃できない」は affects の対象フィルタに第134弾の entered_this_turn を使った常在型 deny（attack_player / attack_creature の両方）で、登録先例 dm23rp4x-014（同文の条項）と同形。追加語彙なし（ドリフト）。"
+
+  - id: T1090
+    name: 試験用速攻獣
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "スピードアタッカー（試験用フィクスチャ: 出たターンに攻撃できる役。T1089 の制限が無ければ出たターンに攻撃でき、制限があれば攻撃できない）"
+    keywords: [speed_attacker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第362弾の検証用フィクスチャ（スピードアタッカー役と火マナ役を兼ねる）。"
+
+  - id: T1091
+    name: 試験用標的獣
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "（試験用フィクスチャ: クリーチャー攻撃の標的役）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第362弾の検証用フィクスチャ（攻撃対象役）。"
+
+  # ---- 語彙パイロット第363弾: attack_on_entry_turn_punished（ドリフト） ----
+  - id: T1092
+    name: 試験用ダン・ティラン
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 5000
+    races: [ガイア・コマンド]
+    mana: 1
+    text: "マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）\n相手のクリーチャーが出たターンに攻撃する時、相手はそのクリーチャーを自身のマナゾーンに置く。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: modify, select: {ref: self}, mod: {allow: [{action: attack_creature, other: {tapped: false}}]}, duration: end_of_turn}]}
+    - {kind: trigger, when: {event: attack, subject: {owner: opp, filter: {entered_this_turn: true}}}, effect: [{op: move, select: {ref: event.subject}, to: mana, reason: put}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第363弾の対象（dm22rp2x-023 試練の大地ダン・ティラン型）。1件目は partial 既存のマッハファイター展開形。2件目が本弾の確立形: 攻撃誘発の第三者観測形 {event: attack, subject: {owner: opp, filter: {entered_this_turn: true}}}（第358弾と同形）→ move {select: {ref: event.subject}, to: mana, reason: put}。第358弾との違いはタイミングで、本条項は「攻撃する時」に即時置くため delayed_trigger を挟まない。追加語彙なし（ドリフト）。"
+
+  - id: T1093
+    name: 試験用速攻獣・改
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "スピードアタッカー（試験用フィクスチャ: 出たターンに攻撃できる役。T1092 の条項が狙う、出たターンに攻撃する相手クリーチャー役）"
+    keywords: [speed_attacker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第363弾の検証用フィクスチャ（スピードアタッカー役と火マナ役を兼ねる）。"
+
+  - id: T1094
+    name: 試験用標的獣・改
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "（試験用フィクスチャ: クリーチャー攻撃の標的役。攻撃が中断されればバトルは行われない）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第363弾の検証用フィクスチャ（攻撃対象役）。"
+
+  # ---- 語彙パイロット第364弾: blocking_power（power_when への opponent_filter 追加） ----
+  - id: T1095
+    name: 試験用ワダツミ・フィッシュ
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 3000
+    races: [フィッシュ, オリジン]
+    mana: 1
+    text: "ブロッカー\nこのクリーチャーは攻撃することができない。\n進化ではないクリーチャーをブロックしている時、このクリーチャーのパワーは+2000される。"
+    keywords: [blocker, cannot_attack]
+    abilities:
+    - {kind: static, affects: self, mod: {power_when: {amount: 2000, when: blocking, opponent_filter: {not_types: [evolution]}}}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第364弾の対象（dm34-025 ワダツミ・フィッシュ型）。「進化ではないクリーチャーをブロックしている時、パワー+2000」は power_when {when: blocking} に第364弾で追加した opponent_filter {not_types: [evolution]} を付けた形。power_when 単体ではバトルの相手を参照できず、battle_power はバトル中だけの修整で「ブロックしている時」（ブロック宣言から攻撃の終わりまで）とは範囲が異なるため流用しなかった。"
+
+  - id: T1096
+    name: 試験用突撃獣・改
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: "スピードアタッカー（試験用フィクスチャ: 進化ではないパワー4000アタッカー役。T1095 がブロックすると +2000 を受けた 5000 に負ける）"
+    keywords: [speed_attacker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第364弾の検証用フィクスチャ（進化ではないアタッカー役）。"
+
+  - id: T1097
+    name: 試験用進化突撃獣
+    types: [creature, evolution]
+    evolve_from: {types: [creature]}
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: "スピードアタッカー（試験用フィクスチャ: 進化クリーチャーのパワー4000アタッカー役。T1095 がブロックしても opponent_filter で +2000 が付かず、T1095 は 3000 のまま負ける）"
+    keywords: [speed_attacker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第364弾の検証用フィクスチャ（進化アタッカー役。バトルゾーンに直接置く）。"
+
+  # ---- 語彙パイロット第365弾: entered_this_turn_cannot_attack_opponents（ドリフト） ----
+  - id: T1098
+    name: 試験用月砂フロッガ
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [デューンゲッコー, ディスタス]
+    mana: 1
+    text: "相手の進化ではないクリーチャーは、出たターン、攻撃できない。\nササゲール1（ディスペクターを召喚する時、コストを1少なくしてもよい。そうしたら、このクリーチャーを破壊する。そのディスペクターのコストは0以下にはならない）"
+    abilities:
+    - {kind: static, affects: self, mod: {sac_reduce: 1}}
+    - {kind: static, affects: {zone: bz, owner: opp, filter: {types: [creature], not_types: [evolution], entered_this_turn: true}}, mod: {deny: [attack_player, attack_creature]}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第365弾の対象（dm22ex1-cho37 月砂 フロッガ-1型）。「相手の進化ではないクリーチャーは、出たターン、攻撃できない」は第362弾の確立形（static {affects: {zone: bz, owner: opp, filter: {types: [creature], entered_this_turn: true}}, mod: {deny: [attack_player, attack_creature]}}）のフィルタに not_types: [evolution] を足した形で、登録先例 dm23rp4x-014 の同文条項＋第364弾で使った not_types フィルタの組み合わせ。ササゲール1は partial 既存の static {affects: self, mod: {sac_reduce: 1}}（第201弾の確立形）。追加語彙なし（ドリフト）。"
+
+  - id: T1099
+    name: 試験用速攻獣・365
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "スピードアタッカー（試験用フィクスチャ: 進化ではないアタッカー役。T1098 の制限があれば出たターンに攻撃できず、進化でないことの判別役）"
+    keywords: [speed_attacker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第365弾の検証用フィクスチャ（進化ではないスピードアタッカー役と火マナ役を兼ねる）。"
+
+  - id: T1100
+    name: 試験用進化速攻獣・365
+    types: [creature, evolution]
+    evolve_from: {types: [creature]}
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "スピードアタッカー（試験用フィクスチャ: 進化クリーチャーのアタッカー役。T1098 の制限は not_types: [evolution] で及ばず、出たターンに攻撃できる）"
+    keywords: [speed_attacker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第365弾の検証用フィクスチャ（進化アタッカー役）。"
+
+  # ---- 語彙パイロット第366弾: conditional_battle_indestructible（ドリフト） ----
+  - id: T1101
+    name: 試験用ケルビ・チゼン
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 1500
+    races: [メカ・デル・ディネロ]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）\n自分の超化獣クリーチャーがあれば、このクリーチャーはバトル中破壊されない。"
+    keywords: [blocker]
+    abilities:
+    - {kind: static, affects: self, if: {exists: {zone: bz, owner: you, filter: {race_has: 超化獣}}}, mod: {battle_indestructible: true}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第366弾の対象（dm24rp2-054 ケルビ・チゼン型）。「自分の超化獣クリーチャーがあれば、このクリーチャーはバトル中破壊されない」は第59弾の確立 mod {battle_indestructible: true} に第356弾の確立条件（static の if {exists: {zone: bz, owner: you, filter: {race_has: 超化獣}}}、登録先例 dm21-s04 / dm24rp2-064 と同文の照合）を付けた形。追加語彙なし（ドリフト）。"
+
+  - id: T1102
+    name: 試験用超化獣・366
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 2000
+    races: [テスト, 超化獣]
+    mana: 1
+    text: "（試験用フィクスチャ: 超化獣の味方役。T1101 の条件の判別役）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第366弾の検証用フィクスチャ（超化獣役と闇マナ役を兼ねる）。"
+
+  - id: T1103
+    name: 試験用強襲獣・366
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: "（試験用フィクスチャ: パワー4000アタッカー役。T1101 のパワー1500より大きく、条件が無ければブロックした T1101 はバトルに負けて破壊される）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第366弾の検証用フィクスチャ（相手アタッカー役と火マナ役を兼ねる）。"
+
+  # ---- 語彙パイロット第367弾: always_win_battles（ドリフト） ----
+  - id: T1104
+    name: 試験用マルシアス
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 2000
+    races: [エンジェル・コマンド]
+    mana: 1
+    text: "このクリーチャーはすべてのバトルに勝つ。(相手クリーチャーのパワーの方が大きくても、相手クリーチャーはバトルに負ける。バトルしているクリーチャー両方がこの能力を持っている場合は、どちらも破壊されない)"
+    abilities:
+    - {kind: static, affects: self, mod: {win_all_battles: true}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第367弾の対象（dm14-s01 太陽の精霊マルシアス型）。「このクリーチャーはすべてのバトルに勝つ」は第61弾の確立 mod {win_all_battles: true}（static {affects: self}）。combat._battle は片方だけ持てばパワーに関わらずその側が勝ち、両方持てば相打ちなしで、公式テキストの括弧書き（両方がこの能力を持っている場合はどちらも破壊されない）と一致する。gap 名 always_win_battles は第61弾 win_all_battles の別名行。追加語彙なし（ドリフト）。"
+
+  - id: T1105
+    name: 試験用巨壁獣・367
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第367弾の検証用フィクスチャ（パワー4000ブロッカー役。T1104 のパワー2000より大きく、win_all_battles が無ければ攻撃側がバトルに負けて破壊される）。"
+
+  - id: T1106
+    name: 試験用不敗獣・367
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）\nこのクリーチャーはすべてのバトルに勝つ。"
+    keywords: [blocker]
+    abilities:
+    - {kind: static, affects: self, mod: {win_all_battles: true}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第367弾の検証用フィクスチャ（win_all_battles 持ちブロッカー役。T1104 とバトルすると両方持ちで相打ちなしになる判別役）。"
+
+  - id: T1107
+    name: 試験用通常獣・367
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "（試験用フィクスチャ: 能力なしパワー2000アタッカー役。T1105 にブロックされるとバトルに負けて破壊される対照役）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第367弾の検証用フィクスチャ（対照アタッカー役と火マナ役を兼ねる）。"
+
+  # ---- 語彙パイロット第368弾: draw_equal_to_chosen_cost（ドリフト） ----
+  - id: T1108
+    name: 試験用グレート・リンク
+    types: [spell]
+    civs: [water]
+    cost: 10
+    mana: 1
+    text: "シンパシー：グレートメカオーとキカイヒーロー（この呪文を唱える時支払うコストは、バトルゾーンにある自分のグレートメカオーまたはキカイヒーロー１体につき１少なくなる。ただし、コストは１より少なくならない）\nバトルゾーンにあるクリーチャーを１体選ぶ。そのクリーチャーのコストの数と同じ枚数のカードを引く。"
+    abilities:
+    - {kind: static, zone: hand, affects: self, mod: {cost: {amount: -1, count: {zone: bz, owner: you, filter: {races: [グレートメカオー, キカイヒーロー]}}}, cost_min: 1}}
+    spell:
+    - {op: choose, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}, as: pick}
+    - {op: draw, count: {cost_of: pick}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第368弾の対象（dm21-011 グレート・リンク・テクノロジー型）。シンパシーは登録先例 dm21-020 と同形の static {zone: hand, affects: self, mod: {cost: {amount: -1, count: {zone: bz, owner: you, filter: {races: [...]}}}, cost_min: 1}}。「選んだクリーチャーのコストの数と同じ枚数引く」は choose {as: pick} で束縛し draw {count: {cost_of: pick}} で参照する（cost_of 式は selectors の一般式。move の as ＋ cost_of 参照は dm26ex1-029 の登録先例）。追加語彙なし（ドリフト）。"
+
+  - id: T1109
+    name: 試験用メカオー・368
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 3000
+    races: [グレートメカオー]
+    mana: 1
+    text: "（試験用フィクスチャ: グレートメカオー役。T1108 のシンパシーの数え上げと、コスト3の選択対象の判別役。水マナ役も兼ねる）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第368弾の検証用フィクスチャ（グレートメカオー役と水マナ役を兼ねる）。"
+
+  - id: T1110
+    name: 試験用キカイヒーロー・368
+    types: [creature]
+    civs: [water]
+    cost: 5
+    power: 5000
+    races: [キカイヒーロー]
+    mana: 1
+    text: "（試験用フィクスチャ: キカイヒーロー役。コスト5の選択対象として引く枚数5の判別役）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第368弾の検証用フィクスチャ（キカイヒーロー役）。"
+
+  - id: T1111
+    name: 試験用無関係獣・368
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 7000
+    races: [テスト]
+    mana: 1
+    text: "（試験用フィクスチャ: シンパシー対象外の種族でコスト7。相手のクリーチャーを選んでも引けることと、シンパシーで数えないことの判別役）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第368弾の検証用フィクスチャ（対象外種族・コスト7役）。"
+
+  # ---- 語彙パイロット第369弾: no_shield_break（ドリフト） ----
+  - id: T1112
+    name: 試験用ポンの助・369
+    types: [creature]
+    civs: [zero]
+    cost: 1
+    power: 820
+    races: [ジョーカーズ]
+    mana: 1
+    text: "このクリーチャーはシールドをブレイクできない。\n自分は「S・トリガー」能力を使えない。\nこのカードは、４枚より多くデッキに入れることができる。"
+    abilities:
+    - {kind: static, affects: self, mod: {breaks: 0}}
+    - {kind: static, affects: {zone: shield, owner: you}, mod: {deny: [s_trigger]}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第369弾の対象（dmex03-061 夜のポンの助 型）。「シールドをブレイクできない」は登録先例 dmex17-106 夢幻なる零龍（「シールドを１つもブレイクしない」）と同形の static {affects: self, mod: {breaks: 0}}（break_opts が [0] になり、攻撃してもブレイク自体が起きない）。「自分はS・トリガー能力を使えない」は登録先例 dm04-022（「誰も闇のカードのS・トリガーを使えない」= affects {owner: any, zone: shield, filter: {civs: [darkness]}}, mod: {deny: [s_trigger]}）の変種で、対象が自分だけ・文明フィルタ無し。デッキ構築ルール（4枚より多く入れることができる）は dmex13-057 の先例どおりエンジン側に委ね、テキストのみに残す。追加語彙なし（ドリフト）。"
+
+  # ---- 語彙パイロット第370弾: set_power_to_zero（ドリフト） ----
+  - id: T1113
+    name: 試験用オルタナティブ・370
+    types: [creature]
+    civs: [zero]
+    cost: 7
+    power: 6543
+    races: [アンノウン・セレス]
+    mana: 1
+    crystal_soul: 2
+    keywords: [double_breaker]
+    text: "水晶ソウル２（このクリーチャーを召喚する時、自分のマナゾーンにある裏向きのカードのマナの数字は２になる）\nW・ブレイカー\nこのクリーチャーが出た時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを０にする。（パワー０以下のクリーチャーは破壊される）\nこのクリーチャーが破壊された時、無色ゼニス・クリーチャーを１体、自分の手札からコストを支払わずに召喚してもよい。"
+    abilities:
+    - kind: trigger
+      when: {event: move, to: bz, subject: self}
+      effect:
+      - op: choose
+        select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}
+        as: victim
+      - op: modify
+        select: {ref: victim}
+        mod: {power_set: 0}
+        duration: end_of_turn
+    - kind: trigger
+      when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+      effect:
+      - op: may
+        body:
+        - op: play_free
+          select: {zone: hand, owner: you, filter: {types: [creature], colorless: true, race_has: ゼニス}, count: 1}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第370弾の対象（dm24ex2-042 騎士のコード オルタナティブ 型）。「出た時、相手のクリーチャーを1体選ぶ。このターン、そのパワーを0にする」は登録先例 dmrp11-zs01（第272弾 power_set・第333弾）と同形の choose {owner: opp, as: victim} → modify {select: {ref: victim}, mod: {power_set: 0}, duration: end_of_turn}。括弧書き「パワー0以下のクリーチャーは破壊される」は状況起因処理（703.4c）でエンジンが処理するため条項としては書かない。水晶ソウル2（crystal_soul: 2、第154弾）と破壊時誘発（may play_free 無色ゼニス）は partial に組立て済み。追加語彙なし（ドリフト）。"
+  - id: T1114
+    name: 試験用強化獣・370
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーのパワーは+3000される。（試験用フィクスチャ: 実効パワー6000。power_set が加算を上書きすることの判別役）"
+    abilities:
+    - {kind: static, affects: self, mod: {power: 3000}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第370弾の検証用フィクスチャ（自己パワー加算役。power_set: 0 が加算分ごと上書きして0にし、状況起因処理で破壊されることの判別に使う）。"
+
+  # ---- 語彙パイロット第371弾: set_power_zero（ドリフト） ----
+  - id: T1115
+    name: 試験用永遠の無・371
+    types: [spell]
+    civs: [darkness]
+    cost: 5
+    mana: 1
+    text: "相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを０にする。（パワー０以下のクリーチャーは破壊される）"
+    spell:
+    - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: victim}
+    - {op: modify, select: {ref: victim}, mod: {power_set: 0}, duration: end_of_turn}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第371弾の対象（dmex15-b025 永遠の無 型）。「相手のクリーチャーを1体選ぶ。このターン、そのクリーチャーのパワーを0にする」は第370弾 set_power_to_zero の確立形（登録先例 dmrp11-zs01・dm24ex2-042 と同形の choose {owner: opp, as: victim} → modify {select: {ref: victim}, mod: {power_set: 0}, duration: end_of_turn}）を呪文の spell に置いたもの。gap 名 set_power_zero は set_power_to_zero の別名行。括弧書き「パワー0以下のクリーチャーは破壊される」は状況起因処理（703.4c）でエンジンが処理するため条項としては書かない。追加語彙なし（ドリフト）。"
+
+  # ---- 語彙パイロット第372弾: set_power（ドリフト） ----
+  - id: T1116
+    name: 試験用イエス・ヤザリス・372
+    types: [creature, evolution]
+    civs: [light]
+    cost: 5
+    power: 5500
+    races: [アポロニア・ドラゴン]
+    mana: 1
+    text: "ブロッカー\n進化-自分の「ブロッカー」を持つクリーチャー１体の上に置く。\nこのクリーチャーをバトルゾーンに出した時、そのターン、バトルゾーンにある相手の進化ではないクリーチャーすべてのパワーは500になる。"
+    keywords: [blocker]
+    evolve_from: {types: [creature], keyword: blocker}
+    abilities:
+    - kind: trigger
+      when: {event: move, to: bz, subject: self}
+      effect:
+      - {op: modify, select: {zone: bz, owner: opp, filter: {types: [creature], not_types: [evolution]}, count: all}, mod: {power_set: 500}, duration: end_of_turn}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第372弾の対象（dm32-011 超神龍イエス・ヤザリス 型）。「出た時、そのターン、相手の進化ではないクリーチャーすべてのパワーは500になる」は一括の one-shot modify {select: {zone: bz, owner: opp, filter: {types: [creature], not_types: [evolution]}, count: all}, mod: {power_set: 500}, duration: end_of_turn}。power_set は第272弾の mod、一括 modify（zone セレクタ＋count: all）は登録先例多数（dm23bd5-059 等）、「進化ではない」は第365弾の not_types: [evolution]。進化元「自分の『ブロッカー』を持つクリーチャー」は evolve_from {types: [creature], keyword: blocker}（同セットの登録先例 dm32-002・dm32-072 と同形・同文）。追加語彙なし（ドリフト）。"
+  - id: T1117
+    name: 試験用ブロッカー台・372
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー（試験用フィクスチャ: T1116 の進化元役。光マナ役も兼ねる）"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第372弾の検証用フィクスチャ（ブロッカーを持つ進化元役＋光マナ役）。"
+  - id: T1118
+    name: 試験用巨獣・372
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 7000
+    races: [テスト]
+    mana: 1
+    text: "（試験用フィクスチャ: パワー7000の進化ではないクリーチャー役。500に下げられる判別に使う）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第372弾の検証用フィクスチャ（相手の大型・非進化役）。"
+  - id: T1119
+    name: 試験用進化獣・372
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 6
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: "進化-クリーチャー１体の上に置く。（試験用フィクスチャ: パワー4000の進化クリーチャー役。power_set: 500 の対象から外れる判別に使う）"
+    evolve_from: {types: [creature]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第372弾の検証用フィクスチャ（相手の進化クリーチャー役）。"
+  - id: T1120
+    name: 試験用小獣・372
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 300
+    races: [テスト]
+    mana: 1
+    text: "（試験用フィクスチャ: パワー300の進化ではないクリーチャー役。power_set は『500になる』ため引き上げも起きる判別に使う）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第372弾の検証用フィクスチャ（相手の小型・非進化役）。"
+  - id: T1121
+    name: ラジコンBOY
+    types:
+    - creature
+    civs:
+    - zero
+    cost: 6
+    power: 3000
+    races:
+    - ジョーカーズ
+    mana: 1
+    text: スーパー・S・トリガー（このクリーチャーを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい。その時自分のシールドが１つもなければ、このクリーチャーにxB能力を与える）このクリーチャーがバトルゾーンに出た時、自分の山札の一番下のカードを手札に加える。xBこのクリーチャーがバトルゾーンに出た時、相手は自身のクリーチャーを３体選び、そのうちの１体を自身の手札に加え、１体をマナゾーンに置き、１体を山札の一番下に置く。
+    keywords:
+    - super_s_trigger
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_bottom: 1
+        to: hand
+        reason: draw
+    - kind: trigger
+      sst: true
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: choose
+        select:
+          zone: bz
+          owner: opp
+          chooser: opp
+          filter:
+            types:
+            - creature
+          count: 3
+        as: trio
+      - op: choose
+        select:
+          ref: trio
+          chooser: opp
+          count: 1
+        as: tohand
+      - op: move
+        select:
+          ref: tohand
+        to: hand
+        reason: return
+      - op: choose
+        select:
+          ref: trio
+          chooser: opp
+          count: 1
+        as: tomana
+      - op: mana_put
+        select:
+          ref: tomana
+      - op: move
+        select:
+          ref: trio
+          count: all
+        to: deck
+        reason: put
+        position: bottom
+    source:
+      official: proto
+      review: pending
+      notes: 語彙パイロット第373弾の検証用フィクスチャ（dmrp04s-011 ラジコンBOY 型）。
+  - id: T1122
+    name: 石像男
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 6
+    power: 5000
+    races:
+    - ヘドリアン
+    mana: 1
+    text: 自分のクリーチャーで、すべての文明が揃っていれば、相手は自身の「S・トリガー」を使えない。
+    abilities:
+    - kind: static
+      affects:
+        zone: shield
+        owner: opp
+      if:
+        all:
+        - cmp:
+          - count:
+              zone: bz
+              owner: you
+              filter:
+                types:
+                - creature
+                civs:
+                - light
+          - ">="
+          - 1
+        - cmp:
+          - count:
+              zone: bz
+              owner: you
+              filter:
+                types:
+                - creature
+                civs:
+                - water
+          - ">="
+          - 1
+        - cmp:
+          - count:
+              zone: bz
+              owner: you
+              filter:
+                types:
+                - creature
+                civs:
+                - darkness
+          - ">="
+          - 1
+        - cmp:
+          - count:
+              zone: bz
+              owner: you
+              filter:
+                types:
+                - creature
+                civs:
+                - fire
+          - ">="
+          - 1
+        - cmp:
+          - count:
+              zone: bz
+              owner: you
+              filter:
+                types:
+                - creature
+                civs:
+                - nature
+          - ">="
+          - 1
+      mod:
+        deny:
+        - s_trigger
+    source:
+      official: proto
+      review: pending
+      notes: 語彙パイロット第374弾の検証用フィクスチャ（dm23rp1-t2 石像男 型）。
+  - id: T1123
+    name: サルベージ・クラスター
+    types:
+    - creature
+    civs:
+    - water
+    cost: 5
+    power: 3000
+    races:
+    - サイバー・クラスター
+    mana: 1
+    text: このクリーチャーは、ブロックされない。メタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る) このクリーチャーが破壊される時、墓地に置くかわりに自分の手札に戻す。
+    keywords:
+    - unblockable
+    abilities:
+    - kind: replace
+      when:
+        event: move
+        from: bz
+        to: graveyard
+        reason: destroy
+        subject: self
+      if:
+        cmp:
+        - count:
+            zone: mana
+            owner: you
+        - ">="
+        - 7
+      instead:
+      - op: move
+        select:
+          ref: self
+        to: hand
+        reason: return
+    source:
+      official: proto
+      review: pending
+      notes: 語彙パイロット第375弾の検証用フィクスチャ（dm14-018 サルベージ・クラスター 型）。
+  - id: T1124
+    name: 暴歌の妖精
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 3
+    power: 3000
+    races:
+    - スノーフェアリー
+    - 暴拳王国
+    mana: 1
+    text: 自分のマナゾーンにあるカードを、すべての文明のカードとして扱う。レインボーナス：このクリーチャーがバトルゾーンに出た時、バトルゾーンに自分の多色クリーチャーがあれば、自分の山札の上から１枚目をマナゾーンに置く。
+    abilities:
+    - kind: static
+      affects:
+        zone: mana
+        owner: you
+      mod:
+        add_civs:
+        - light
+        - water
+        - darkness
+        - fire
+        - nature
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      if:
+        exists:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            multicolor: true
+      effect:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: mana
+        reason: put
+    source:
+      official: proto
+      review: pending
+      notes: 語彙パイロット第376弾の検証用フィクスチャ（dmex14-010 暴歌の妖精 型）。
+
+  - id: T1125
+    name: 無限鉄拳オニナグリ
+    types:
+    - creature
+    - evolution
+    civs:
+    - darkness
+    - fire
+    cost: 6
+    power: 7000
+    races:
+    - ヒューマノイド
+    - ハンター
+    - エイリアン
+    mana: 1
+    evolve_from:
+      races:
+      - ハンター
+    text: マナゾーンに置く時、このカードはタップして置く。進化-自分のハンター・クリーチャー１体の上に置く。光のクリーチャーとバトル中、このクリーチャーのパワーは+2000される。このクリーチャーがバトルに勝った時、このクリーチャーをアンタップする。W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: static
+      affects: self
+      mod:
+        battle_power:
+          amount: 2000
+          opponent_filter:
+            civs:
+            - light
+    - kind: trigger
+      when:
+        event: battle_win
+        subject: self
+      effect:
+      - op: untap
+        select:
+          ref: self
+    source:
+      official: proto
+      review: pending
+      notes: 語彙パイロット第377弾の検証用フィクスチャ（dmd05-001 無限鉄拳オニナグリ 型）。
+
+  - id: T1126
+    name: 試験用光壁獣・377
+    types: [creature]
+    civs: [light]
+    cost: 8
+    power: 8000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第377弾の検証用フィクスチャ（光・パワー8000ブロッカー役。T1125 の素パワー7000では負け、battle_power +2000 が効けば勝つ判別役）。"
+
+  - id: T1127
+    name: 試験用火壁獣・377
+    types: [creature]
+    civs: [fire]
+    cost: 8
+    power: 8000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第377弾の検証用フィクスチャ（火・パワー8000ブロッカー役。光でない相手には battle_power が効かず T1125 が負ける対照役）。"
+
+  - id: T1128
+    name: 超竜サンバースト・NEX
+    types:
+    - creature
+    - evolution
+    civs:
+    - fire
+    cost: 7
+    power: 11000
+    races:
+    - アーマード・ドラゴン
+    mana: 1
+    evolve_from:
+      races:
+      - アーマード・ドラゴン
+    text: 進化-自分のアーマード・ドラゴン１体の上に置く。このクリーチャーがバトルに勝った時、このクリーチャーをアンタップしてもよい。パワー12000以上のクリーチャーとバトル中、このクリーチャーのパワーは+11000される。W・ブレイカー
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when:
+        event: battle_win
+        subject: self
+      effect:
+      - op: may
+        body:
+        - op: untap
+          select:
+            ref: self
+    - kind: static
+      affects: self
+      mod:
+        battle_power:
+          amount: 11000
+          opponent_filter:
+            power_ge: 12000
+    source:
+      official: proto
+      review: pending
+      notes: 語彙パイロット第378弾の検証用フィクスチャ（dmd15-003 超竜サンバースト・NEX 型）。
+
+  - id: T1129
+    name: 試験用巨壁獣・378
+    types: [creature]
+    civs: [water]
+    cost: 10
+    power: 12000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第378弾の検証用フィクスチャ（水・パワー12000ブロッカー役。T1128 の素パワー11000では負け、battle_power +11000 が効けば勝つ判別役。ブロック側の判別では攻撃役にも使う）。"
+
+  - id: T1130
+    name: 試験用壁獣・378
+    types: [creature]
+    civs: [water]
+    cost: 9
+    power: 11000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第378弾の検証用フィクスチャ（水・パワー11000ブロッカー役。閾値12000未満のため battle_power が効かず相打ちになる対照役）。"
+
+  - id: T1131
+    name: 素晴らしい犬 ワンワンワン
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 2
+    power: 1111
+    races:
+    - アウトレイジ犬
+    mana: 1
+    text: "{Dog Souls}《素晴らしい犬 ワンワンワン》は、４枚より多くデッキに入れることができる。バトルゾーンにある自分の他のアウトレイジ犬１匹につき、このクリーチャーのパワーを+1111する。"
+    abilities:
+    - kind: static
+      affects: self
+      mod:
+        power:
+          amount: 1111
+          count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - アウトレイジ犬
+            other: true
+    source:
+      official: proto
+      review: pending
+      notes: 語彙パイロット第379弾の検証用フィクスチャ（dmx22b-110 素晴らしい犬 ワンワンワン 型）。
+
+  - id: T1132
+    name: 試験用アウトレイジ犬・379
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [アウトレイジ犬]
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第379弾の検証用フィクスチャ（他のアウトレイジ犬役。素のクリーチャー）。"
+  - id: T1133
+    name: 試験用壁獣・379
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第379弾の検証用フィクスチャ（水・パワー2000ブロッカー役。T1131 の素パワー1111では負け、他の犬1匹で +1111=2222 になれば勝つ判別役）。"
+
+  - id: T1134
+    name: 西南の超人 / 断断打つべしナウ
+    faces:
+    - name: 西南の超人
+      types: [creature]
+      civs: [nature]
+      cost: 4
+      power: 3000
+      races: [ジャイアント, サムライ]
+      text: "自分のジャイアント・クリーチャーの召喚コストを最大２少なくしてもよい。ただし、コストは０以下にはならない。セイバー：ジャイアント（自分のジャイアントが破壊される時、このクリーチャーをかわりに破壊してもよい）"
+      abilities:
+      - {kind: static, affects: {zone: hand, owner: you, filter: {races: [ジャイアント]}}, mod: {cost: -2}}
+      - {kind: replace, optional: true, when: {event: move, to: graveyard, reason: destroy, subject: {owner: you, filter: {races: [ジャイアント]}, other: true}}, instead: [{op: destroy, select: {ref: self, count: 1}}]}
+    - name: 断断打つべしナウ
+      types: [spell]
+      civs: [nature]
+      cost: 1
+      keywords: [s_trigger]
+      text: "S・トリガー / 自分のクリーチャーを１体、タップする。次の自分のターンのはじめまで、相手のクリーチャーが攻撃する時、可能ならそのクリーチャーを攻撃する。"
+      spell:
+      - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: t}
+      - {op: tap, select: {ref: t}}
+      - {op: modify, select: {ref: t}, mod: {must_be_attacked: true}, duration: until_next_own_turn_start}
+    mana: 1
+    text: "自分のジャイアント・クリーチャーの召喚コストを最大２少なくしてもよい。ただし、コストは０以下にはならない。セイバー：ジャイアント（自分のジャイアントが破壊される時、このクリーチャーをかわりに破壊してもよい） ／ S・トリガー 自分のクリーチャーを１体、タップする。次の自分のターンのはじめまで、相手のクリーチャーが攻撃する時、可能ならそのクリーチャーを攻撃する。"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第380弾の対象（dm23rp4x-tf03 型ツインパクト）。クリーチャー面の召喚コスト軽減は第347弾の確立形（static {affects: {zone: hand, owner: you, filter: {races: [ジャイアント]}}, mod: {cost: -2}}、登録済み dmbd02-014 と同文同形）、セイバーは partial の組立て済み置換（dmbd02-014 登録形と同一）。呪文面は partial の組立て済み形（choose→tap→modify {must_be_attacked: true, duration: until_next_own_turn_start}、第51弾 T147 と同系）。"
+
+  - id: T1135
+    name: デビル・リンク・タブー
+    types: [spell]
+    civs: [darkness]
+    cost: 10
+    mana: 1
+    text: "シンパシー：グランド・デビルとディープ・マリーン(この呪文を唱える時支払うコストは、バトルゾーンにある自分のグランド・デビルまたはディープ・マリーン１体につき１少なくなる。ただし、コストは１より少なくならない)\n相手は、次の自分自身のターンにクリーチャーを召喚できず、呪文を唱えることもできない。"
+    abilities:
+    - {kind: static, zone: hand, affects: self, mod: {cost: {amount: -1, count: {zone: bz, owner: you, filter: {races: [グランド・デビル, ディープ・マリーン]}}}, cost_min: 1}}
+    spell:
+    - {op: modify, select: {zone: hand, owner: opp, filter: {types: [creature]}}, mod: {deny: [summon]}, duration: until_next_own_turn_start}
+    - {op: modify, select: {zone: hand, owner: opp, filter: {types: [spell]}}, mod: {deny: [cast]}, duration: until_next_own_turn_start}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第381弾の対象（dm21-014 デビル・リンク・タブー 型）。シンパシーは dm21-020 / dm21-011 の登録先例と同形の static（zone: hand、cost {amount: -1, count: {zone: bz, owner: you, filter: {races: [グランド・デビル, ディープ・マリーン]}}}, cost_min: 1）。次の相手ターン中の召喚・詠唱禁止はファイナル・ストップ（dm26sd1-e007、第33弾）と同型の modify {select: {zone: hand, owner: opp, filter: {types: [creature]}}, mod: {deny: [summon]}, duration: until_next_own_turn_start} ＋同形の deny: [cast]（呪文。dm23bd7-030 の召喚版・dmex17-024 の併記版とも同系）。"
+
+  - id: T1136
+    name: 試験用グランド・デビル・381
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 3000
+    races: [グランド・デビル]
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第381弾の検証用フィクスチャ（グランド・デビル役。素のクリーチャー。T1135 のシンパシー数え上げ用）。"
+
+  - id: T1137
+    name: 試験用ディープ・マリーン・381
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 3000
+    races: [ディープ・マリーン]
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第381弾の検証用フィクスチャ（ディープ・マリーン役。素のクリーチャー。T1135 のシンパシー数え上げ用）。"
+
+  # ---- 語彙パイロット第382弾: attack_after_win_condition（新規語彙: turn_count kind battle_win） ----
+  - id: T1138
+    name: 森の格闘家ガンバレット
+    types: [creature]
+    civs: [nature]
+    cost: 1
+    power: 5000
+    races: [ドリームメイト]
+    mana: 1
+    text: "このターン、自分のクリーチャーがバトルに勝った後でしか、このクリーチャーは攻撃できない。"
+    abilities:
+    - {kind: static, affects: self, if: {cmp: [{turn_count: {kind: battle_win, owner: you}}, "==", 0]}, mod: {deny: [attack_player, attack_creature]}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第382弾の対象（dm30-033 森の格闘家ガンバレット 型）。「このターン、自分のクリーチャーがバトルに勝った後でしか攻撃できない」は promoy21-051 の登録先例（条件が満たない間 deny: [attack_player, attack_creature] を与える常在型）と同形で、条件を本弾の新規履歴 kind battle_win で書く: static {affects: self, if: {cmp: [{turn_count: {kind: battle_win, owner: you}}, \"==\", 0]}, mod: {deny: [attack_player, attack_creature]}}。battle_win は combat の battle_win レコード（勝者1体につき1件、controller＝勝者のコントローラ）を _record_history で hist:battle_win:<player> に集約する（第382弾で defs の TURN_COUNT_KINDS と events の記録、Rust engine.rs のミラーを追加）。相打ちは両者とも敗者側なのでレコードが出ず、数えない。"
+
+  - id: T1139
+    name: 試験用強襲獣・382
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 6000
+    races: [テスト]
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第382弾の検証用フィクスチャ（パワー6000の素アタッカー役。T1140（4000ブロッカー）に勝って battle_win を記録する役）。"
+
+  - id: T1140
+    name: 試験用巨壁獣・382
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第382弾の検証用フィクスチャ（パワー4000ブロッカー役。T1139 には負け、T1105（4000）とは相打ちになる判別役）。"
+
+  # ---- 語彙パイロット第383弾: variable_breaks_by_count（ドリフト: 第130弾 breaks {count}） ----
+  - id: T1141
+    name: シグマ・トゥレイト
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 6
+    power: 9000
+    races: [サバイバー]
+    mana: 1
+    evolve_from: {races: [サバイバー]}
+    text: "進化ー自分のサバイバー１体の上に置く。 / クルー・ブレイカー:サバイバー(シールドを攻撃したとき、バトルゾーンにある自分の他のサバイバー１体につき、シールドをさらにもう１枚ブレイクする)"
+    abilities:
+    - {kind: static, affects: self, mod: {breaks: {count: {zone: bz, owner: you, filter: {races: [サバイバー]}, other: true}}}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第383弾の対象（dm06-029 シグマ・トゥレイト 型）。クルー・ブレイカー:サバイバーは第130弾で確立した breaks {count}（base 1 + amount 1 × セレクタの数）で表す: static {affects: self, mod: {breaks: {count: {zone: bz, owner: you, filter: {races: [サバイバー]}, other: true}}}}。登録先例 dmc51-006（クルー・ブレイカー:ドラゴン、race_has 版）/ dm26-009（多色版、other なし）/ dmr01-002（ブロッカー版）と同形。原文に「自分の他の」とあるため other: true で自分自身を数えない。rejects 行の partial の notes（breaks は固定数しか書けない）は第130弾以前の記述で陳腐化している。"
+
+  - id: T1142
+    name: 試験用サバイバー・383
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [サバイバー]
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第383弾の検証用フィクスチャ（他のサバイバー役。素のクリーチャー。T1141 のクルー・ブレイカー数え上げ用）。"
+
+  - id: T1143
+    name: 試験用非サバイバー・383
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第383弾の検証用フィクスチャ（非サバイバー役。素のクリーチャー。T1141 の数え上げに混ざらないことの判別用）。"
+
+  - id: T1144
+    name: 銀界の守護者ル・ギラ・レシール
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 4000
+    races: [ガーディアン]
+    mana: 1
+    keywords: [blocker, cannot_attack_player]
+    text: "ブロッカー(相手クリーチャーが攻撃するとき、このクリーチャーをタップして、その攻撃を阻止してよい。その後、その相手クリーチャーとバトルする)\nこのクリーチャーがバトルゾーンにある間、進化クリーチャーはタップされた状態でバトルゾーンに出る。\nこのクリーチャーは、相手プレイヤーを攻撃できない。"
+    abilities:
+    - {kind: static, affects: {zone: bz, owner: any, filter: {types: [evolution]}}, mod: {grant: [enters_tapped]}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第384弾の対象（dm06-001 銀界の守護者ル・ギラ・レシール 型）。「進化クリーチャーはタップされた状態でバトルゾーンに出る」は第339弾（dmex19-m20 ゴウケン齋型）の確立形 static {affects: {zone: bz, owner: opp}, mod: {grant: [enters_tapped]}} の一般化: 本カードは両プレイヤー対象のため owner: any、対象は進化クリーチャーだけのため filter {types: [evolution]} を足す。入るカードの chars に enters_tapped が含まれ、events の移動適用でタップして置かれる。"
+
+  - id: T1145
+    name: 試験用進化ガーディアン・384
+    types: [creature, evolution]
+    civs: [light]
+    cost: 3
+    power: 3000
+    races: [ガーディアン]
+    mana: 1
+    evolve_from: {races: [ガーディアン]}
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第384弾の検証用フィクスチャ（進化クリーチャー役。ガーディアンの上に進化する。T1144 の付与でタップして出ることの判別用）。"
+
+  - id: T1146
+    name: 試験用ガーディアン・384
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 3000
+    races: [ガーディアン]
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第384弾の検証用フィクスチャ（非進化クリーチャー役。T1145 の進化元であり、自身はタップして出ないことの判別用）。"
+
+  - id: T1147
+    name: 試験用タップ進化・384
+    types: [creature, evolution]
+    civs: [light]
+    cost: 3
+    power: 3000
+    races: [ガーディアン]
+    mana: 1
+    evolve_from: {races: [ガーディアン]}
+    keywords: [enters_tapped]
+    text: "このクリーチャーは、タップしてバトルゾーンに出る。"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第384弾の検証用フィクスチャ（自身が enters_tapped キーワードを持つ進化クリーチャー役。登録済みでは dmex01-032 と同型。第384弾の _stack 修正で、進化元の位相引き継ぎに入場タップが合成されることの判別用）。"
+
+  - id: T1148
+    name: リッチ警官 キャッシュ！
+    types: [creature]
+    civs: [light, water]
+    cost: 8
+    power: 2500
+    races: [ヒューマノイド]
+    mana: 1
+    text: "このクリーチャーがバトルゾーンに出た時、自分の手札を１枚、相手に見せてもよい。そうしたら、そのカードのコストと同じ枚数のカードを引く。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: may, body: [{op: choose, select: {zone: hand, owner: you, count: 1}, as: pick}, {op: draw, count: {cost_of: pick}}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第385弾の対象（promoy18-087 リッチ警官 キャッシュ！ 型）。「手札を１枚見せてもよい。そうしたら、そのカードのコストと同じ枚数引く」は第368弾の draw {count: {cost_of: pick}} と、登録先例 dmr05-046 の「may の中で手札から選ぶ（見せる）」形の組み合わせで表す。判別役の手札カードは既存 proto T1109（コスト3）/ T1110（コスト5）を流用する。"
+
+  - id: T1149
+    name: 夜露死苦 キャロル
+    types: [creature]
+    civs: [water, fire]
+    cost: 3
+    power: 2000
+    races: [アウトレイジ]
+    mana: 1
+    text: "このクリーチャーがどこからでも墓地に置かれる時、自分のマナゾーンに水と火文明があれば、かわりに手札に戻す。"
+    abilities:
+    - kind: replace
+      when: {event: move, to: graveyard, subject: self}
+      if:
+        all:
+        - exists: {zone: mana, owner: you, filter: {civs: [water]}}
+        - exists: {zone: mana, owner: you, filter: {civs: [fire]}}
+      instead:
+      - {op: move, select: {ref: subject, count: 1}, to: hand, reason: return}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第386弾の対象（dm26ex4-cho046 夜露死苦 キャロル 型）。「どこからでも墓地に置かれる時」の置換は when に from を書かない形で、条件は all [exists マナ水, exists マナ火]。登録済み dm23ex1-062（同名カードの別刷り）の登録形と完全一致するドリフト。判別役は既存 proto を流用: T1105（火・パワー4000ブロッカー＝ハンター役）/ T079（水・マナ役）/ T277（火・マナ役）。既知の制限: 置換の発生源走査規則（bz 外は zone 宣言した置換だけ）により本形は bz 起点でのみ発火し、手札・山札起点では発火しない（dm23ex1-062 も同一。第386弾 docs 参照、専用ステージ送り）。"
+
+  - id: T1150
+    name: 楽蛇の虚 フミガルド
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 6000
+    races: [デーモン・コマンド]
+    mana: 1
+    text: "このターン攻撃したクリーチャー１体につき、このクリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。\nD・D・D [ff05]\nスピードアタッカー\nW・ブレイカー\n自分のターンに１度、相手のクリーチャーが出る時、自分の手札が１枚以下なら、かわりにそのクリーチャーを墓地に置いてもよい。"
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+    - {kind: static, zone: hand, affects: self, mod: {cost: {amount: -2, count: {turn_count: {kind: attack, owner: any, distinct: true}}}, cost_min: 1}}
+    - kind: declare
+      zone: hand
+      when: {event: attack, subject: {owner: you, filter: {types: [creature]}}}
+      effect:
+      - {op: may, body: [{op: play_self, cost: 5, civs: [fire]}]}
+    - kind: replace
+      once_per_turn: true
+      optional: true
+      when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}}
+      if:
+        all:
+        - {is_turn: you}
+        - cmp:
+          - {count: {zone: hand, owner: you}}
+          - "<="
+          - 1
+      instead:
+      - {op: move, select: {ref: event.subject}, to: graveyard, reason: put}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第387弾の対象（dm25ex3-rp4s04 楽蛇の虚 フミガルド 型）。第1条項「このターン攻撃したクリーチャー1体につき召喚コストを2少なくする（0以下にはならない）」は公式QA 47928（2025.12.19）で体数読み（同一クリーチャーの再攻撃は1体）と確定したため、本弾で追加した turn_count の distinct: true（kind: attack 専用。hist:attackers リストを cid で重複排除してから数える）を使い、シンパシーと同型の hand 常在型 {cost: {amount: -2, count: {turn_count: {kind: attack, owner: any, distinct: true}}}, cost_min: 1} で表す。owner はテキストに所有者の限定が無いため any。D・D・D 宣言と出る時置換は partial の構築済み形そのまま（declare は may 包みの play_self {cost: 5, civs: [fire]}、置換は once_per_turn + optional の replace）。判別役は新規フィクスチャ T1151（同一クリーチャーの2回攻撃役）と既存 proto T001 / T1139（別個体のアタッカー役）、マナ役は T277 を流用する。"
+
+  - id: T1151
+    name: 試験用連撃獣・387
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "スピードアタッカー。このクリーチャーの攻撃が終わる時、このクリーチャーをアンタップする。（同一クリーチャーが同じターンに2回攻撃する状況を作るための試験用フィクスチャ。第387弾）"
+    keywords: [speed_attacker]
+    abilities:
+    - {kind: trigger, when: {event: attack_end, subject: self}, effect: [{op: untap, select: {ref: self}}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第387弾の判別用フィクスチャ。公式QA 47928 の状況（同じクリーチャーが攻撃→アンタップ→再攻撃）を実挙動で作るための攻撃終了時自己アンタップ役。"
+
+  - id: T1152
+    name: カンテ＝ランタン
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 1000
+    races: [アビスロイヤル]
+    mana: 1
+    text: "このクリーチャーがバトルする時、そのバトルの終わりまで、バトルしている相手クリーチャーのパワーを－3000する。（パワー０以下のクリーチャーは破壊される）"
+    abilities:
+    - kind: trigger
+      when: {event: battle_start, subject: self}
+      effect:
+      - {op: modify, select: {ref: event.opponent}, mod: {power: -3000}, duration: during_attack}
+    - kind: trigger
+      when: {event: battle_start, opponent: self}
+      effect:
+      - {op: modify, select: {ref: event.subject}, mod: {power: -3000}, duration: during_attack}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第388弾の対象（dm24rp4-065 カンテ＝ランタン 型）。「このクリーチャーがバトルする時、そのバトルの終わりまで、バトルしている相手クリーチャーのパワーを－3000する」は第75弾の battle_start 両面誘発（攻撃側 subject: self＋守備側 opponent: self）＋第176弾・登録先例 dm26rp1-039 の modify {select: {ref: event.opponent / event.subject}, mod: {power: N}, duration: during_attack} のドリフトで表す。partial の注記「バトル相手を参照する語彙が無い」は第75・176弾の実装で解消済みだった。判別役は新規フィクスチャ T1153（パワー3500ブロッカー）と既存 proto T1126（パワー8000ブロッカー）/ T1140（パワー4000ブロッカー）を流用する。"
+
+  - id: T1153
+    name: 試験用中壁獣・388
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3500
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第388弾の判別用フィクスチャ（パワー3500ブロッカー役。T1152 の素パワー1000では負け、バトル相手への -3000 が効けば 500 になって勝つ判別役。守備側テストでは攻撃役も兼ねる）。"
+
+  - id: T1154
+    name: 死罠の杖
+    types: [creature]
+    civs: [darkness, nature]
+    cost: 4
+    power: 5000
+    races: [ビーストフォーク, 不死樹王国]
+    mana: 1
+    text: "このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。そのクリーチャーのコストと同じ枚数のカードを、自分の山札の上から墓地に置く。"
+    abilities:
+    - kind: trigger
+      when: {event: move, to: bz, subject: self}
+      effect:
+      - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: pick}
+      - {op: mana_put, select: {ref: pick}}
+      - {op: mill, owner: you, count: {cost_of: pick}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第389弾の対象（dmex10-014 死罠の杖 型）。「相手のクリーチャーを１体選び、持ち主のマナゾーンに置く」は choose {select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: pick}＋mana_put {select: {ref: pick}}、「そのクリーチャーのコストと同じ枚数」は mill マクロ（move {from_top: $count}）の count に第368弾の一般式 {cost_of: pick} を渡す形で表す。from_top は selectors が eval_expr で評価し schema.py でも expr と定義済みのため、式の組み合わせは新規語彙なしで届く（mill の count への式渡しは登録先例が無く本弾で実挙動を検証）。判別役は既存 proto T1110（コスト5）/ T1109（コスト3）を流用する。"
+
+  - id: T1155
+    name: ハンマノ裁徒
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 6000
+    races: [メタリカ, サバキスト]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）\nこのターン中にカードが自分のシールドゾーンに置かれていなければ、このクリーチャーは相手プレイヤーを攻撃できない。\nW・ブレイカー（このクリーチャーはシールドを２つブレイクする）"
+    keywords: [blocker, double_breaker]
+    abilities:
+    - {kind: static, affects: self, if: {cmp: [{turn_count: {kind: shield_put, owner: you}}, "==", 0]}, mod: {deny: [attack_player]}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第390弾の対象（dmsd07-003 ハンマノ裁徒 型）。条項「このターン中にカードが自分のシールドゾーンに置かれていなければ、このクリーチャーは相手プレイヤーを攻撃できない」は登録済み dmrp08-032 ブロクノ裁徒Z（第205ラウンド登録）の第1能力と同一の形（static {affects: self, if: {cmp: [{turn_count: {kind: shield_put, owner: you}}, ==, 0]}, mod: {deny: [attack_player]}}）で表す。shield_put は move to: shield のレコードを置かれた側のコントローラで集約する既存の履歴 kind で、deny はプレイヤー攻撃のみ（クリーチャー攻撃は可能）。判別役は既存 proto T245（自盾追加試験呪文。自分の山札の上から1枚を自分の新しいシールドとして置く実フロー役）を流用する。"
+
+  # ---- 語彙パイロット第391弾: battle_duration（ドリフト: 第122弾 battle_power の他者付与形） ----
+  - id: T1156
+    name: ギャノバズガ・ドラゴン
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 4000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    text: "自分の火のクリーチャーがバトルする時、そのバトルの終わりまで、そのクリーチャーのパワーは+3000される。"
+    abilities:
+    - kind: static
+      affects: {zone: bz, owner: you, filter: {types: [creature], civs: [fire]}}
+      mod: {battle_power: {amount: 3000}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第391弾の対象（dmd15-005 ギャノバズガ・ドラゴン 型）。条項「自分の火のクリーチャーがバトルする時、そのバトルの終わりまで、そのクリーチャーのパワーは+3000される」は mod battle_power（第122弾。バトル中だけのパワー修整）の他者付与形で表す: 登録先例 dmrp15-040（自分のクリーチャーすべてに battle_power +2000、only 無し）と dmr17-054（自然フィルタ＋civs フィルタ付き）が同型で、対象は civs: [fire] フィルタ・amount 3000・only 無し（攻撃側でも守備側でも効く）。battle_power の他者付与は第342弾で _battle_bonus の付与経路が実装済み。発生源自身も自分の火のクリーチャーに含まれる。判別役は新規フィクスチャ T1157（火・パワー2000）/ T1158（水・パワー2000）と既存 proto T1140（火・パワー4000ブロッカー）/ T1155（光・パワー6000ブロッカー）を流用する。"
+
+  - id: T1157
+    name: 試験用火獣・391
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第391弾の判別用フィクスチャ（火・パワー2000バニラ役。素では T1140 のパワー4000ブロッカーに負け、T1156 の battle_power +3000 が効けば 5000 になって勝つ判別役。守備側テストではタップして攻撃される役も兼ねる）。"
+
+  - id: T1158
+    name: 試験用水獣・391
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第391弾の判別用フィクスチャ（水・パワー2000バニラ役。火フィルタに合わないため T1156 の +3000 を受けず、T1140 のパワー4000ブロッカーに負ける文明フィルタの判別役）。"
+
+  - id: T1159
+    name: 彩強の巨人
+    types: [creature]
+    civs: [nature]
+    cost: 9
+    power: 11000
+    races: [ジャイアント]
+    mana: 1
+    text: "文明ブレイカー(このクリーチャーは、自分のマナゾーンにある文明ひとつにつき１枚、シールドをブレイクする)"
+    abilities:
+    - kind: static
+      affects: self
+      mod: {breaks: {civ_count: {zone: mana, owner: you}, base: 0}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第392弾の対象（dm27-010 彩強の巨人 型）。単一条項「文明ブレイカー(このクリーチャーは、自分のマナゾーンにある文明ひとつにつき１枚、シールドをブレイクする)」は mod breaks の式形式 {civ_count: セレクタ}（第79弾。登録先例 dmc34-025 は「追加でブレイクする」型で base 既定1の base+式値）に、第145弾で実挙動検証済みの base: 0（バラエティ・ブレイカーの {distinct_cost_count: ..., base: 0} と同機構で、ちょうど式の値になる）を組み合わせたもの: static {affects: self, mod: {breaks: {civ_count: {zone: mana, owner: you}, base: 0}}}。civ_count は対象カード群にある文明の種類数で多色は各文明を数える（selectors の確立形）。判別役は既存 proto を流用: マナ役 T001（自然）/ T004（光）/ T005（火）/ T008（闇）/ T009（水）/ T030（光・水の多色）。"
+
+  # ---- 語彙パイロット第393弾: shield_placed_this_turn_condition（ドリフト: 第390弾 placed_this_turn_condition と同一条項） ----
+  - id: T1160
+    name: 青守銀 ノチェス
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 4500
+    races: [メタリカ]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）\nこのターン中に自分のシールドゾーンにカードが置かれていなければ、このクリーチャーは相手プレイヤーを攻撃できない。"
+    keywords: [blocker]
+    abilities:
+    - {kind: static, affects: self, if: {cmp: [{turn_count: {kind: shield_put, owner: you}}, "==", 0]}, mod: {deny: [attack_player]}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第393弾の対象（dmrp06-062 青守銀 ノチェス 型）。条項「このターン中に自分のシールドゾーンにカードが置かれていなければ、このクリーチャーは相手プレイヤーを攻撃できない」は第390弾 placed_this_turn_condition（dmsd07-003 ハンマノ裁徒）で解消した条項と同一で、登録済み dmrp08-032 ブロクノ裁徒Z（第205ラウンド登録）の第1能力と同一の形（static {affects: self, if: {cmp: [{turn_count: {kind: shield_put, owner: you}}, ==, 0]}, mod: {deny: [attack_player]}}）で表す。shield_put は move to: shield のレコードを置かれた側のコントローラで集約する既存の履歴 kind で、deny はプレイヤー攻撃のみ（クリーチャー攻撃は可能）。対象行は partial も reason も無い素行のため骨格は公式データ（data/cards/raw/official_*.jsonl の dmrp06-062 行: 光 / コスト3 / パワー4500 / 種族 メタリカ / mana 1）から起こした。判別役は既存 proto T245（自盾追加試験呪文。自分の山札の上から1枚を自分の新しいシールドとして置く実フロー役）を流用する。"
+
+  # ---- 語彙パイロット第394弾: only_creature_condition（ドリフト: no_leave 第49弾＋static if の count 門番） ----
+  - id: T1161
+    name: 龍装者 クシュトル
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2500
+    races: [ドラゴンギルド, メタリカ]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）\n自分のクリーチャーがこのクリーチャーだけなら、このクリーチャーは離れない。"
+    keywords: [blocker]
+    abilities:
+    - {kind: static, affects: self, if: {cmp: [{count: {zone: bz, owner: you, filter: {types: [creature]}}}, "==", 1]}, mod: {no_leave: true}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第394弾の対象（dm26rp3-056 龍装者 クシュトル 型）。単一条項「自分のクリーチャーがこのクリーチャーだけなら、このクリーチャーは離れない」は、mod no_leave（第49弾。「バトルゾーンを離れる時、かわりにとどまる」）を static の if（count 式との cmp）で門番する登録先例 dmx22b-040（「自分のシールドが５つ以上なら、自分の光のクリーチャーはバトルゾーンを離れない」を static {affects: セレクタ, if: {cmp: [{count: {zone: shield, owner: you}}, >=, 5]}, mod: {no_leave: true}} で登録）の門番パターンの自己版: static {affects: self, if: {cmp: [{count: {zone: bz, owner: you, filter: {types: [creature]}}}, ==, 1]}, mod: {no_leave: true}}。count は自分のバトルゾーンのクリーチャー数（このクリーチャー自身を含む）で、1 の時だけ単独と一致する。no_leave: true は無条件（破壊・バウンスとも止める。第49弾）。判別役は既存 proto を流用: T1157（火・パワー2000バニラ＝味方役／相手役）/ T056（相手クリーチャー破壊呪文）/ T140（相手クリーチャーバウンス呪文）/ マナ役 T008（闇）・T009（水）。"
+
+  # ---- 語彙パイロット第395弾: civ_count_of_destroyed（ドリフト: civ_count 式の {ref: 変数} セレクタ） ----
+  - id: T1162
+    name: 生魂転霊
+    types: [spell]
+    civs: [nature]
+    cost: 2
+    mana: 1
+    text: "S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）\n自分のクリーチャーを１体破壊する。その後、そのクリーチャーが持っていた文明の数だけ、自分の山札の上からカードをマナゾーンに置く。"
+    keywords: [s_trigger]
+    spell:
+    - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: victim}
+    - {op: set_var, name: n_civs, value: {civ_count: {ref: victim}}}
+    - {op: destroy, select: {ref: victim}}
+    - {op: mana_put, select: {zone: deck, owner: you, from_top: {var: n_civs}}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第395弾の対象（dmex15-b099 生魂転霊 型）。条項「自分のクリーチャーを１体破壊する。その後、そのクリーチャーが持っていた文明の数だけ、自分の山札の上からカードをマナゾーンに置く」は、choose {select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: victim}（第368・385弾の choose 確立形、所有者は you）→ destroy {select: {ref: victim}}（マクロ: move to: graveyard, reason: destroy）→ mana_put {select: {zone: deck, owner: you, from_top: {civ_count: {ref: victim}}}}（マクロ: move to: mana, reason: put）で表す。civ_count は第79弾の式で引数はセレクタ一般（defs.expr が selector として検証し、schema.py でも civ_count: ref(selector)・selector の ref キー・from_top: ref(expr) と両側に定義済み。第408ラウンドの教訓どおり確認）。ただし candidates の ref 分岐は alive（gen 一致）で絞るため、破壊で gen が進んだ後の {ref: victim} は空になり civ_count は 0 に倒れる（本弾で実測。当初の「破壊後に直接数える」形は不成立）。そこで第322弾の set_var（式を評価して束縛する op。登録先例に「捨てる前に set_var で手札枚数を数えてから使う」形がある）で破壊前に文明数を数えて束縛し、mana_put の from_top に {var: n_civs} で渡す——「移動前に数えて束縛する」確立パターンの適用で、追加語彙なし。破壊できなかった場合（離れない等）でも参照先は選んだクリーチャーで、文面どおりその文明数を数える。候補が無ければ choose は空で civ_count は 0（0枚。第368・385弾の cost_of 0 と同じ読み）。判別役は既存 proto を流用: T030（光・水の多色クリーチャー＝文明2つ役）/ T1157（火・単色＝文明1つ役、2候補の対照役）/ T001（自然＝マナ役・自然単色役）。追加語彙なし（ドリフト）。"
+
+  # ---- 語彙パイロット第396弾: power_per_civilization（ドリフト: civ_count 式＋set_var＋modify の amount {var} ベイク） ----
+  - id: T1163
+    name: 虹色の霊光
+    types: [spell]
+    civs: [nature]
+    cost: 3
+    mana: 1
+    text: "このターン、バトルゾーンにある自分のクリーチャー１体のパワーは、そのクリーチャーが持つ文明ひとつにつき+2000される。\nカードを１枚引く。"
+    spell:
+    - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: pick}
+    - {op: set_var, name: p_up, value: {mul: [{civ_count: {ref: pick}}, 2000]}}
+    - {op: modify, select: {ref: pick}, mod: {power: {amount: {var: p_up}}}, duration: end_of_turn}
+    - {op: draw, player: you, count: 1}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第396弾の対象（dm25-055 虹色の霊光 型）。条項「このターン、バトルゾーンにある自分のクリーチャー１体のパワーは、そのクリーチャーが持つ文明ひとつにつき+2000される」は、choose {select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: pick}（第368・385弾の choose 確立形）→ set_var {name: p_up, value: {mul: [{civ_count: {ref: pick}}, 2000]}}（第79弾の式 civ_count を第322弾の set_var で数えて束縛）→ modify {select: {ref: pick}, mod: {power: {amount: {var: p_up}}}, duration: end_of_turn}（amount の {var:} は op_modify の生成時ベイクでリテラルに固定される。基盤B4）→ draw {player: you, count: 1} で表す。当初の候補形は2つとも不成立だった（本弾で実測）: (a) modify の mod power {amount: 2000, count: {civ_count: {ref: pick}}} は、mod の count が特性計算時に env_self（{you, self} のみ・解決時の vars を含まない）で評価されるため {ref: pick} が空に倒れる。(b) count: {civ_count: {ref: self}} は civ_count の評価が chars_ro 経由で同じカードの特性計算へ再入し RecursionError になる（distinct_cost_count の _distinct_costing のような再入ガードは civ_count の経路に無い）。そこで第395弾と同じ「移動前に数えて束縛する」パターンを、対象が移動しない本件では「修整の生成前に数えて束縛する」形で適用した。civ_count / mul / set_var / var は defs と schema.py（生成済み card.schema.json）の両側に定義済みを確認（第408ラウンドの教訓）。候補が無ければ choose は空で p_up は 0、modify は対象なしで生成されず、ドローだけが解決する（文面は2文が独立）。判別役は既存 proto を流用: T030（光・水の多色クリーチャー＝文明2つ役）/ T1157（火・単色＝文明1つ役・2候補時の対照役）/ T001（自然＝マナ役）。"
+
+  # ---- 語彙パイロット第397弾: mana_placed_count_this_turn（ドリフト: when の ord {kind: mana_put, ge: 2}） ----
+  - id: T1164
+    name: マ・スクメーロ・タンク
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 8000
+    races: [グランセクト]
+    mana: 1
+    text: "W・ブレイカー（このクリーチャーはシールドを２つブレイクする）\nこのクリーチャーはタップしてバトルゾーンに置かれ、自分のターンのはじめにアンタップしない。\n自分のマナゾーンにカードを置く時、それがそのターンに自分のマナゾーンに置く最初のカードでなければ、このクリーチャーをアンタップする。"
+    keywords: [double_breaker, enters_tapped]
+    abilities:
+    - {kind: static, affects: self, mod: {deny: [untap_at_start]}}
+    - kind: trigger
+      when: {event: move, to: mana, subject: {owner: you}, ord: {kind: mana_put, ge: 2}}
+      effect:
+      - {op: untap, select: {ref: self}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第397弾の対象（dmrp06-027 マ・スクメーロ・タンク 型）。条項「自分のマナゾーンにカードを置く時、それがそのターンに自分のマナゾーンに置く最初のカードでなければ、このクリーチャーをアンタップする」は、登録先例 dm23rp2x-047（「各ターン2枚目のカードを自分のマナゾーンに置いた時」）の trigger {when: {event: move, to: mana, subject: {owner: you}, ord: {kind: mana_put, eq: 2}}} の ord 比較を ge: 2 に変えた形（「最初のカードでなければ」＝2枚目以降すべて）。ord は履歴基盤が move レコードへ刻むそのターンでの通し番号で、defs の ORD_KINDS に mana_put があり、ord の比較は eq/ge/gt/le/lt のいずれか1つ（第3段・共通基盤その2a、test_vocab_hist_counters の T238 が ord ge の実挙動を検証済み）。効果は untap {select: {ref: self}}（登録先例多数）。残りの条項は partial 構築済み: W・ブレイカー＝keyword double_breaker、タップ入り＝keyword enters_tapped、自分のターンのはじめにアンタップしない＝static {affects: self, mod: {deny: [untap_at_start]}}。ord / untap / deny は defs と schema.py（生成済み card.schema.json）の両側に定義済みを確認（第408ラウンドの教訓）。判別役は既存 proto を流用: T002（CIP で山札の上から1枚をマナゾーンに置く＝2枚目以降のマナ置き役）/ T001（自然クリーチャー＝マナ役・チャージ役）。"
+
+  - id: T1165
+    name: ディオーネ
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 3000
+    races: [シー・ハッカー]
+    mana: 1
+    text: "ブロッカー\n「スピードアタッカー」を持つクリーチャーは、バトルゾーンに出たターン、攻撃できない。\nこのクリーチャーは攻撃できない。"
+    keywords: [blocker, cannot_attack]
+    abilities:
+    - kind: static
+      affects: {zone: bz, owner: any, filter: {types: [creature], keyword: speed_attacker, entered_this_turn: true}}
+      mod: {deny: [attack_player, attack_creature]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第398弾の対象（dmex11-004 ディオーネ 型）。条項「「スピードアタッカー」を持つクリーチャーは、バトルゾーンに出たターン、攻撃できない」は、第362弾の登録先例 dm23rp4x-014 / dm23bd6-003 の static {affects: {zone: bz, owner: opp, filter: {types: [creature], entered_this_turn: true}}, mod: {deny: [attack_player, attack_creature]}} の owner を any に広げ、フィルタに keyword: speed_attacker を足した形（文面に対象の所有者の限定が無いため両プレイヤーのクリーチャーに及ぶ）。entered_this_turn は第134弾のフィルタ、keyword は FILTER_KEYS の既存キーで、どちらも defs と schema.py（FILTER_KEYS を引く生成）の両側に定義済みを確認（第408ラウンドの教訓）。残りの条項は partial 構築済み: ブロッカー＝keyword blocker、このクリーチャーは攻撃できない＝keyword cannot_attack。判別役は既存 proto を流用: T1090（スピードアタッカー役・火マナ役）/ T1091（標的役）。"
+
+  - id: T1166
+    name: 聖者の精霊龍 セレナーデ
+    types: [creature]
+    civs: [light, water]
+    cost: 7
+    power: 7500
+    races: [エンジェル・コマンド・ドラゴン, 革命軍]
+    mana: 1
+    text: "マナゾーンに置く時、このカードはタップして置く。\nブロッカー\nW・ブレイカー\n「スピードアタッカー」を持つクリーチャーはすべて、バトルゾーンに出たターン、攻撃できない。"
+    keywords: [blocker, double_breaker]
+    abilities:
+    - kind: static
+      affects: {zone: bz, owner: any, filter: {types: [creature], keyword: speed_attacker, entered_this_turn: true}}
+      mod: {deny: [attack_player, attack_creature]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第399弾の対象（dmr22-s04 聖者の精霊龍 セレナーデ 型）。条項「「スピードアタッカー」を持つクリーチャーはすべて、バトルゾーンに出たターン、攻撃できない」は、第398弾の確立形そのもの: static {affects: {zone: bz, owner: any, filter: {types: [creature], keyword: speed_attacker, entered_this_turn: true}}, mod: {deny: [attack_player, attack_creature]}}（第362弾の登録先例の owner を any に広げ keyword フィルタを足した形。文面の「すべて」に所有者の限定は無い）。entered_this_turn / keyword は FILTER_KEYS の既存キーで defs と schema.py の両側に定義済み。残りの条項は partial が素のため本弾で構築: ブロッカー＝keyword blocker、W・ブレイカー＝keyword double_breaker、「マナゾーンに置く時、このカードはタップして置く」は多色カードのルール（405.1。エンジン core が civs 2つ以上をマナに置く時にタップさせる）で、変換済みカード（dm10-037 / dm10-041 / dm10-064 / dmbd05-006 等）では一貫して text のみで表す。静的効果の affects 照合は base（印刷特性）のため、他の効果で付与されたスピードアタッカーはフィルタに掛からない既知の制限は本カードでも残る（第398弾で固定。エンジン全体の規約で専用ステージ送り）。判別役は既存 proto を流用: T1090（スピードアタッカー役・火マナ役）/ T1091（標的役）/ T314（スピードアタッカー自己付与役＝付与分の制限確認用）。"
+
+  - id: T1167
+    name: ブルース・ガー
+    types: [creature]
+    civs: [fire]
+    cost: 1
+    power: 1000
+    races: [ファイアー・バード, K・ソウル]
+    mana: 1
+    text: "【K・ソウル】\nこのクリーチャーは、自分のターンのはじめにアンタップしない。"
+    abilities:
+    - kind: static
+      affects: self
+      mod: {deny: [untap_at_start]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第400弾の対象（dmrp21-t14 ブルース・ガー 型）。条項「このクリーチャーは、自分のターンのはじめにアンタップしない」は、登録済み dmrp06-027（第397弾・ラウンド432）の partial 構築済み・登録形そのもの static {affects: self, mod: {deny: [untap_at_start]}}（登録先例 dmrp18-025 も同形）。deny / untap_at_start は defs と schema.py（生成済み card.schema.json）の両側に定義済みを確認（第408ラウンドの教訓）。【K・ソウル】は種族特性で、登録先例 dmex01-043 / dm36-032 と同様に races へ 'K・ソウル' を入れて表す（partial の races は [ファイアー・バード] のみのため補完あり: races と text のみ。partial の text は断片「アンタップしない」のため text には公式テキスト全文を入れる）。untap_restriction ファミリーは pure 3件だが残り2件は形が異なる: dm26rp1-td004 は「相手のクリーチャーはターンのはじめ以外アンタップしない」＝効果によるアンタップの禁止で untap_at_start の deny とは別形、dmx15-011 は「誰も自身のマナゾーンにある呪文をアンタップできない」＝マナゾーンの呪文への全般的なアンタップ禁止で別形。本弾は dmrp21-t14 の1件のみを対象とし、ファミリーは解消しない。判別役は既存 proto を流用: T001（通常クリーチャー＝対照役・マナ役）/ T1090（火マナ役）。"
+
+  - id: T1168
+    name: 超神龍レイ・ソレイユ
+    types: [creature, evolution]
+    civs: [light]
+    cost: 4
+    power: 6000
+    races: [アポロニア・ドラゴン]
+    mana: 1
+    text: "ブロッカー\n進化-自分の「ブロッカー」を持つクリーチャー１体の上に置く。\n自分のクリーチャーがブロックした時、そのクリーチャーは相手のシールドを１枚ブレイクする。"
+    keywords: [blocker]
+    evolve_from: {types: [creature], keyword: blocker}
+    abilities:
+    - kind: static
+      affects: {zone: bz, owner: you, filter: {types: [creature]}}
+      mod:
+        gain:
+        - kind: trigger
+          when: {event: block, subject: self}
+          effect:
+          - {op: break, player: opp, count: 1}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第401弾の対象（dm33-001 超神龍レイ・ソレイユ 型）。条項「自分のクリーチャーがブロックした時、そのクリーチャーは相手のシールドを１枚ブレイクする」は、自分のクリーチャーすべてに誘発能力を与える静的効果で表す: static {affects: {zone: bz, owner: you, filter: {types: [creature]}}, mod: {gain: [trigger {when: {event: block, subject: self}, effect: [break {player: opp, count: 1}]}]}}。gain で誘発を与える形は登録先例 dmd26-015（静的効果の gain）＋第326弾形B（呪文の modify で gain した誘発が break を解決）の合成で追加語彙なし。発生源自身を監視する trigger 形では break の帰属（_breaker は env の self＝発生源を見る）が発生源に寄ってしまい、文面の「そのクリーチャーは」（＝ブロックしたクリーチャー自身）とずれるため gain 形を採る。ブレイクはブロック宣言時（バトルの前）に解決する（第320・326弾で固定）。残りの条項: ブロッカー＝keyword blocker（partial 構築済み）、「進化-自分の『ブロッカー』を持つクリーチャー１体の上に置く」＝ types [creature, evolution] ＋ evolve_from {types: [creature], keyword: blocker}（第372弾・登録先例 dm32-011 と同文・同形。partial に欠けた要素の補完は types への evolution 追加と evolve_from の追加のみで、text は partial の時点で公式全文と一致し補完なし）。gain / evolve_from の keyword は defs と schema.py の両側に定義済みを確認（第408ラウンドの教訓）。判別役は既存 proto を流用: T1117（ブロッカー進化元役＋光マナ役）/ T004（ブロッカー役）/ T001（攻撃役）/ T1118（パワー7000の攻撃役＝ブロッカーがバトルで落ちてもブレイクが先に起きる判別）/ T1107（ブロッカーを持たない進化元対照）。"
+
+  - id: T1169
+    name: 天英雄 ヴァルハラ・デューク
+    types: [creature]
+    civs: [light]
+    cost: 7
+    power: 7000
+    races: [エンジェル・コマンド・ドラゴン]
+    mana: 1
+    text: "マナ武装 ７：このクリーチャーをバトルゾーンに出した時、自分のマナゾーンに光のカードが７枚以上あれば、次の自分のターンのはじめまで自分のクリーチャーは破壊されない。\nW・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）"
+    keywords: [double_breaker]
+    abilities:
+    - kind: trigger
+      when: {event: move, to: bz, subject: self}
+      if: {cmp: [{count: {zone: mana, owner: you, filter: {civs: [light]}}}, ">=", 7]}
+      effect:
+      - op: modify
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+        mod: {indestructible: true}
+        duration: until_next_own_turn_start
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第402弾の対象（promoy13-019 天英雄 ヴァルハラ・デューク 型）。条項「マナ武装 ７：出た時、自分のマナゾーンに光のカードが７枚以上あれば、次の自分のターンのはじめまで自分のクリーチャーは破壊されない」は、出た時誘発に条件 if {cmp: [{count: {zone: mana, owner: you, filter: {civs: [light]}}}, '>=', 7]} を付け、効果を第127弾の indestructible を一括 modify で与える形で表す: modify {select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}, mod: {indestructible: true}, duration: until_next_own_turn_start}。一括 modify（count: all）の確立形は登録済み dm23sd2-013（出た時誘発→modify count: all の indestructible、duration: end_of_turn）と同型で、duration: until_next_own_turn_start との併用も登録先例がある（dmrp15-030 は select が ref の形）。一括 modify は解決時に集合が固定される（第372弾の実測どおり非 dynamic）ため、解決後にバトルゾーンに出たクリーチャーは対象に含まれない。マナ武装の条件は誘発の if で表す（登録先例の作法）。W・ブレイカーは keyword double_breaker（partial 構築済み）。partial は骨格完備で text は公式全文と一致するため補完なし。判別役は既存 proto を流用: T1117（光マナ役）/ T001（味方・相手役）/ T004（ブロッカー味方役）/ T1118（パワー7000の攻撃役）/ T056（相手の破壊呪文役）/ T620（自分の単体破壊呪文役）。"
+
+  - id: T1170
+    name: ゴールデン・ザ・ジョニー
+    types: [creature]
+    civs: [zero]
+    cost: 7
+    power: 10000
+    races: [ジョーカーズ]
+    mana: 1
+    text: "スピードアタッカー　W・ブレイカー\nマスター・ブラスター（このクリーチャーが攻撃する時、バトルゾーンまたはマナゾーンに自分のジョーカーズが合計４枚以上あれば、バトルゾーンにある相手のカードを１枚選ぶ。相手はそれを自身の山札の一番下に置く）\n相手は、各ターンに一度しか呪文を唱えられない。"
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+    - kind: trigger
+      when: {event: attack, subject: self}
+      if: {cmp: [{sum: [{count: {zone: bz, owner: you, filter: {race_has: ジョーカーズ}}}, {count: {zone: mana, owner: you, filter: {race_has: ジョーカーズ}}}]}, ">=", 4]}
+      effect:
+      - {op: choose, select: {zone: bz, owner: opp, count: 1}, as: target}
+      - {op: move, select: {ref: target}, to: deck, position: bottom, reason: put}
+    - kind: static
+      affects: {zone: hand, owner: opp, filter: {types: [spell]}}
+      mod:
+        deny:
+        - {action: cast, max_per_turn: 1}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第403弾の対象（dmex03-g02 ゴールデン・ザ・ジョニー 型）。条項「相手は、各ターンに一度しか呪文を唱えられない」は、第182弾の回数型 deny を常在型 static に載せた形で表す: static {affects: {zone: hand, owner: opp, filter: {types: [spell]}}, mod: {deny: [{action: cast, max_per_turn: 1}]}}。permits の max_per_turn は、そのターンに hist:<count>:<そのカードのコントローラ> が上限以上なら禁止が当たる仕組みで、count 省略時は action 名（cast）が履歴 kind になり、hist:cast は詠唱レコードで集約される（第182弾で modify 形が登録済み）。deny cast の範囲付け（相手の手札の呪文への static）はラビリンス登録カード（ラウンド241）の作法と同型。残りの条項: スピードアタッカー／W・ブレイカーはキーワード（partial 構築済み）、マスター・ブラスターは partial 構築済みの攻撃時誘発（ジョーカーズ合計は bz とマナの count の sum で照合）。partial は骨格完備で text は公式全文と一致するため補完なし。判別役は既存 proto を流用: T003（相手の詠唱役＝水コスト2ドロー呪文）/ T001（マナ役・召喚対照役）/ T960（相手の S・トリガー呪文役＝S・トリガー詠唱と履歴の関係の確認用）/ T004（自分の対照役）。"
+
+  - id: T1171
+    name: 知識の包囲網
+    types: [spell]
+    civs: [water]
+    cost: 7
+    mana: 1
+    text: "自分の手札を１枚見せる。そのカードのコストと同じ枚数のカードを引く。"
+    spell:
+    - {op: choose, select: {zone: hand, owner: you, count: 1}, as: pick}
+    - {op: draw, count: {cost_of: pick}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第404弾の対象（dmr05-021 知識の包囲網 型）。条項「自分の手札を１枚見せる。そのカードのコストと同じ枚数のカードを引く」は、第368弾の呪文形（choose で束縛し draw {count: {cost_of: pick}}）と第385弾の手札 choose（「見せる」＝手札から選ぶ。選んだカードは手札に留まり、公開自体に追加の機械的効果は無い。登録先例 dmr05-046 の may 内 choose と同系統）の合成で表す: spell = [choose {select: {zone: hand, owner: you, count: 1}, as: pick}, draw {count: {cost_of: pick}}]。本件は文面に任意性が無いため may で包まない（第385弾との差）。候補が無ければ（手札が空）cost_of は 0 で引かない（第368弾と同じ読み）。partial は骨格のみで text は断片のため、提出形では spell と公式テキスト全文を補う（補完あり: spell と text）。判別役は既存 proto を流用: T1109（コスト3・水マナ役）/ T1110（コスト5役）。"
+
+  - id: T1172
+    name: 反骨鉄拳バーニアン
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 2000
+    races: [グレートメカオー]
+    mana: 1
+    text: "このクリーチャーのパワーは、バトルゾーンにある相手のクリーチャーの種族ひとつにつき+2000される。"
+    abilities:
+    - kind: static
+      affects: self
+      mod:
+        power: {amount: 2000, count: {distinct_race_count: {zone: bz, owner: opp, filter: {types: [creature]}}}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第405弾の対象（dm20-037 反骨鉄拳バーニアン 型）。条項「このクリーチャーのパワーは、バトルゾーンにある相手のクリーチャーの種族ひとつにつき+2000される」は、新式 distinct_race_count {selector}（対象カード群にある種族の種類数。多重種族はすべて数える。第145弾 distinct_cost_count・第212弾 distinct_type_count の種族版で、評価は同じ再入回避の作法）を使い、常在型 mod power {amount: 2000, count: {distinct_race_count: {zone: bz, owner: opp, filter: {types: [creature]}}}} で表す。partial は骨格完備で text は公式全文と一致するため補完なし。判別役は既存 proto を流用: T001（単一種族役・種族 テスト）/ T787（2種族役＝アンノウン＋ゼニス）/ T371（3種族役＝ゴッド＋ダークロード＋ナイト）。"
+
+  - id: T1173
+    name: 口寄の化身
+    types: [creature]
+    civs: [nature]
+    cost: 6
+    power: 4000
+    races: [ミステリー・トーテム]
+    mana: 1
+    text: "このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分の、ミステリー・トーテム以外の種族１種類につき１枚、カードを引いてもよい。"
+    abilities:
+    - kind: trigger
+      when: {event: move, to: bz, subject: self}
+      effect:
+      - {op: may, body: [{op: draw, count: {distinct_race_count: {selector: {zone: bz, owner: you}, exclude_races: [ミステリー・トーテム]}}}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第406弾の対象（dmx12b-058 口寄の化身 型）。条項「このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分の、ミステリー・トーテム以外の種族１種類につき１枚、カードを引いてもよい」は、第405弾の式 distinct_race_count の構造化形 {selector, exclude_races}（第406弾で追加: 数えた種族名の集合から exclude_races を差し引く。種族名単位の除外で、多種族のミステリー・トーテム持ちの他の種族は数える）を使い、CIP 誘発の may 内 draw {count: {distinct_race_count: {selector: {zone: bz, owner: you}, exclude_races: [ミステリー・トーテム]}}} で表す。文面に「クリーチャー」の限定は無いため selector に types フィルタは付けない（タマシード等の種族も数える）。partial は骨格完備で text は断片のため、提出形の text は公式全文（補完あり: text のみ）。判別役は既存 proto を流用: T001（単一種族役・自然マナ役）/ T787（2種族役）/ T189（種族を持つタマシード役）/ T1174（多種族トーテム役＝種族名単位の除外の判別）。"
+
+  - id: T1174
+    name: 試作多種族トーテム
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [ミステリー・トーテム, アース・ドラゴン]
+    mana: 1
+    text: "試験用: ミステリー・トーテムとアース・ドラゴンの2種族を持つクリーチャー。"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第406弾の判別役。ミステリー・トーテムを含む多種族クリーチャー（実在カードでは dm27-051 等）で、distinct_race_count の exclude_races が種族名単位で効くこと（このカードのアース・ドラゴンは数える。カード単位で除外すると0になる）の判別に使う。"
+
+  - id: T1175
+    name: 超絶特Q ダンガンテイオー
+    types: [creature]
+    civs: [zero]
+    cost: 8
+    power: 8000
+    races: [ジョーカーズ]
+    mana: 1
+    keywords: [double_breaker]
+    text: "W・ブレイカー（このクリーチャーはシールドを２つブレイクする）\n自分のクリーチャーは、バトルゾーンに出たターン、プレイヤーを攻撃できる。\n相手のクリーチャーは、バトルゾーンに出たターン、プレイヤーを攻撃できない。"
+    abilities:
+    - kind: static
+      affects: {zone: bz, owner: you, filter: {types: [creature], entered_this_turn: true}}
+      mod: {player_rush: true}
+    - kind: static
+      affects: {zone: bz, owner: opp, filter: {types: [creature], entered_this_turn: true}}
+      mod: {deny: [attack_player]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第407弾の対象（dmex02-011 超絶特Q ダンガンテイオー 型）。条項「自分のクリーチャーは、バトルゾーンに出たターン、プレイヤーを攻撃できる」は、第261弾の mod player_rush（出たターンにプレイヤーだけは攻撃できる。self 形は登録済み promoy17-sp4d01 = static {affects: self, if: {exists: {ref: self, filter: {entered_this_turn: true}}}, mod: {player_rush: true}}）を、自軍全体への付与に一般化した static {affects: {zone: bz, owner: you, filter: {types: [creature], entered_this_turn: true}}, mod: {player_rush: true}} で表す。player_rush の特性は出たターンにしか参照されない（combat._attack_options の rush 分岐）ため、フィルタの entered_this_turn は文面の範囲の明示でもある。条項「相手のクリーチャーは、バトルゾーンに出たターン、プレイヤーを攻撃できない」は、第362弾の登録先例の deny 形（entered_this_turn フィルタ＋deny）を attack_player のみに絞った static {affects: {zone: bz, owner: opp, filter: {types: [creature], entered_this_turn: true}}, mod: {deny: [attack_player]}}（クリーチャーへの攻撃は奪わない）。残りの条項は partial 構築済み: W・ブレイカー＝keyword double_breaker。partial は骨格完備で text は公式全文のため補完なし。判別役は既存 proto を流用: T1090（スピードアタッカー役・火マナ役）/ T1091（通常クリーチャー役）/ T314（スピードアタッカー自己付与役＝付与 SA でも本 deny には掛かる判別。本 deny のフィルタは keyword を含まないため第398弾の base 照合の制限は及ばない）/ T001（通常クリーチャー役）。"
+
+  - id: T1176
+    name: その子供、凶暴につき
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [ヒューマノイド, チルドレン]
+    mana: 1
+    text: "自分のコスト３以下のクリーチャーすべてに「スピードアタッカー」を与える。（「スピードアタッカー」を持つクリーチャーは召喚酔いしない）\n相手の進化クリーチャーと相手の「スピードアタッカー」を持つクリーチャーはすべて、タップしてバトルゾーンに出る。"
+    abilities:
+    - kind: static
+      affects: {zone: bz, owner: you, filter: {types: [creature], cost_le: 3}}
+      mod: {grant: [speed_attacker]}
+    - kind: static
+      affects: {zone: bz, owner: opp, filter: {types: [evolution]}}
+      mod: {grant: [enters_tapped]}
+    - kind: static
+      affects: {zone: bz, owner: opp, filter: {types: [creature], keyword: speed_attacker}}
+      mod: {grant: [enters_tapped]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第408弾の対象（dmex11-005 その子供、凶暴につき 型）。条項「自分のコスト３以下のクリーチャーすべてに「スピードアタッカー」を与える」は常在型 static の grant [speed_attacker]（登録先例: 自軍クリーチャー全体への grant [speed_attacker] を持つ登録カード群）に cost_le: 3 フィルタを足した形。条項「相手の進化クリーチャーと相手の「スピードアタッカー」を持つクリーチャーはすべて、タップしてバトルゾーンに出る」は2件に分けた: 進化側は第384弾・登録済み dm06-001 の grant [enters_tapped]（filter {types: [evolution]}）の owner を opp に絞った形、スピードアタッカー側は登録済み dmrp06-030 の grant [enters_tapped]（filter {types: [creature], keyword: speed_attacker}、owner: any）の owner を opp に絞った形。既知の制限（第398弾と同一）: 静的効果の affects 照合は base（印刷特性）のため、他の効果で付与されたスピードアタッカーは第3件のフィルタに掛からない（dmrp06-030 等の登録済み keyword フィルタ静的効果と共有するエンジン全体の規約）。partial は骨格のみで text は断片のため、提出形の text は公式全文（補完あり: text のみ）。判別役は既存 proto を流用: T001（コスト2バニラ＝第1条項の対象役・自然マナ役）/ T1090（印刷スピードアタッカー役・火マナ役）/ T1091（バニラ役）/ T1145・T1146（進化・進化元役）/ T314（スピードアタッカー自己付与役＝付与分の制限確認用）。"
+
+  - id: T1177
+    name: 永遠のリュウセイ・カイザー
+    types: [creature]
+    civs: [fire]
+    cost: 8
+    power: 8000
+    races: [レッド・コマンド・ドラゴン, ハンター]
+    mana: 1
+    keywords: [double_breaker]
+    text: "W・ブレイカー\n自分のクリーチャーすべてに「スピードアタッカー」を与える。\n相手のクリーチャーはタップして出る。\n相手の、クリーチャーの能力または呪文によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに出してもよい。"
+    abilities:
+    - kind: static
+      affects: {owner: you, filter: {types: [creature]}}
+      mod: {grant: [speed_attacker]}
+    - kind: static
+      affects: {zone: bz, owner: opp, filter: {types: [creature]}}
+      mod: {grant: [enters_tapped]}
+    - kind: replace
+      zone: hand
+      optional: true
+      when: {event: move, from: hand, to: graveyard, reason: discard, subject: self, by: opp}
+      instead:
+      - {op: move, select: {ref: self, count: 1}, to: bz, reason: put}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第409弾の対象（dm26ex3-010 永遠のリュウセイ・カイザー 型）。条項「自分のクリーチャーすべてに「スピードアタッカー」を与える」は partial 構築済みの static {affects: {owner: you, filter: {types: [creature]}}, mod: {grant: [speed_attacker]}}（zone を欠く形は登録先例 dmbd05-006 / dmbd09-007 / dm23-015 と同形で、split の part[2] 定型所有でもある）。条項「相手のクリーチャーはタップして出る」は static {affects: {zone: bz, owner: opp, filter: {types: [creature]}}, mod: {grant: [enters_tapped]}}＝登録済み dmc52-007 聖霊王エルフェウス（第340弾）の登録形と完全一致（第339弾の grant [enters_tapped] 確立形）。条項「相手の、クリーチャーの能力または呪文によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに出してもよい」は replace {zone: hand, optional: true, when: {event: move, from: hand, to: graveyard, reason: discard, subject: self, by: opp}, instead: [move {select: {ref: self, count: 1}, to: bz, reason: put}]}＝同一文面の登録済み dm26ex3-dcr005 蒼神龍アナザー・ワールド（同セット）の登録形と完全一致（by: opp は第40弾で確立。dm25ex2-079 も同形）。partial の unsupported は enters_tapped_grant のみで、第3条項は partial に未構築だったが上記のとおり登録先例と同一形で表せる。partial は骨格完備・text は公式全文のため補完なし。判別役は既存 proto を流用: T001（バニラ役・自然マナ役）/ T1090（印刷スピードアタッカー役・火マナ役）/ T1091（バニラ役）/ T1145・T1146（進化・進化元役）/ T116（同一文面の捨て置換役）/ T117（相手の手札を捨てさせる呪文役）/ T118（自分の手札を捨てる呪文役）/ T008（闇マナ役）。"
+
+  - id: T1178
+    name: 剛鉄突破 アイアンローズ
+    types: [creature]
+    civs: [light]
+    cost: 7
+    power: 6000
+    races: [アウトレイジMAX]
+    mana: 1
+    keywords: [double_breaker]
+    text: "バトルゾーンにある相手のクリーチャーはすべて「ブロッカー」を得、可能であればブロックする。このクリーチャーのパワーは、バトルゾーンにある相手のクリーチャー１体につき+2000される。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）"
+    abilities:
+    - kind: static
+      affects: {zone: bz, owner: opp, filter: {types: [creature]}}
+      mod: {grant: [blocker], require: [block]}
+    - kind: static
+      affects: self
+      mod: {power: {amount: 2000, count: {zone: bz, owner: opp, filter: {types: [creature]}}}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第410弾の対象（dmr09-004 剛鉄突破 アイアンローズ 型）。force_block は過去のセンサスで「ブロック強制の mod が無い」「別機構」として却下されたが、mod {require: [block]}（507.1b）は語彙として存在し combat.py のブロック宣言でも強制として働くことを本弾で実測し、判断を覆した。第1条項は static {affects: {zone: bz, owner: opp, filter: {types: [creature]}}, mod: {grant: [blocker], require: [block]}}（自己スコープの require [block] を相手全体への付与に一般化。grant と require の併記は登録先例あり。keyword フィルタを含まないため第398弾の base 照合の制限は及ばない）。第2条項は static {affects: self, mod: {power: {amount: 2000, count: {zone: bz, owner: opp, filter: {types: [creature]}}}}}（第405弾の count 形）。本弾の最小エンジン修正: combat.py のブロック宣言でタップ対象が「強制全員＋選択された1体」になっており、強制クリーチャーが複数いると全員タップしていた（選ばれた1体の tap イベント二重発火も含む）。公式にはタップするのは選ばれた1体だけで、強制は no_block 選択肢を消すことで効くため、to_tap を選択された1体に絞った。Rust engine.rs はもともと選択された1体だけをタップする形で修正後の Python と一致する（require の強制自体の Rust 未実装は既存の乖離で本弾では触らない。rust_stamp は先例どおり据え置き）。partial は骨格完備・text は公式全文のため補完なし。判別役は既存 proto を流用: T001（攻撃役・自軍バニラ役）/ T1091（相手バニラ役）/ T1090（相手の印刷スピードアタッカー役）。自己スコープ強制の回帰ピンは tests/rule_cards.yaml の R057 を使う。"
+
+  - id: T1179
+    name: 有毒類罠顎目 ドクゲーター
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 4000
+    races: [ジュラシック・コマンド・ドラゴン]
+    mana: 1
+    text: "相手の呪文の効果またはクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに出してもよい。\nこのクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のコスト４以下のカードを１枚選び、持ち主のマナゾーンに置く。"
+    abilities:
+    - kind: replace
+      zone: hand
+      optional: true
+      when: {event: move, from: hand, to: graveyard, reason: discard, subject: self, by: opp}
+      instead:
+      - {op: move, select: {ref: self, count: 1}, to: bz, reason: put}
+    - kind: trigger
+      when: {event: move, to: bz, subject: self}
+      effect:
+      - {op: choose, select: {zone: bz, owner: opp, filter: {cost_le: 4}, count: 1}, as: pick}
+      - {op: mana_put, select: {ref: pick}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第411弾の対象（dmx18-047 有毒類罠顎目 ドクゲーター 型）。madness は第379・385弾で「手札破壊の置換照合が未実装」として却下されたが、第409弾が同一文面系統の条項を登録済み dm26ex3-dcr005 の登録形と完全一致する replace 形で実挙動検証し、前提が崩れたため本弾で再評価した。第1条項は replace {zone: hand, optional: true, when: {event: move, from: hand, to: graveyard, reason: discard, subject: self, by: opp}, instead: [move {select: {ref: self, count: 1}, to: bz, reason: put}]}＝登録済み dm26ex3-dcr005 と完全一致（by: opp は第40弾で確立。zone: hand 宣言のため第386弾の発生源走査制限は及ばない）。第2条項は trigger {when: {event: move, to: bz, subject: self}, effect: [choose {select: {zone: bz, owner: opp, filter: {cost_le: 4}, count: 1}, as: pick}, mana_put {select: {ref: pick}}]}＝第389弾・登録済み dmex10-014 の CIP 形のフィルタを {types: [creature]} から {cost_le: 4} に替えたもの（文面は「カード」のため types は絞らない。cost_le の登録先例は dm23rp1-074）。partial は骨格完備で text は断片のため補完は text のみ。ファミリーの残り1件 dmx26-028 は CIP が公開＋種族抜き＋残りを順序付けて山札の下へ戻す複合で対象外（残置）。判別役は既存 proto を流用: T001（コスト2クリーチャー役・自然マナ役）/ T004（コスト3ブロッカー役）/ T116（コスト6役＝候補外の判別・マッドネス同形役）/ T117（相手の手札を捨てさせる呪文役）/ T118（自分の手札を捨てる呪文役）/ T189（コスト3タマシード役＝「カード」判別）/ T008（闇マナ役）。"
+
+  - id: T1180
+    name: 超宮兵 マノミ
+    types: [creature]
+    civs: [water]
+    cost: 5
+    power: 4000
+    races: [ムートピア]
+    mana: 1
+    text: "G・ゼロ：このターン、自分が呪文を３枚以上唱えていれば、このクリーチャーをコストを支払わずに召喚してもよい。\nこのクリーチャーが出た時、カードを２枚引く。"
+    free_if: {cmp: [{turn_count: {kind: cast, owner: you}}, ">=", 3]}
+    abilities:
+    - kind: trigger
+      when: {event: move, to: bz, subject: self}
+      effect:
+      - {op: draw, count: 2}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第412弾の対象（dmex19-028 超宮兵 マノミ 型）。turn_count_free は行の注記で「ターンの行動回数を条件にする語彙が無い」とされたが、G・ゼロの条件フィールド free_if には turn_count 式がそのまま入り、登録済み dmrp06-038 貝獣 ラリア（free_if {cmp: [{turn_count: {kind: cast, owner: you}}, \">=\", 2]}）と dmpcd02-b18 魔光騎聖ブラッディ・シャドウ（同形で \">=\", 1）が同文面系統の G・ゼロを登録済み。本件は閾値3で完全なドリフト（新規語彙・エンジン・defs・スキーマ変更なし）。第2条項の CIP 誘発（出た時、カードを2枚引く）は partial に構築済み。partial は骨格完備で text は公式全文のため補完なし。alias は dmrp06-016 の1件（rejects に独自行なし、canon は対象自身）。判別役は既存 proto を流用: T012（コスト1水呪文役＝唱える判別。相手が1枚引く効果は無害）/ T009（水マナ役）。"
+
+  - id: T1181
+    name: ブラッディ・シンバル
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 4000
+    races: [ガーゴイル]
+    mana: 1
+    text: "ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)\nこのクリーチャーは攻撃することができない。\nこのクリーチャーはバトルに勝っても、バトルの後、破壊される。"
+    keywords: [blocker, cannot_attack]
+    abilities:
+    - kind: trigger
+      when: {event: battle_win, subject: self}
+      effect:
+      - {op: destroy, select: {ref: self}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第413弾の対象（dmx03-036 ブラッディ・シンバル 型）。battle_result_destruction は行の注記で「バトル結果依存の破壊を表す語彙が無い」とされたが、trigger {when: {event: battle_win, subject: self}, effect: [destroy {select: {ref: self}}]} は登録済み dm01-026 ダーク・クラウン / dm01-056 / dm01-089 / dm06-027 / dm06-087 の5件で「バトルに勝っても、バトルのあと、持ち主の墓地に置かれる」を表す確立形で、本件の文面「バトルに勝っても、バトルの後、破壊される」は destroy op と直接対応し完全なドリフト（新規語彙・エンジン・defs・スキーマ変更なし）。敗北・相打ち時はバトル自体で破壊されるため battle_win 誘発のみで挙動等価。partial は骨格完備（keywords [blocker, cannot_attack] 構築済み）で text は公式全文のため補完なし。alias は dm14-091 / dmc42-071 の2件（rejects に独自行なし、canon は対象自身）。判別役は既存 proto を流用: T001（パワー2000バニラ役＝負ける攻撃側）/ T1139（パワー6000役＝勝つ攻撃側・味方の勝ち判別）/ T1140（パワー4000ブロッカー役＝相打ち判別・誘発なし対照）。"
+
+  - id: T1182
+    name: カオス・ストライク
+    types: [spell]
+    civs: [fire]
+    cost: 2
+    mana: 1
+    text: "バトルゾーンにある相手のクリーチャーを１体選ぶ。\nこのターン、選んだクリーチャーがタップされていなくても攻撃できる。"
+    spell:
+    - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: tgt}
+    - {op: modify, select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}, mod: {allow: [{action: attack_creature, other: {tapped: false}, only: {var: tgt}}]}, duration: end_of_turn}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第414弾の対象（dm01-034 カオス・ストライク 型）。chosen_creature_can_be_attacked_while_untapped は partial の注記で「攻撃側すべてに許可を与えると選んでいないクリーチャーまで攻撃できてしまう」とされたが、第275弾（attack_specific_target）の allow 項目の only {var: 名前} がその問題を解決済みで、登録済み dmr09-102 戦場のロックンロール（同じく火・コスト2の呪文）の登録形と同型: spell = [choose {select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: tgt}, modify {select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}, mod: {allow: [{action: attack_creature, other: {tapped: false}, only: {var: tgt}}]}, duration: end_of_turn}]。登録先例との差は選択フィルタに tapped: false が無いことだけ（本件はタップ状態を問わず選べる）。完全なドリフト（新規語彙・エンジン・defs・スキーマ変更なし）。partial は骨格完備で text は公式全文と内容一致（改行のみ欠く）ため補完なし。alias は無し（canon は対象自身）。判別役は既存 proto を流用: T1090（印刷スピードアタッカー役＝攻撃側・火マナ役）/ T008（パワー1000バニラ役＝選ぶ対象）/ T1091（パワー2000バニラ役＝選ばない対照）。"
+
+  - id: T1183
+    name: 燃えるメラッチ
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [ファイアー・バード炎, 革命軍]
+    mana: 1
+    text: "自分の火の進化クリーチャーの召喚コストを最大２少なくする。ただしコストは０以下にならない。バトル中、このクリーチャーは破壊されない。"
+    abilities:
+    - kind: static
+      affects: {owner: you, zone: hand, filter: {types: [evolution], civs: [fire]}}
+      mod: {cost: -2, cost_min: 1}
+    - kind: static
+      affects: self
+      mod: {battle_indestructible: true}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第415弾の対象（dmd27-012 燃えるメラッチ 型）。battle_indestructible はラウンド59で gap 細分済みの既知ギャップだが、カード全体の2条項とも同一文面の登録先例で表せる完全なドリフト（新規語彙・エンジン・defs・スキーマ変更なし）: 第1条項は登録済み dm17-022 聖騎士ヴォイジャー（static {affects: {owner: you, zone: hand, filter: {types: [evolution]}}, mod: {cost: -2, cost_min: 1}}、「最大２少なくなる／コストは１より少なくならない」）の形に文明フィルタ {civs: [fire]} を足したもので、「コストは０以下にならない」の下限1読みは登録済み dm24ex1-087 / dm24bd2-016（同文面で cost_min: 1）とも一致する。第2条項は第59弾の確立 mod {battle_indestructible: true} の素形で、登録済み dm25rp3-055 / dmr21-077 が同一文面（「このクリーチャーはバトル中破壊されない」）を static {affects: self} で登録済み（第366弾はその条件つき版）。対象行は partial の無い素行（reason フィールドも無し）で、骨格は公式データ行から構築し text は公式全文のため補完なし。alias は dmr17-082 / promoy14-010 / promoy14-019 の3件（rejects に独自行なし、canon は対象自身）。判別役は既存 proto を流用: T328（火の進化・コスト3役＝軽減対象／進化元は種族テスト）/ T077（水の進化・コスト3役＝文明フィルタ判別）/ T1090（火の非進化・コスト2役＝種別フィルタ判別＋進化元役＋火マナ役）/ T1139（パワー6000役＝バトルの勝者）/ T1140（パワー4000ブロッカー役＝不破壊なし対照）。"
+  - id: T1184
+    name: C.W.テラス
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 4000
+    races: [ジョーカーズ]
+    mana: 1
+    text: "Jチェンジ６（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト６以下のジョーカーズ１体を入れ替えてもよい）\nこのクリーチャーがバトルゾーンに出た時、そのターン、自分の他のクリーチャー１体のパワーは+4000され、シールドをさらに１つブレイクする。"
+    abilities:
+    - kind: trigger
+      when: {event: attack, subject: self}
+      effect:
+      - op: may
+        body:
+        - {op: swap, out: {ref: self}, out_to: mana, in: {zone: mana, owner: you, filter: {types: [creature], cost_le: 6, race_has: ジョーカーズ}, count: 1}}
+    - kind: trigger
+      when: {event: move, to: bz, subject: self}
+      effect:
+      - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, other: true, count: 1}, as: pick}
+      - {op: modify, select: {ref: pick}, mod: {power: 4000, breaks_add: 1}, duration: end_of_turn}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第416弾の対象（dmrp07-052 C.W.テラス 型）。fixed_breaks_plus_one は round66 行の note で「modify で固定+1のブレイク数増加を表す語彙がない」とされたが、breaks_add は第360弾で確立した既存 mod キーで集約（core.py）は modify 由来も対象にし、登録済み dmr19-047 煽動の面 フリント（第159弾）が modify {mod: {power: 5000, breaks_add: 1}, duration: end_of_turn} を登録済み＝完全なドリフト（新規語彙・エンジン・defs・スキーマ変更なし）。第1条項 Jチェンジ６は第24弾の確立形で、同セットの登録済み dmrp07-027 おテントさんの登録形と完全一致（swap {out: {ref: self}, out_to: mana, in: {zone: mana, owner: you, filter: {types: [creature], cost_le: 6, race_has: ジョーカーズ}, count: 1}} を may で包む）。第2条項の「自分の他の」は selector の other: true（第379弾）、choose→modify {ref: pick} は第389・395・414弾の確立パターン。対象行は partial も reason も無い素行（round66 由来）で、骨格は公式データ行（by_product/rp07.jsonl）から構築し text は公式全文（改行あり）のため補完なし。alias は無し（canon は対象自身）。判別役は既存 proto を流用: T068（ジョーカーズ・コスト3役＝入れ替え先）/ T001（自然バニラ・パワー2000役＝CIP の対象・非ジョーカーズのマナ役）。新規判別役 T1185（ジョーカーズ・コスト7＝閾値超過）。"
+  - id: T1185
+    name: 試験用ジョーカーズ大獣・416
+    types: [creature]
+    civs: [nature]
+    cost: 7
+    power: 7000
+    races: [ジョーカーズ]
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第416弾の検証用フィクスチャ（ジョーカーズ・コスト7のバニラ役。Jチェンジ６の閾値 cost_le: 6 を超えるため入れ替え先にならない判別役）。"
+
+  - id: T1186
+    name: 護神のインガ イヌハッカ
+    types: [creature]
+    civs: [light, darkness]
+    cost: 3
+    power: 5500
+    races: [オラクル]
+    mana: 1
+    keywords: [blocker, cannot_attack_player]
+    text: "マナゾーンに置く時、このカードはタップして置く。G・ゼロ - バトルゾーンに自分のゴッドがあれば、このクリーチャーをコストを支払わずに召喚してもよい。 ブロッカーこのクリーチャーは、相手プレイヤーを攻撃できない。このクリーチャーはバトルに勝っても、バトルの後、破壊される。"
+    free_if: {exists: {zone: bz, owner: you, filter: {race_has: ゴッド}}}
+    abilities:
+    - kind: trigger
+      when: {event: battle_win, subject: self}
+      effect:
+      - {op: destroy, select: {ref: self}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第417弾の対象（dmr11-051 護神のインガ イヌハッカ 型）。battle_win_destroy は行の注記で「バトル勝利後の自壊を表す語彙が無い」とされたが、第413弾の確立形 trigger {when: {event: battle_win, subject: self}, effect: [destroy {select: {ref: self}}]}（登録済み dm01-026 と完全一致）で表せる。未構築だった3条項も確立形のみ: G・ゼロは free_if {exists: {zone: bz, owner: you, filter: {race_has: ゴッド}}}（登録済み dm22rp2x-tf14 の条件形と同一）、ブロッカーはキーワード blocker、相手プレイヤーを攻撃できないはキーワード cannot_attack_player（同一文面の自己制限は converted でキーワード形328件が標準）。第1条項「マナゾーンに置く時タップして置く」は多色ルール405.1でエンジン core が適用済み（第399弾）のため text のみ。partial は骨格のみで text は断片のため、提出形は text のみ公式全文に補完する。alias は dmr11-051m の1件（rejects に独自行なし、canon は対象自身）。判別役は既存 proto を流用: T001（パワー2000バニラ役）/ T1139（パワー6000役）/ T1140（パワー4000ブロッカー役＝対照）/ T873（光マナ役）/ T872（闇マナ役）。新規判別役 T1187（ゴッドのバニラ役）/ T1188（ゴッド・ノヴァ OMG のバニラ役＝race_has の部分一致判別）。"
+
+  - id: T1187
+    name: 試験用ゴッド・417
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 5000
+    races: [ゴッド]
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第417弾の検証用フィクスチャ（種族ゴッドのバニラ役。T1186 の G・ゼロ条件「自分のゴッドがあれば」の判別役。リンクキーワードを持たない素のゴッド）。"
+
+  - id: T1188
+    name: 試験用ゴッド・ノヴァ・417
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 5000
+    races: [ゴッド・ノヴァ OMG]
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第417弾の検証用フィクスチャ（種族ゴッド・ノヴァ OMG のバニラ役。G・ゼロ条件のフィルタ race_has: ゴッド が部分一致でこの種族も数えることの判別役）。"
+
+  - id: T1189
+    name: 怪盗妖精カサブランカ / 「信じていたのに裏切られるなんて！」
+    mana: 1
+    text: "このクリーチャーが出た時、自分の山札の上から１枚をマナゾーンに置く。\n自分のマナゾーンにあるカードは、すべての文明を持つ。\nカードを自分の手札からマナゾーンに置いた時、そのカードをアンタップする。 ／ S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）\nコスト５以上のクリーチャーをすべて持ち主の手札に戻す。"
+    faces:
+      - name: 怪盗妖精カサブランカ
+        types: [creature]
+        civs: [nature]
+        cost: 3
+        power: 2000
+        races: [スノーフェアリー]
+        text: "このクリーチャーが出た時、自分の山札の上から１枚をマナゾーンに置く。\n自分のマナゾーンにあるカードは、すべての文明を持つ。\nカードを自分の手札からマナゾーンに置いた時、そのカードをアンタップする。"
+        abilities:
+        - kind: trigger
+          when: {event: move, to: bz, subject: self}
+          effect:
+          - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}
+        - kind: static
+          affects: {zone: mana, owner: you}
+          mod: {add_civs: [light, water, darkness, fire, nature]}
+        - kind: trigger
+          when: {event: move, from: hand, to: mana, subject: {owner: you}}
+          effect:
+          - {op: untap, select: {ref: event.subject}}
+      - name: 「信じていたのに裏切られるなんて！」
+        types: [spell]
+        civs: [water]
+        cost: 6
+        text: "S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）\nコスト５以上のクリーチャーをすべて持ち主の手札に戻す。"
+        keywords: [s_trigger]
+        spell:
+        - {op: bounce, select: {zone: bz, owner: any, filter: {types: [creature], cost_ge: 5}, count: all}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第418弾の対象（dm26sd1-u010 怪盗妖精カサブランカ / 「信じていたのに裏切られるなんて！」型、ツインパクト）。all_civilizations_mana は行の注記で「マナゾーンのカードにすべての文明を持たせる語彙が無い」とされたが、第2条項は第376弾の確立形 static {affects: {zone: mana, owner: you}, mod: {add_civs: [light, water, darkness, fire, nature]}}（登録済み dmex01-014 と同文・同形）で表せる。第1条項は move {select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}（第376弾の形）。第3条項は登録済み dm24bd5-033 の監視誘発（move to mana・subject {owner: you} → untap {ref: event.subject}）から first_time と multicolor フィルタを外し、文面どおり from: hand を足した形。第376弾では第3条項が未組立てとして見送られた候補を、本弾で確立形を確認して再評価した。呪文面は keywords [s_trigger] ＋ bounce {select: {zone: bz, owner: any, filter: {types: [creature], cost_ge: 5}, count: all}}。partial は骨格のみ（faces 無し、text は第2条項の断片）のため、提出形は faces 構造と text を補完する。alias は dm24bd5-010 / dm25ex3-tf27 / dm25rp4-t09 の3件（rejects に独自行なし、canon は対象自身）。判別役は既存 proto を流用: T001（自然バニラ・マナ役）/ T030（光水の多色＝タップ入り判別役）/ T277（火・コスト2＝支払い判別役）/ T1139（パワー6000役）/ T008（闇マナ役）。"
+
+  - id: T1190
+    name: 捧程者 アコギエレキ
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [ムートピア, 美孔麗王国]
+    mana: 1
+    text: "このターンに自分が召喚したクリーチャー１体または唱えた呪文１枚につき、このクリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。\nスピードアタッカー（このクリーチャーは召喚酔いしない）"
+    keywords: [speed_attacker]
+    abilities:
+    - kind: static
+      zone: hand
+      affects: self
+      mod:
+        cost:
+          amount: -2
+          count:
+            sum:
+            - {turn_count: {kind: summon, owner: you}}
+            - {turn_count: {kind: cast, owner: you}}
+        cost_min: 1
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第419弾の対象（dmex14-054 捧程者 アコギエレキ型）。turn_count_cost_reduction は行の注記で「ターンの行動回数による軽減を表す語彙が無い」とされたが、登録済み dm24ex3-rp2003 / dm24ex3-rp2004 が同文型を static {zone: hand, affects: self, mod: {cost: {amount: -2, count: {sum: [turn_count, turn_count]}, cost_min: 1}}} で登録済みであり、本件は kind を summon / cast（owner: you）に差し替えただけのドリフト。記録側は hist:summon（reason: summon の参入のみ）/ hist:cast で文面どおり数える。スピードアタッカーは partial 構築済みのキーワード。alias 無し。判別役は既存 proto を流用: T001（自然・コスト2バニラ＝召喚役とマナ役）/ T012（水・コスト1呪文＝詠唱役）/ T009（水マナ役）/ T277（火マナ役）。"
+
+  - id: T1191
+    name: 予言者マンプクルト
+    types: [creature]
+    civs: [light]
+    cost: 1
+    power: 3500
+    races: [ライトブリンガー]
+    mana: 1
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）\nこのクリーチャーは、自分のターンのはじめにアンタップしない。\n自分のタマシードがなければ、このクリーチャーは相手プレイヤーを攻撃できない。\n自分のタマシードが出た時、このクリーチャーをアンタップする。"
+    keywords: [blocker]
+    abilities:
+    - kind: static
+      affects: self
+      mod: {deny: [untap_at_start]}
+    - kind: static
+      affects: self
+      if: {not: {exists: {zone: bz, owner: you, filter: {types: [tamaseed]}}}}
+      mod: {deny: [attack_player]}
+    - kind: trigger
+      when: {event: move, to: bz, subject: {owner: you, filter: {types: [tamaseed]}}}
+      effect:
+      - {op: untap, select: {ref: self}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第420弾の対象（dm22rp1-011 予言者マンプクルト型）。does_not_untap は行の注記で「ターンのはじめにアンタップしない常在型能力を表す語彙が無い」とされたが、第1条項は第400弾の確立形 static {affects: self, mod: {deny: [untap_at_start]}}（登録済み dmrp06-027 の登録形そのもの）。第2条項は登録済み dmrp21-072 の同文条項の登録形 static {affects: self, if: {not: {exists: {zone: bz, owner: you, filter: {types: [tamaseed]}}}}, mod: {deny: [attack_player]}} と完全一致。第3条項は登録済み dm24rp4-031 の監視誘発（move to bz・subject {owner: you, filter, other: true} → untap {ref: self}）の subject をタマシードに替えた形で、文面に「てもよい」が無いため may は付けない。第400弾では2条項が未構築として見送られた候補を、本弾で全条項の確立形を確認して再評価した。partial は骨格＋keywords [blocker] 構築済みで text は公式全文（補完なし）。alias 無し。判別役は既存 proto を流用: T506（自然・コスト2タマシード＝第3条項の発生源役）/ T001（自然バニラ＝クリーチャー参入の対照役・マナ役）/ T030（光水の多色＝光マナ役）。"
+
+  - id: T1192
+    name: ヤッタレ総長
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [ジョーカーズ]
+    mana: 1
+    text: "自分のコスト７以上のジョーカーズを召喚するコストを１少なくしてもよい。ただし、コストは０以下にならない。\nバトルゾーンにあるカードを１枚、自分の山札の一番下に置いた時、カードを１枚引く。"
+    abilities:
+    - kind: static
+      affects: {owner: you, zone: hand, filter: {types: [creature], race_has: ジョーカーズ, cost_ge: 7}}
+      mod: {cost_may: {amount: 1, min: 1}}
+    - kind: trigger
+      when: {event: move, from: bz, to: deck, position: bottom, subject: {owner: you}}
+      effect:
+      - {op: draw, count: 1}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第421弾の対象（dmex04-025 ヤッタレ総長型）。move_to_deck_bottom_trigger は行の注記で「when で置き場所（上／下）を区別できない」とされたが、第290弾で when の position 照合が実装され、登録済み dmrp06-001 の形Dが trigger {when: {event: move, to: deck, position: bottom, subject: {owner: you}, cause: {by: opp, kind: [spell, ability]}}, effect: [may [draw 1]]} を登録済み。本件の第2条項は同形から cause を外し（文面に原因の限定なし）、文面どおり from: bz を足し、ドローは必須とした形。能動態「置いた時」の読みは第418弾の先例（dm24bd5-033 の登録形）に従う。第1条項は partial 構築済みの static {affects: {owner: you, zone: hand, filter: {types: [creature], race_has: ジョーカーズ, cost_ge: 7}}, mod: {cost_may: {amount: 1, min: 1}}}。公式 QA: 自身が一番下に置かれた時も引ける（32439）／下に2枚ある進化クリーチャーは計3枚で3枚引く（31661）。partial は骨格＋第1条項まで構築済みで text は公式全文（補完なし）。alias は dmex02-041 / dmrp04s-050 / promoy16-087 の3件（rejects に独自行なし、canon は対象自身）。判別役は既存 proto を流用: T844（自分の呪文で自分の獣を一番下へ＝駆動役）/ T842（相手の呪文で一番上へ＝位置の対照役）/ T841（相手の呪文で自分の獣を一番下へ＝原因の判別役）/ T001（自然バニラ＝移動対象役・マナ役）に、本弾で T1193（墓地から一番下＝from 判別役）/ T1194（自分の獣2体を一度に一番下＝枚数判別役）を追加。"
+
+  - id: T1193
+    name: 試験用墓地底置き呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 4
+    mana: 1
+    text: "自分の墓地からカードを１枚選び、自分の山札の一番下に置く。（第421弾の from 判別役: バトルゾーンからではない一番下置き）"
+    spell:
+      - {op: move, select: {zone: graveyard, owner: you, count: 1}, to: deck, position: bottom, reason: return}
+
+  - id: T1194
+    name: 試験用一括底置き呪文
+    types: [spell]
+    civs: [water]
+    cost: 4
+    mana: 1
+    text: "自分のクリーチャーを２体選び、自分の山札の一番下に置く。（第421弾の枚数判別役: 置かれたカードの枚数だけ引く）"
+    spell:
+      - {op: move, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 2}, to: deck, position: bottom, reason: return}
+
+  - id: T1195
+    name: 凶鬼79号 ジュージュ
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 2000
+    races: [マフィ・ギャング]
+    mana: 1
+    text: "S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）\nブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）\nこのクリーチャーがブロックした時、このターン、その相手クリーチャーのパワーを－9000する。（パワー０以下のクリーチャーは破壊される）\nこのターンの終わりに、このクリーチャーがタップしていたら、破壊する。"
+    keywords: [s_trigger, blocker]
+    abilities:
+    - kind: trigger
+      when: {event: block, subject: self}
+      effect:
+      - {op: modify, select: {ref: event.attacker}, mod: {power: -9000}, duration: end_of_turn}
+    - kind: trigger
+      when: {event: turn_end}
+      if: {exists: {ref: self, filter: {tapped: true}}}
+      effect:
+      - {op: destroy, select: {ref: self}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第422弾の対象（dmrp12-046 凶鬼79号 ジュージュ型）。block_event_target は行の注記で「ブロック対象への効果を表す語彙が無い」とされ、第359弾では「-9000 の継続付与とターン終わり自己破壊が併記され重い」、第387弾では「partial が stub で複数条項が未構築」として見送られたが、第388弾で modify の event 参照（登録済み dm26rp1-039 の形）、第401弾で trigger {when: {event: block, subject: self}} が確立し、第4条項は登録済み dmrp15-069 の trigger {when: {event: turn_end}, if: {exists: {ref: self, filter: {tapped: true}}}, effect: [destroy {select: {ref: self}}]} と同形（鬼タイム条件が無い分だけ単純）。なお第3条項の対象参照は event.opponent ではなく event.attacker: block レコード（combat.py）は subject=ブロッカー・attacker=攻撃クリーチャーで opponent キーを持たず、登録済み dmr16g-015 が「ブロックされた時」の対象を ref event.attacker で登録済み（本弾の初回プローブで event.opponent では modify が空転し通常バトルになることを実測して差し替えた）。duration は文面「このターン」どおり end_of_turn。partial は骨格＋keywords [s_trigger, blocker] まで構築済みで text は公式全文（補完なし）。alias は無し（canon は対象自身）。判別役は本弾で T1196（パワー5000: -9000 で 0 以下になり破壊される役）/ T1197（パワー12000: -9000 でも 3000 で残り、ターン終了後に 12000 に戻る役）/ T1198（パワー10000: -9000 で 1000 になりバトルに負けるため、ブロッカーがタップしたまま生き残る役）を追加し、既存 proto の T1126（パワー8000ブロッカー＝第3条項の不発判別役）/ T001（パワー2000バニラ＝第4条項の対照役）を流用。"
+
+  - id: T1196
+    name: 試験用中型獣・422
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    mana: 1
+    text: "（第422弾の判別役: パワー5000。T1195 にブロックされると -9000 でパワー0以下になり破壊される）"
+
+  - id: T1197
+    name: 試験用超大型獣・422
+    types: [creature]
+    civs: [nature]
+    cost: 9
+    power: 12000
+    mana: 1
+    text: "（第422弾の判別役: パワー12000。T1195 にブロックされると -9000 でパワー3000 になりバトルに勝ち、ターンが終わればパワーは 12000 に戻る）"
+
+  - id: T1198
+    name: 試験用大型獣・422
+    types: [creature]
+    civs: [water]
+    cost: 8
+    power: 10000
+    mana: 1
+    text: "（第422弾の判別役: パワー10000。T1195 にブロックされると -9000 でパワー1000 になりバトルに負けるため、ブロッカーはタップしたまま生き残り、第4条項の判別に使える）"
+
+  - id: T1199
+    name: 粛清者アイザク
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 4000
+    races: [ソルトルーパー]
+    mana: 1
+    text: "ブロッカー\nこのクリーチャーは、相手プレイヤーを攻撃できない。\nこのクリーチャーがブロックする時、バトルゾーンにある自分のクリーチャーを１体選んでもよい。このクリーチャーのバトルの後、選んだクリーチャーをアンタップする。"
+    keywords: [blocker, cannot_attack_player]
+    abilities:
+    - kind: trigger
+      when: {event: block, subject: self}
+      effect:
+      - op: may
+        body:
+        - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: pick}
+        - op: delayed_trigger
+          when: {event: battle_end, subject: self}
+          effect:
+          - {op: untap, select: {ref: pick}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第423弾の対象（dm10-013 粛清者アイザク型）。trigger_after_battle_win_or_lose は行の注記で「遅延誘発で待てるのは battle_win だけ（battle_lose イベントが無い）」とされたが、battle_lose は defs の EVENTS にあり combat.py が敗者レコードを出して登録済み3件が使用し、本件に要るのは勝敗ではなく「バトルの後」そのもので、第211弾の battle_end レコード（両参加者が subject）と trigger {when: {event: battle_end, subject: self}} が確立形。遅延は op delayed_trigger（603.6、when は誘発と同じ文法、env の self と vars をスナップショット保持、発生源の生死に紐付かない）で、block 誘発（第401・422弾）の中で choose {as: pick} を束縛してから delayed_trigger を作ると vars スナップショットで pick が遅延効果に届く。第1・第2条項は partial に keywords [blocker, cannot_attack_player] として構築済み。partial は骨格＋keywords まで構築済みで text は公式全文（補完なし）。alias は無し（canon は対象自身）。判別役は既存 proto の T001（パワー2000バニラ＝味方役・弱いアタッカー役）/ T1196（パワー5000＝発生源がバトルに負ける判別役）を流用。"
+
+  - id: T1200
+    name: ガンバＧ/ガガン・ガン・ガガン
+    mana: 1
+    text: "W・ブレイカー（このクリーチャーはシールドを２つブレイクする）\nこのクリーチャーは、バトルゾーンに出たターンの間、相手プレイヤーを攻撃できる。 ／ ジョーカーズを１枚、自分の墓地からマナゾーンに置く。"
+    faces:
+      - name: ガンバＧ
+        types: [creature]
+        civs: [zero]
+        cost: 6
+        power: 6000
+        races: [ジョーカーズ]
+        text: "W・ブレイカー（このクリーチャーはシールドを２つブレイクする）\nこのクリーチャーは、バトルゾーンに出たターンの間、相手プレイヤーを攻撃できる。"
+        keywords: [double_breaker]
+        abilities:
+        - kind: static
+          affects: self
+          if: {exists: {ref: self, filter: {entered_this_turn: true}}}
+          mod: {player_rush: true}
+      - name: ガガン・ガン・ガガン
+        types: [spell]
+        civs: [zero]
+        cost: 2
+        text: "ジョーカーズを１枚、自分の墓地からマナゾーンに置く。"
+        spell:
+        - {op: move, select: {zone: graveyard, owner: you, filter: {race_has: ジョーカーズ}, count: 1}, to: mana, reason: put}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第424弾の対象（dmbd07-a-006 ガンバＧ/ガガン・ガン・ガガン型、ツインパクト）。entry_turn_attack は行の注記で「出たターンに攻撃できる効果を表す語彙が無い」とされ、第392弾では「召喚酔いのプレイヤー限定バイパスの確立形が未確認」として見送られたが、第261弾の mod player_rush がそのバイパスであり、登録済み promoy17-sp4d01 が同一文面を self 形 static {affects: self, if: {exists: {ref: self, filter: {entered_this_turn: true}}}, mod: {player_rush: true}} で登録済み（本弾で直接照合。第407弾もこの self 形を明記）。クリーチャー面 第1条項は keywords [double_breaker]。呪文面は move {select: {zone: graveyard, owner: you, filter: {race_has: ジョーカーズ}, count: 1}, to: mana, reason: put}（墓地→マナの move は登録済み dm23bd5-042 の呪文形。文面どおり必須1枚で up_to 無し、種別指定が無いため types フィルタ無し）。partial はクリーチャー面の骨格のみのため、提出形は faces 構造＋text＋keywords を補完する。呪文面の文明は公式データで空文字だが、同 product のツインパクトで明示される場合はクリーチャー面と同一（dmbd07-b-010）のため両面 zero とする。alias は dmsd04-002 / promoy17-035 / promoy17-sp4d02 の3件（rejects に独自行なし、canon は対象自身）。判別役は既存 proto を流用: T1091（通常クリーチャー役）/ T1090（スピードアタッカー役）/ T001（バニラ役）。"
+
+  - id: T1201
+    name: 巨体の守護者ランチュン
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 4000
+    races: [ガーディアン]
+    mana: 1
+    text: "ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)\nこのクリーチャーは、相手プレイヤーを攻撃できない。\nコスト６以下のクリーチャーとバトル中、このクリーチャーのパワーは+2000される。"
+    keywords: [blocker, cannot_attack_player]
+    abilities:
+    - kind: static
+      affects: self
+      mod: {battle_power: {amount: 2000, opponent_filter: {cost_le: 6}}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第425弾の対象（dmr08-009 巨体の守護者ランチュン型）。battle_power_filter は行の注記で「バトル相手の条件つきパワーを表す語彙が無い」とされたが、第122弾で確立した battle_power {amount, opponent_filter} のフィルタ差し替え版で、第377弾（civs 版）・第378弾（power_ge 版）と同型のドリフト。filter の cost_le は既存キーで、combat.py の _battle_bonus が filter_match（相手の特性値）で照合し、only 無しでは攻撃・防御の両バトルに効く。第1・第2条項は partial に keywords [blocker, cannot_attack_player] として構築済み。partial は骨格＋keywords まで構築済みで text は公式全文（補完なし）。alias は無し（canon は対象自身）。判別役は本弾で T1202（コスト5／パワー5000バニラ: 素4000では負け、+2000で勝つ役）/ T1203（コスト7／パワー5000バニラ: コスト上限を超え加算が付かない対照役）を追加。"
+
+  - id: T1202
+    name: 試験用コスト5パワー5000
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第425弾の判別役（コスト5＝上限以下／パワー5000: 対象の素4000では負け、バトル中+2000で勝つ）。"
+
+  - id: T1203
+    name: 試験用コスト7パワー5000
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 5000
+    mana: 1
+    text: ""
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第425弾の対照役（コスト7＝上限超え／パワー5000: 加算が付かず対象が負ける）。"
+
+  - id: T1204
+    name: 薩摩の超人
+    types: [creature]
+    civs: [nature]
+    cost: 9
+    power: 13000
+    races: [ジャイアント, サムライ]
+    mana: 1
+    text: "T・ブレイカー\n自分のジャイアントはすべて、可能ならブロックされる。\n自分のターン中、自分のジャイアントがバトルに勝った時、相手のシールドを１つブレイクする。"
+    keywords: [triple_breaker]
+    abilities:
+    - kind: static
+      affects: {zone: bz, owner: you, filter: {types: [creature], races: [ジャイアント]}}
+      mod: {must_be_blocked: true}
+    - kind: trigger
+      when: {event: battle_win, subject: {owner: you, filter: {races: [ジャイアント]}}}
+      if: {is_turn: you}
+      effect:
+      - {op: break, player: opp, count: 1}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第426弾の対象（dmex08-291 薩摩の超人型）。must_be_blocked は新規語彙（最小）: mod {must_be_blocked: true} が攻撃側の特性になり、combat.py のブロック宣言（phase 2）で、その攻撃をブロックできるクリーチャーが1体でもいれば no_block 選択肢が消える（第410弾の require [block] と同じ強制の効き方で、キーになる特性が防御側でなく攻撃側）。第368弾では「must_be_attacked は攻撃先の強制でブロックの強制とは別機構」として見送られたが、それは既存 mod では表せないという確認であり、本弾は新規語彙として最小追加する判断。第2条項（自分のジャイアントのバトル勝利時に相手のシールドを1つブレイク）は partial に構築済みの trigger をそのまま使う。partial は骨格完備で text は公式全文（補完なし）、keywords [triple_breaker] 構築済み。alias は dm31-s03（partial の source.aliases のみで、自前の reject 行は無い）。判別役は既存 proto を流用: T1044（同名系ジャイアント獣）/ T001（非ジャイアント対照）/ T004・T1078・T1085（防御側ブロッカー）。"
+
+  - id: T1205
+    name: 轟速 ザ・ゼット
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 7000
+    races: [ソニック・コマンド, 侵略者]
+    mana: 1
+    text: "スピードアタッカー（このクリーチャーは召喚酔いしない）W・ブレイカー（このクリーチャーはシールドを２つブレイクする）自分のターンの終わりに、そのターンこのクリーチャーが攻撃していたら、破壊する。"
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+    - kind: trigger
+      when: {event: turn_end, player: you}
+      if: {cmp: [{turn_count: {kind: attack_by, ref: self}}, ">=", 1]}
+      effect:
+      - {op: destroy, select: {ref: self}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第427弾の対象（dmd27-016 轟速 ザ・ゼット型）。turn_history_attacked はドリフト: 「そのターンこのクリーチャーが攻撃していたら」は turn_count {kind: attack_by, ref: self}（クリーチャー単位の攻撃回数。第159・161弾の確立式で、登録済み dm15-004 は attack_end 誘発＋attack_by == 1 で「はじめて攻撃する時」を表現）。「自分のターンの終わりに」は when {event: turn_end, player: you}（登録済み dm10-041 の確立形）。履歴の prev_counters への退避は次ターンの st_start で行われるため、turn_end の if 評価では当ターンの hist が生きている。partial は骨格＋keywords 構築済みで text は公式全文（補完なし）。alias は promoy15-052（partial の source.aliases のみで、自前の reject 行は無い）。判別役は既存 proto を流用: T001（バニラ＝他のクリーチャーだけが攻撃した時の対照）。"
+
+  - id: T1206
+    name: ジョー・リザード
+    types: [creature]
+    civs: [fire]
+    cost: 6
+    power: 3000
+    races: [デューンゲッコー]
+    mana: 1
+    text: "このクリーチャーは、クリーチャーを攻撃するときブロックされない。\nパワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)"
+    abilities:
+    - kind: static
+      affects: self
+      mod: {unblockable_vs_creatures: true}
+    - kind: static
+      affects: self
+      mod: {power_when: {amount: 3000, when: attacking}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第428弾の対象（dm09-030 ジョー・リザード型）。unblockable_only_when_attacking_creatures は新規語彙（最小）: mod {unblockable_vs_creatures: true} が攻撃側の特性になり、combat.py のブロック宣言（phase 2）で攻撃先がクリーチャーの時だけブロック候補が消える（攻撃先がプレイヤーの時は通常どおりブロックできる。ガードマンはブロックではないので残る）。キーワード unblockable の deny [be_blocked] では permits の other がブロッカー候補側を指すため攻撃先で切り替えられない、という行の注記は実測で正しく、第426弾 must_be_blocked と同型の追加にした。第2条項パワーアタッカー+3000 は power_when の確立形（登録済み dm01-s08 等、split の定型所有形そのもの）。partial は骨格完備で text は公式全文（補完なし）、alias 無し。判別役は既存 proto を流用: T001（対照の通常クリーチャー／攻撃先）/ T004（パワー3000ブロッカー）/ T1126（パワー8000ブロッカー）。"
+
+  - id: T1207
+    name: 鳥神兵クウザ
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 1000
+    races: [アーマロイド]
+    mana: 1
+    text: "このクリーチャーは、クリーチャーを攻撃するときブロックされない。\nパワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)"
+    abilities:
+    - kind: static
+      affects: self
+      mod: {unblockable_vs_creatures: true}
+    - kind: static
+      affects: self
+      mod: {power_when: {amount: 3000, when: attacking}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第428弾の対象（dm09-050 鳥神兵クウザ型）。dm09-030 と同一文面・同形（T1206 の notes 参照）。partial は骨格完備で text は公式全文（補完なし）、alias 無し。"
+
+  - id: T1208
+    name: 天災超邪 クロスファイア 2nd
+    types: [creature]
+    civs: [water, fire]
+    cost: 7
+    power: 7000
+    races: [アウトレイジMAX]
+    mana: 1
+    keywords: [speed_attacker, double_breaker]
+    free_if: {all: [{cmp: [{turn_count: {kind: draw, owner: you}}, ">=", 6]}, {not: {exists: {zone: bz, owner: you, filter: {name: 天災超邪 クロスファイア 2nd}}}}]}
+    text: "マナゾーンに置く時、このカードはタップして置く。G・ゼロ―このターン、カードを６枚以上引いていて、自分の 《天災超邪 クロスファイア ２nd》がバトルゾーンになければ、このクリーチャーをコストを支払わずに召喚してもよい。スピードアタッカーW・ブレイカー"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第429弾の対象（dmx22b-038 天災超邪 クロスファイア 2nd 型）。drew_this_turn_condition はドリフト: G・ゼロ条件は free_if {all: [{cmp: [{turn_count: {kind: draw, owner: you}}, \">=\", 6]}, {not: {exists: {zone: bz, owner: you, filter: {name: 天災超邪 クロスファイア 2nd}}}}]} で、第412弾の free_if turn_count cmp（登録済み dmex19-028）と登録済み dmex08-226 / dm25ex3-rp4tr6 の同名不在条件の合成。kind: draw は引いた側ごとに1枚ずつ hist:draw へ集約され、ターンドローも数に含まれる（実測）。「マナゾーンに置く時タップして置く」は多色ルール 405.1 でテキストのみ（第399弾）。partial は骨格のみで text は断片のため、提出形では text（公式全文）＋keywords＋free_if を補う（補完あり）。alias は dmr11-017 / promoy12-063（rejects に独自行なし、canon は対象自身）。判別役は既存 proto を流用: T003（水呪文・2ドロー役）/ T705（水呪文・1ドロー役＝境界判別）/ T009（水マナ役）/ T1207（火マナ役。多色の支払いは文明ごとに1枚ずつ要る）。"
+
+  # ---- 第430弾 infinity_power_attacker ----
+  - id: T1209
+    name: 武闘将軍 カツキング
+    types: [creature, exile_creature]
+    civs: [fire]
+    cost: 8
+    power: 11000
+    races: [アウトレイジMAX]
+    mana: 1
+    keywords: [speed_attacker, double_breaker, infinite_power_attacker]
+    text: "スピードアタッカーW・ブレイカーこのクリーチャーをバトルゾーンに出した時、そのターン、このクリーチャーはタップされていないクリーチャーを攻撃できる。∞ (ルビ：インフィニティ）パワーアタッカー（攻撃中、このクリーチャーのパワーは無限大になる）このクリーチャーがバトルに勝った時、シールドを１枚ブレイクする。ドロン・ゴー：このクリーチャーが破壊された時、名前に《武闘》とあるエグザイル・クリーチャーを１体、自分の手札からバトルゾーンに出してもよい。自分の他の、名前に《武闘》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: modify
+            select: {ref: self}
+            mod: {allow: [{action: attack_creature, other: {tapped: false}}]}
+            duration: end_of_turn
+      - kind: trigger
+        when: {event: battle_win, subject: self}
+        effect:
+          - {op: break, count: 1, player: opp}
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: move
+                select: {zone: hand, owner: you, filter: {name_has: 武闘, types: [exile_creature]}, count: 1}
+                to: bz
+                reason: put
+      - kind: static
+        affects: {zone: hand, owner: you, filter: {name_has: 武闘, types: [exile_creature]}}
+        if: {not: {exists: {zone: [hand, bz], owner: you, filter: {name_has: チーム・エグザイル}}}}
+        mod: {deny: [enter_bz]}
+      - kind: static
+        affects: {zone: graveyard, owner: you, filter: {name_has: 武闘, types: [exile_creature]}}
+        if: {not: {exists: {zone: [hand, bz], owner: you, filter: {name_has: チーム・エグザイル}}}}
+        mod: {deny: [enter_bz]}
+      - kind: static
+        affects: {zone: mana, owner: you, filter: {name_has: 武闘, types: [exile_creature]}}
+        if: {not: {exists: {zone: [hand, bz], owner: you, filter: {name_has: チーム・エグザイル}}}}
+        mod: {deny: [enter_bz]}
+      - kind: static
+        affects: {zone: deck, owner: you, filter: {name_has: 武闘, types: [exile_creature]}}
+        if: {not: {exists: {zone: [hand, bz], owner: you, filter: {name_has: チーム・エグザイル}}}}
+        mod: {deny: [enter_bz]}
+      - kind: static
+        affects: {zone: shield, owner: you, filter: {name_has: 武闘, types: [exile_creature]}}
+        if: {not: {exists: {zone: [hand, bz], owner: you, filter: {name_has: チーム・エグザイル}}}}
+        mod: {deny: [enter_bz]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第430弾の対象（dmr09-v02 武闘将軍 カツキング 型）。infinity_power_attacker はドリフト: ∞パワーアタッカーは第272弾のキーワード infinite_power_attacker（登録済み dmsp02-009 は本カードの GS 版）。partial 構築済みのドロン・ゴー誘発と deny 静的効果5件は『エグザイル・クリーチャー』の照合に races [アウトレイジMAX] を代理として使っていたが、代理は同値でないことを公式コーパスで実測した（アウトレイジMAX 種族 280件中エグザイルは 84件のみ。《武闘》名でも熱血武闘 カツキング等の非エグザイルが代理に一致する）。登録先例 dmd11-001 / dmd11-005 の filter {name_has: 武闘, types: [exile_creature]} へ修正し、両先例が保持するチーム・エグザイル無視の if も追加した（partial は欠落）。types の exile_creature も partial に無かったため補った。第1条項は CIP 誘発 → modify {allow: [attack_creature, other: {tapped: false}], duration: end_of_turn}（dmd11-005 の常在型 allow が同形の先例、ターン制限の差は CIP＋duration）。判別役: T1210（《武闘》名エグザイル）/ T1211（《武闘》名・非エグザイル＝代理なら一致してしまう対照）/ T736（チーム・エグザイル）/ T763（パワー99999）/ T1204（パワー13000 の対照）。"
+
+  - id: T1210
+    name: 武闘龍 テストドン
+    types: [creature, exile_creature]
+    civs: [fire]
+    cost: 6
+    power: 2000
+    races: [アウトレイジMAX]
+    mana: 1
+    text: "名前に《武闘》とあるエグザイル・クリーチャー。（第430弾・ドロン・ゴーの対象／制限の対象）"
+
+  - id: T1211
+    name: 熱血武闘 テストキング
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [アウトレイジMAX]
+    mana: 1
+    text: "名前に《武闘》とあり種族はアウトレイジMAX だが、エグザイル・クリーチャーではない対照用クリーチャー（熱血武闘 カツキング型）。races 代理では一致してしまうが types フィルタでは一致しない。（第430弾）"
+
+  # ---- 第431弾 after_battle_trigger ----
+  - id: T1212
+    name: 血誓怪人ザミザニン
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 5000
+    races: [デビルマスク]
+    mana: 1
+    keywords: [blocker, cannot_attack]
+    text: "ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）\nこのクリーチャーは攻撃できない。\nこのクリーチャーがバトルする時、バトルの後、破壊する。"
+    abilities:
+      - kind: trigger
+        when: {event: battle_end, subject: self}
+        effect:
+          - op: destroy
+            select: {ref: self}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第431弾の対象（dmrp14-072 血誓怪人ザミザニン 型）。after_battle_trigger はドリフト: trigger {when: {event: battle_end, subject: self}, effect: [destroy {select: {ref: self}}]} は第211弾の battle_end 形で、登録済み dmpcd03-b11 が本件と同一の条項構造（ブロッカー／攻撃できない／バトルする時、バトルの後、破壊する）をこの形で保持する（旧形は攻撃できないクリーチャーでは発火せず修繕ステージで差し替えられた経緯が同カードの notes に残る）。第359弾の見送りはファミリーの均一性への異議であり、本件自体の表現不能の所見ではない。もう1件の dmrp09-074（勝ったクリーチャーを手札に戻す）は勝者参照が要るため残置。対象行は partial も reason も無い素行で、骨格は公式データ行（by_product/rp14.jsonl）から構築。判別役: T001（パワー2000＝ブロックして勝つ相手）/ T1126（パワー8000ブロッカー＝ブロックして負ける相手）。"
+  - id: T1213
+    name: メガンス・ワイバーン
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [アーマード・ワイバーン, アンノイズ]
+    mana: 1
+    text: "相手のターン中、相手のマナゾーンからカードが離れる時、相手のシールドをひとつ選び、持ち主の手札に加える。"
+    abilities:
+      - kind: trigger
+        when: {event: move, from: mana, subject: {owner: opp}}
+        if: {is_turn: opp}
+        effect:
+          - op: move
+            select: {zone: shield, owner: opp, count: 1}
+            to: hand
+            reason: return
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第432弾の対象（dmr05-032 メガンス・ワイバーン 型）。mana_leave_trigger はドリフト: from: mana の移動監視誘発は登録済み dm28-014（自軍マナ・宛先無指定）/ dm17-030（owner: any）の確立形、if {is_turn: opp} は登録済み dm23-027（move 誘発＋is_turn: opp＋相手シールド選択の近接先例）/ dm21-006 の確立形、シールド→手札の move は登録済み dmex13-073（自軍版）の確立形で、選択主体は既定のコントローラー（dm23-027 の chooser: opp と対照）。判別役: T1214（相手が自分のマナを手札に戻す呪文＝相手ターン中の離脱）/ T1215（自分のターンに相手のマナを墓地に置く呪文＝is_turn の判別）/ T1216（相手が自分のマナ2枚を戻す呪文＝2回誘発の判別）/ T001（通常召喚＝タップだけでは離脱しない判別）。"
+  - id: T1214
+    name: マナ回収の呪文
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    mana: 1
+    text: "自分のマナゾーンからカードを1枚選び、手札に戻す。（テスト用）"
+    spell:
+      - op: move
+        select: {zone: mana, owner: you, count: 1}
+        to: hand
+        reason: return
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第432弾の判別役: 相手が自分のターンに唱えると、相手のマナゾーンからカードが1枚離れる。"
+  - id: T1215
+    name: マナ焼きの呪文
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    mana: 1
+    text: "相手のマナゾーンのカードを1枚選び、持ち主の墓地に置く。（テスト用）"
+    spell:
+      - op: move
+        select: {zone: mana, owner: opp, count: 1}
+        to: graveyard
+        reason: put
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第432弾の判別役: 自分が自分のターンに唱えると、相手のマナゾーンからカードが離れるが is_turn: opp でないため対象は誘発しない。"
+  - id: T1216
+    name: マナ大回収の呪文
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    mana: 1
+    text: "自分のマナゾーンからカードを2枚まで選び、手札に戻す。（テスト用）"
+    spell:
+      - op: move
+        select: {zone: mana, owner: you, count: 1}
+        to: hand
+        reason: return
+      - op: move
+        select: {zone: mana, owner: you, count: 1}
+        to: hand
+        reason: return
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第432弾の判別役: 相手が自分のターンに唱えると、相手のマナゾーンからカードが2枚離れ、対象は2回誘発するはず。"
+  - id: T1217
+    name: 穿神兵ジェットドリル
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 2000
+    races: [アーマロイド]
+    mana: 1
+    text: "相手の山札または墓地から、カードがマナゾーンに置かれた時、相手は自身のマナゾーンからカードを１枚選んで山札の一番下に置く。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: mana, from: [deck, graveyard], subject: {owner: opp}}
+        effect:
+          - op: move
+            select: {zone: mana, owner: opp, count: 1, chooser: opp}
+            to: deck
+            reason: put
+            position: bottom
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第433弾の対象（dm39-015 穿神兵ジェットドリル 型）。opponent_mana_trigger はドリフト: to: mana の移動監視誘発は第397弾（登録済み dmrp06-027 等）の確立形、from のリスト指定は defs の when 検証とエンジン _match_when の両側で対応済み、chooser: opp は selector の既存キー（第432弾で対照した dm23-027 の明示形）、山札の一番下への move {to: deck, reason: put, position: bottom} は登録済みニンジャ・ストライク形（dm22bd1-017 等）の確立形。判別役: T1218（相手の山札の上から相手のマナへ置く呪文＝山札起点）/ T1219（相手の墓地から相手のマナへ置く呪文＝墓地起点）/ T1220（相手の手札から相手のマナへ置く呪文＝from の判別）/ T1221（自分の山札の上から自分のマナへ置く呪文＝subject owner の判別）/ T1222（相手の山札の上2枚を相手のマナへ置く呪文＝2回誘発の判別）。"
+  - id: T1218
+    name: 相手マナ送りの呪文
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    mana: 1
+    text: "相手の山札の上から1枚目を、相手のマナゾーンに置く。（テスト用）"
+    spell:
+      - op: move
+        select: {zone: deck, owner: opp, from_top: 1}
+        to: mana
+        reason: put
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第433弾の判別役: 自分が唱えると、相手の山札からカードが1枚相手のマナゾーンに置かれ、対象が誘発するはず。"
+  - id: T1219
+    name: 相手墓地マナ送りの呪文
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    mana: 1
+    text: "相手の墓地からカードを1枚選び、相手のマナゾーンに置く。（テスト用）"
+    spell:
+      - op: move
+        select: {zone: graveyard, owner: opp, count: 1}
+        to: mana
+        reason: put
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第433弾の判別役: 自分が唱えると、相手の墓地からカードが1枚相手のマナゾーンに置かれ、対象が誘発するはず。"
+  - id: T1220
+    name: 相手手札マナ送りの呪文
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    mana: 1
+    text: "相手の手札からカードを1枚、相手のマナゾーンに置く。（テスト用）"
+    spell:
+      - op: move
+        select: {zone: hand, owner: opp, count: 1}
+        to: mana
+        reason: put
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第433弾の判別役: 自分が唱えると、相手の手札からカードが1枚相手のマナゾーンに置かれるが、from: hand は対象の from リストに無いため誘発しないはず。"
+  - id: T1221
+    name: 自分マナ送りの呪文
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    mana: 1
+    text: "自分の山札の上から1枚目を、自分のマナゾーンに置く。（テスト用）"
+    spell:
+      - op: move
+        select: {zone: deck, owner: you, from_top: 1}
+        to: mana
+        reason: put
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第433弾の判別役: 自分が唱えると、自分の山札からカードが1枚自分のマナゾーンに置かれるが、subject {owner: opp} に一致しないため対象は誘発しないはず。"
+  - id: T1222
+    name: 相手マナ大送りの呪文
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    mana: 1
+    text: "相手の山札の上から2枚を、相手のマナゾーンに置く。（テスト用）"
+    spell:
+      - op: move
+        select: {zone: deck, owner: opp, from_top: 1}
+        to: mana
+        reason: put
+      - op: move
+        select: {zone: deck, owner: opp, from_top: 1}
+        to: mana
+        reason: put
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第433弾の判別役: 自分が唱えると、相手の山札からカードが2枚相手のマナゾーンに置かれ、対象は2回誘発するはず。"
+  - id: T1223
+    name: マネコン
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 1000
+    races: [サイバーロード, アンノイズ]
+    mana: 1
+    text: "このクリーチャーが攻撃する時、バトルゾーンに「W・ブレイカー」を持つクリーチャーがあれば、そのターン、このクリーチャーのパワーは+5000され、「W・ブレイカー」を得る。\nこのクリーチャーが攻撃する時、バトルゾーンに「T・ブレイカー」を持つクリーチャーがあれば、そのターン、このクリーチャーのパワーは+11000され、「T・ブレイカー」を得る。"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        if: {exists: {zone: bz, owner: any, filter: {types: [creature], keyword: double_breaker}}}
+        effect:
+          - op: modify
+            select: {ref: self}
+            mod: {power: 5000, breaks: 2}
+            duration: end_of_turn
+      - kind: trigger
+        when: {event: attack, subject: self}
+        if: {exists: {zone: bz, owner: any, filter: {types: [creature], keyword: triple_breaker}}}
+        effect:
+          - op: modify
+            select: {ref: self}
+            mod: {power: 11000, breaks: 3}
+            duration: end_of_turn
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第434弾の対象（dmr07-010 マネコン 型）。keyword_exists_condition はドリフト: exists＋keyword フィルタは登録済み dmd05-015 / dmrp08-002 の確立形（selector の keyword 照合は付与分を含む現在特性で見るため第398弾の affects base 照合制限は及ばない）、modify の mod への power と breaks の併記は登録済み dm39-033 / dmsp01-012 / promoy5-037 の確立形。breaks は max 集約のため両条件が立てば power +16000・breaks 3。判別役: T1224（W・ブレイカー持ち）/ T1225（T・ブレイカー持ち）/ T001（キーワード無しの対照）/ T004（パワー3000ブロッカー＝パワー判別）。"
+  - id: T1224
+    name: W・ブレイカー持ちの判別役
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "W・ブレイカー（テスト用）"
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第434弾の判別役: バトルゾーンにいるだけで対象の W 条件を満たす。自身は攻撃させない。"
+  - id: T1225
+    name: T・ブレイカー持ちの判別役
+    types: [creature]
+    civs: [nature]
+    cost: 7
+    power: 9000
+    races: [テスト]
+    mana: 1
+    text: "T・ブレイカー（テスト用）"
+    keywords: [triple_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第434弾の判別役: バトルゾーンにいるだけで対象の T 条件を満たす（double_breaker は持たない）。自身は攻撃させない。"
+  - id: T1226
+    name: 大喰の超人
+    types: [creature]
+    civs: [nature]
+    cost: 8
+    power: 8000
+    races: [ジャイアント, ハンター]
+    mana: 1
+    text: "自分のマナゾーンのカードをタップする時、そのうちの好きな枚数のカードの、マナの数字を２または３にしてもよい。\n自分のマナゾーンのカードをタップした時、そのカードを自分の墓地に置く。\nW・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)"
+    keywords: [double_breaker]
+    abilities:
+      - kind: static
+        mana_boost: {values: [2, 3]}
+      - kind: trigger
+        when: {event: tap, subject: {owner: you, zone: mana}}
+        effect:
+          - {op: move, select: {ref: subject}, to: graveyard, reason: put}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第436弾の対象（dmx08-010 大喰の超人 型）。mana_tap_trigger は新規語彙（エンジン変更）: 条項1の mana_boost {values: [2, 3]} は第212弾・ラウンド248の確立形。条項2の when {event: tap, subject: {owner: you, zone: mana}} は第212弾で照合側（subject の zone 指定と T536）が確立済みで、本弾で支払い・コストのマナタップ（h_play 通常支払い／バズレンダ／O・ドライブ、h_cross、h_activate の tap_mana、op pay_or_lose）を ev_task 経由にイベント化した。あわせて _match_when に tap/untap の subject ゾーン既定規則（zone 無指定の dict 形は bz のカードだけに一致）を追加し、登録済みの「クリーチャーがタップ／アンタップした時」系がマナゾーンのカードに誤発しないようにした（ターン開始の一括アンタップで dm26rp2-s007 が相手マナに誤発していた既存の不正確さも解消）。判別役: T536（条項2のみの第212弾 proto）/ T001・T002（バニラ＝支払い用マナと召喚先）。"
+  - id: T1227
+    name: 大焔団 フォルクス
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 7000
+    races: [アウトレイジMAX]
+    mana: 1
+    text: "スピードアタッカー（このクリーチャーは召喚酔いしない）W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）自分の、表向きのシールドがブレイクされた時、相手のパワー6000以下のクリーチャーを１体破壊する。"
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: move, from: shield, reason: break, subject: {owner: you}, face_up: true}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: 6000}, count: 1}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第437弾の対象（dmd11-006 大焔団 フォルクス 型）。shield_faceup_trigger はドリフト: シールド離脱の監視は登録済み dm23rp3-017 等の when {event: move, from: shield, subject: {owner: you}} の確立形、離れたシールドが表向きだったかは第176弾で move レコードに載る face_up を when で照合し、ブレイクによる離脱は h_break が付ける reason: break で他の離脱（回収・墓地送り）と区別する。判別役: T001（パワー2000＝破壊対象になる攻撃役）/ T1225（パワー9000＝power_le: 6000 の対象外）/ T061（シールド回収呪文＝reason: return の非ブレイク離脱）。"

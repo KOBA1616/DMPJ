@@ -33,7 +33,7 @@ REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "b
 LOSE_REASONS = {"direct_attack", "deck_out", "state", "effect"}   # 第188弾: 敗北イベントの reason（when の照合用。移動の reason とは別）
 VIAS = {"revolution_change", "generate", "d_d_d", "rinne"}   # 出し方の印（「革命チェンジによって出た時」「D・D・Dによって出た時」「輪廻∞で唱えた時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start", "until_next_own_turn_end", "until_next_opp_turn_end"}
-MOD_KEYS = {"power", "power_set", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_max", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_be_chosen", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul", "mana_number", "evo_reduce", "cross_reduce", "player_rush", "trigger_double"}
+MOD_KEYS = {"power", "power_set", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_max", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_be_blocked", "must_be_chosen", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul", "mana_number", "evo_reduce", "cross_reduce", "player_rush", "trigger_double", "unblockable_vs_creatures"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
@@ -52,7 +52,7 @@ FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races", "civs
 # owner に any を許すのは destroyed と attack だけ（他は you/opp）
 TURN_COUNT_KINDS = {"shield_put", "shield_left", "mana_put", "cast", "summon", "attack", "destroyed",
                     "broke_by_self", "broke_by_self_attack", "draw", "broken", "enter", "discard", "leave", "tap", "untap", "untap_creature",
-                    "block", "enter_unpaid", "attack_by", "attack_on", "dynamo_tap"}   # dynamo_tap: 第322弾。このターンに「ダイナモ」能力を使うためにタップした自分のダイナモの体数（op_modify の add_of 適用で記録。重複は数えない）
+                    "block", "enter_unpaid", "attack_by", "attack_on", "dynamo_tap", "battle_win"}   # dynamo_tap: 第322弾。このターンに「ダイナモ」能力を使うためにタップした自分のダイナモの体数（op_modify の add_of 適用で記録。重複は数えない）。battle_win: 第382弾。このターンにそのプレイヤーのクリーチャーがバトルに勝った回数（combat の battle_win レコードの controller で集約。相打ち・敗北は数えない）
 TURN_COUNT_ANY_KINDS = {"destroyed", "attack"}
 ORD_KINDS = {"mana_put", "enter", "cast", "summon", "draw", "attack", "attack_by"}   # when の {ord: ...} で照合できる kind
 
@@ -483,6 +483,16 @@ class Checker:
                 return self.selector(v, where)
             if k == "distinct_type_count":   # 対象カード群にあるカードタイプの種類数（第212弾）
                 return self.selector(v, where)
+            if k == "distinct_race_count":   # 対象カード群にある種族の種類数（多重種族はすべて数える。第405弾）
+                if isinstance(v, dict) and "selector" in v:
+                    # {selector, exclude_races?} 形（第406弾）: 数えた種族名の集合から exclude_races を差し引く
+                    # （「ミステリー・トーテム以外の種族」のような種族名単位の除外。カード単位のフィルタ除外とは違う）
+                    if set(v) - {"selector", "exclude_races"} \
+                            or not isinstance(v.get("exclude_races", []), list) \
+                            or not all(isinstance(r, str) for r in v.get("exclude_races", [])):
+                        raise DefError(f"{where}: distinct_race_count needs {{selector, exclude_races?: [race, ...]}}")
+                    return self.selector(v["selector"], where)
+                return self.selector(v, where)
             if k in ("total_cost", "total_power"):   # 対象カード群のコスト／パワーの合計（公開集合の保持。バンドC1 U39）
                 return self.selector(v, where)
             if k == "max_power":   # 対象カード群の最大パワー（第219弾）
@@ -500,11 +510,11 @@ class Checker:
                         or ("face_up" in v and not isinstance(v["face_up"], bool)):
                     raise DefError(f"{where}: bundles needs {{owner: you/opp, face_up?: bool}}")
                 return
-            if k == "turn_count":   # このターンに〜した回数 {kind, owner?, other?, filter?, ref?, from?}（履歴カウンタ基盤。バンドC1 U19。from は第214弾）
-                if not isinstance(v, dict) or set(v) - {"kind", "owner", "other", "filter", "ref", "from"} \
+            if k == "turn_count":   # このターンに〜した回数 {kind, owner?, other?, filter?, ref?, from?, distinct?}（履歴カウンタ基盤。バンドC1 U19。from は第214弾、distinct は第387弾）
+                if not isinstance(v, dict) or set(v) - {"kind", "owner", "other", "filter", "ref", "from", "distinct"} \
                         or v.get("kind") not in TURN_COUNT_KINDS \
                         or ("from" in v and not isinstance(v["from"], str)):
-                    raise DefError(f"{where}: turn_count needs {{kind: <history kind>, owner?: you/opp/any, other?: bool, filter?: <filter>, ref?: str, from?: <zone>}}")
+                    raise DefError(f"{where}: turn_count needs {{kind: <history kind>, owner?: you/opp/any, other?: bool, filter?: <filter>, ref?: str, from?: <zone>, distinct?: bool}}")
                 kind = v["kind"]
                 if kind in ("attack_by", "attack_on"):
                     if set(v) - {"kind", "ref"} or not isinstance(v.get("ref"), (str, dict)):
@@ -521,6 +531,8 @@ class Checker:
                         raise DefError(f"{where}: turn_count {kind} takes no owner/other/filter (self 固定)")
                     if "other" in v and (kind != "attack" or not isinstance(v["other"], bool)):
                         raise DefError(f"{where}: turn_count other is only for kind: attack, as a bool")
+                    if "distinct" in v and (kind != "attack" or not isinstance(v["distinct"], bool)):
+                        raise DefError(f"{where}: turn_count distinct is only for kind: attack, as a bool")
                     if "filter" in v:
                         if kind not in ("attack", "enter_unpaid"):
                             raise DefError(f"{where}: turn_count filter is only for kind: attack / enter_unpaid")
@@ -628,8 +640,8 @@ class Checker:
         raise DefError(f"{where}: unknown cond '{k}'")
 
     def count_spec(self, v, where):
-        """mod の count: セレクタ（体数）か、civ_count / distinct_cost_count / sum / bundles / 履歴式を含む式（文明・コストの種類数、束の数、このターン〜した数など）。"""
-        if isinstance(v, dict) and any(k in v for k in ("civ_count", "distinct_cost_count", "sum", "mul", "bundles",
+        """mod の count: セレクタ（体数）か、civ_count / distinct_cost_count / distinct_race_count / sum / bundles / 履歴式を含む式（文明・コスト・種族の種類数、束の数、このターン〜した数など）。"""
+        if isinstance(v, dict) and any(k in v for k in ("civ_count", "distinct_cost_count", "distinct_race_count", "sum", "mul", "bundles",
                                                          "turn_count", "used_count", "prev_shield_added", "declared",
                                                          "crossed_count", "total_cost", "total_power", "max_power")):
             return self.expr(v, where)
@@ -729,6 +741,12 @@ class Checker:
             mba = m["must_be_attacked"]
             if mba is not True and not (isinstance(mba, dict) and set(mba) == {"first_only"} and mba["first_only"] is True):
                 raise DefError(f"{where}: must_be_attacked must be true or {{first_only: true}}")
+        if "must_be_blocked" in m:   # 「可能ならブロックされる」（第426弾）: 攻撃側の特性。ブロック可能なクリーチャーがいればブロック宣言を強制する
+            if m["must_be_blocked"] is not True:
+                raise DefError(f"{where}: must_be_blocked must be true")
+        if "unblockable_vs_creatures" in m:   # 「クリーチャーを攻撃するときブロックされない」（第428弾）: 攻撃側の特性。攻撃先がクリーチャーの時だけブロック候補を消す（combat 側 phase 2）
+            if m["unblockable_vs_creatures"] is not True:
+                raise DefError(f"{where}: unblockable_vs_creatures must be true")
         if "player_rush" in m:   # 出たターンにプレイヤーだけは攻撃できる（第261弾）
             if m["player_rush"] is not True:
                 raise DefError(f"{where}: player_rush must be true")
@@ -845,13 +863,15 @@ class Checker:
             raise DefError(f"{where}: crystal_soul must be an int >= 1")
         if "mana_number" in m and not (isinstance(m["mana_number"], int) and not isinstance(m["mana_number"], bool) and m["mana_number"] >= 0):
             raise DefError(f"{where}: mana_number must be an int >= 0")
-        if "power_when" in m:   # 攻撃中／ブロック中のパワー修整: {amount: N, count: <selector>, when: attacking|blocking|not_attacking}。バトルをしていない間（プレイヤーを攻撃中など）も含む。not_attacking は「攻撃していない時」（第280弾）
+        if "power_when" in m:   # 攻撃中／ブロック中のパワー修整: {amount: N, count: <selector>, when: attacking|blocking|not_attacking}。バトルをしていない間（プレイヤーを攻撃中など）も含む。not_attacking は「攻撃していない時」（第280弾）。opponent_filter（第364弾）: バトルの相手がフィルタに合う時だけ（battle_power の opponent_filter と同義。blocking では攻撃クリーチャー、attacking では攻撃対象のクリーチャーが相手）
             pw = m["power_when"]
-            if not isinstance(pw, dict) or set(pw) - {"amount", "count", "when"} or not isinstance(pw.get("amount"), int) \
+            if not isinstance(pw, dict) or set(pw) - {"amount", "count", "when", "opponent_filter"} or not isinstance(pw.get("amount"), int) \
                     or pw.get("when") not in ("attacking", "blocking", "not_attacking"):
-                raise DefError(f"{where}: power_when needs amount (int), when: attacking|blocking|not_attacking and optional count (selector)")
+                raise DefError(f"{where}: power_when needs amount (int), when: attacking|blocking|not_attacking and optional count (selector) / opponent_filter (filter)")
             if "count" in pw:
                 self.count_spec(pw["count"], where)
+            if "opponent_filter" in pw:
+                self.filter(pw["opponent_filter"], where)
         if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>, only: attacking}（ハンティング。バトル中だけ。「攻撃中」「ブロック中」は power_when）
             bp = m["battle_power"]
             if not isinstance(bp, dict) or set(bp) - {"amount", "count", "only", "opponent_filter"} or not isinstance(bp.get("amount"), int):

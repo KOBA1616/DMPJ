@@ -76,7 +76,11 @@ def test_encode_parity(rules, deck):
         assert goto["min"] == expo["min"] and goto["max"] == expo["max"]
 
 
-def test_run_batch_model_collects(rules, deck):
+def test_run_batch_model_collects(rules):
+    # 現行 saga.yaml は Rust 未対応カード（dm23bd7-030）を含むため、
+    # rustcore.new_game を使うこのテストは全カード plain な legacy デッキを使う
+    # （Phase 25 の tests/test_batch2.py と同じ扱い）。
+    deck = load_deck("data/decks/saga_legacy.yaml")
     vocab = Vocab(rules)
     model = Model(len(vocab), seed=1)
     states = [rustcore.new_game(rules, [deck, deck], 800 + g, g % 2) for g in range(4)]
