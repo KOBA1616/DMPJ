@@ -546,8 +546,9 @@ def op_pay_or_lose(eng, t, op, env):
     ans, dd = eng.ask(t, p, "pay_mana", opts)
     if dd:
         return dd
-    for c in opts[ans[0]]["cids"]:
-        s.cards[c].tapped = True
+    if opts[ans[0]]["cids"]:
+        # 支払いのマナタップをイベント化する（第436弾）。次の op の前に適用する
+        eng._defer(t, [eng.ev_task([{"ev": "tap", "subject": s.ref(c)} for c in opts[ans[0]]["cids"]])])
     return None
 
 
