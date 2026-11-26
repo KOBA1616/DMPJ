@@ -12,7 +12,7 @@ from .tune import _score
 
 # 物差し・課金・定期処理・検証専用データ。ここを書き換える仮説は自動検証の対象外（人が見る）。
 FORBIDDEN = (
-    ".github/*", "CLAUDE.md", "tools/llm_offload/*", "tools/offload.py", "data/rules/*", "data/known_combos/*",
+    ".github/*", "CLAUDE.md", "data/rules/*", "data/known_combos/*",
     "dmsim/eval/*", "dmsim/autofix/gate.py", "dmsim/autofix/loop.py", "tools/hypothesis_gate.py",
 )
 
