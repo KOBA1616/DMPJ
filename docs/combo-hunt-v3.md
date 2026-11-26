@@ -468,3 +468,115 @@ spotcheck.jsonl、probe_summary.json）。
 本実装には必要で、指定した刈り込みだけでは候補が2桁多い。
 スポットチェック 0/10 が示すとおり静的精度はまだ低く、判定器との
 往復（expert iteration 的な還流）が前提になる。
+
+## 抽出層の語彙統合: 束化の正準化（2026-11-26）
+
+サイクルプローブの結論（「調整すれば可能」）を受けた第1層の実施。束の型は
+`dmsim/engine/zone_graph.py`（Bundle/Premise/Move）が正準だったが、束化は
+zone_graph.bundles_of と discovery/loop_cond.bundles の2系統が独自解釈で
+作り直しており、プローブの穴（'?' 移動・static 不可視・前提落ち・理由欠落）は
+全てこの継ぎ目から出ていた。束化を正準モジュール
+**`dmsim/engine/bundle_canon.py`** 1つに寄せ、発見側はそれを使う側に回した。
+
+### 設計
+
+- 正準モジュール: `dmsim/engine/bundle_canon.py`。公開 API は
+  `bundles(rules)` / `moves_of(ops, ...)` / `premise_of(ab)` / `coverage(rules)`。
+  エンジン実行と zone_graph の型には触らない。zone_graph.bundles_of は日次
+  経路（loop_enum 等）の互換のため残置（発見系の新規利用は正準側）。
+- 解釈はエンジン実行側（ops.py / selectors.py）に一致:
+  - ref は env 束縛を指す。同一効果内の `as`（move / play_free / choose 等の
+    全 op）・set_var・reveal_until の束縛を走査順に追跡し、束縛先ゾーンが
+    移動元になる。play_free の `as` は出した先に束縛。
+  - `event.*` 参照（selectors の event レコード解釈）: event.subject は
+    前提の行き先、event.attacker 等は場、event.shield は break 前提なら手札。
+  - 特殊セレクタ under_of / crossed_to / host_of → bz、bundle_of /
+    exlife_of / castle_of → shield（defs.Checker の特殊キー群に対応）。
+  - play_free の宛先: 自分の呪文面 → その面の resolve_to、resolve_to 指定 →
+    それ、対象が呪文だけに絞られていれば解決後の墓地、それ以外は場。
+  - 移動を生む op の拡充: put_under / play_self / summon_self / summon_on /
+    invade / break / shield_plus / yobinion / mekurade /
+    move_to_event / move_under_to_event（従来は両系統とも未処理）。
+- 前提イベントは defs.EVENTS の全イベント（レジストリ方式）。行き先の無い
+  move は「離れる」前提（to=None）として残す。相手の summon も落とさない。
+- 新しい origin: static（prem=None・moves=[]、affects/mod/if を注釈
+  ann["static"] に保持。無料化 allow がここから読める）、replace（前提は
+  when、移動は instead から）、activate（prem=None）、silent（turn_start
+  前提）。state / partner は理由付きで除外しカバレッジに数える。
+- レジストリ方式: 子 op リストのキーは base.opvocab.OP_ARGS の引数型
+  （ops / oplists）から生成、前提イベントは defs.EVENTS から生成。対応表は
+  凍結しない（ability_features.py の方式が前例）。
+- 注釈の分離: 発見側固有の情報は Bundle.ann（when 丸ごと・reason・via・
+  unpaid・static ペイロード・activate の cost）と互換属性 b.when / b.once、
+  全移動の m.conds に分離。正準の束そのものはエンジン解釈だけから決まる。
+- 発見側の受け止め（loop_cond.gate のポリシー追加）: replace 束はサイクルの
+  一員・付け足しにしない（"replace"）。move/cast/draw と TICKS 以外の前提
+  イベントはゾーン移動の連鎖では満たせないので "event" としてゲートする
+  （束自体は正準側に残り、前提閉集合などの消費側は直接読める）。
+- structsig.prem_key に when.reason を追加（理由制限が署名に載らず乗客を
+  核と誤認した件： ムーンライト / 鬼丸「刀」は reason=destroy の注釈付きで
+  表現され、署名でも区別できるようになった）。
+
+### 実測（統合前 → 統合後）
+
+- 束の総数: zone_graph 17,489 / 旧 loop_cond 17,625 → 正準 30,394
+  （内訳: trigger 7,005、replace 911、activate 63、silent 19、static 10,822、
+  spell 2,308、summon 9,205、free 61）。zone_graph との厳密キー一致は
+  15,712 件、正準のみ 14,682 件、zone_graph のみ 1,777 件（移動の詳細差）。
+- '?' の移動: **1,994 件 → 204 件**。残りは全件理由付き
+  （ref_unbound 201 件＝効果外で束縛される名前。名前別の内訳もカバレッジに
+  出る。ref_event_unresolved 3 件）。src 側のみで dst の '?' は元々 0 件。
+  なおプローブの「サイクルの69%が '?' を含む」は列挙段階の候補空間の話で、
+  保存されたサイクル 122,588 件では '?' を含むものは 0 件だった（再集計で
+  確認）。実体は束レベル 1,994 件であり、その大半が解消した。
+- 前提にならないイベント: 685 件 → **0 件**（premise_none は空）。
+- 能力の束化率: 18,820 / 21,056 = **89.4%**。除外の内訳（全件理由付き）:
+  trigger の移動なし 1,993 件（タップ・修正等の非移動効果）、replace の
+  移動なし 110 件、activate の移動なし 78 件、partner 47 件（単独では
+  機能しない）、gachinko 複合 op 72 件、move_under_to_event の行き先不明
+  45 件、state 4 件、silent の移動なし 4 件、move_to_event 4 件。
+- play_free 宛先の推定内訳: 場（既定）728、自分の呪文面 80、呪文フィルタ→
+  墓地 73、resolve_to 指定 38。
+- 理由制限（when.reason）を持つ束: 690 件。
+- カバレッジ測定は常設: `tools/bundle_coverage.py`（--legacy-diff で旧系統
+  との差分も出す）。子 op リストを辿れないキーは 0 件だった。
+
+### 陽性対照の表現（束レベル、全て確認済み）
+
+- サガの自己回帰: 前提（move→bz、self）の束が feeds で自分を受ける。
+- サガ＋XENARCH: XENARCH の傍受束（前提 hand→graveyard・墓地で働く・
+  移動 graveyard→hand ref_self）が存在し、サガの束がそれを受ける。
+- アカシック4種: アカシック3 の static 束（allow: cast_free）、
+  オルゼキア⇔ホーリーエンド（dm25sp1-003）の回転対（feeds 双方向）、
+  ウォカンナの誘発束。
+- 構造署名の新規エンジン11件: XENARCH 型7件は structsig.interceptor_kind
+  で傍受と判定される束が全件存在、アカシック置換4件も束が存在。
+- テスト: tests/test_bundle_canon.py（15件）が上記を固定。
+
+### 残った穴
+
+- ref_unbound 201 件: 束縛が効果の外（コスト支払い・イベント・前の区間）に
+  ある名前で、静的には現在地を決められない。名前別に数えて明示した。
+- gachinko 72 件: 公開・比較・任意使用の複合 op で、移動へ分解していない
+  （理由付き除外）。mekurade は山札→場（呪文なら墓地）の blind 移動として
+  近似した。
+- move の行き先が無い前提（to=None）は feeds で受けられない（zone_graph.
+  feeds の既知の制限）。前提閉集合の消費側で扱う前提で残した。
+- owner が式（{"var": "tp"} 等）の移動 16 件、zone がリストの移動 102 件は
+  従来どおり保持し、カバレッジに数えた。
+
+### 既存判定への影響
+
+- tools/combo_hunt3.py --controls（予算1000、1,397秒）: 総合合格。
+  akashic / saga（full・loop_only）とも pass・最小コア・増分が
+  controls3_fixed.json の基準値と完全一致。tenmon も再生 33/33 で合格。
+  成果物: ~/workspace/combo3/bundle_unify/controls3_after.json。
+- テスト: tests/test_bundle_canon.py 15件＋発見系（test_hunt2 / test_hunt3 /
+  test_structsig / test_fast_loop_screen / test_hunt_pipeline /
+  test_synergy_hunt）と日次経路（test_zone_graph / test_loop_enum /
+  test_cyclesetup / test_real_cards_zone）が全て合格。
+  統合の過程で見つけた不具合: 正準側の Move.flt に None を渡すと
+  zone_graph._match が落ちる（従来の両系統は常に {} を渡していた）。
+  正準側は全移動で flt={} 以上を保証する形に直した。
+  また対照カードの一部は converted.yaml 由来のため、テストでは
+  conftest の DMSIM_SKIP_CONVERTED を読み込み時だけ外す（test_ai.py の作法）。

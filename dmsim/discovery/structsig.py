@@ -29,7 +29,7 @@ Move（src→dst、ref_self、draw、対象フィルタ）の組で表す。部�
 from __future__ import annotations
 
 
-def prem_key(prem) -> tuple | None:
+def prem_key(prem, when=None) -> tuple | None:
     if prem is None:
         return None
     subj = prem.subject
@@ -37,7 +37,14 @@ def prem_key(prem) -> tuple | None:
         subj_key = ("dict", tuple(sorted((k, str(v)) for k, v in subj.items())))
     else:
         subj_key = subj
-    return (prem.kind, prem.frm, prem.to, subj_key, prem.player, prem.zone)
+    # 理由制限（destroy のみ等）は署名に含める（2026-11-26 語彙統合）。
+    # 理由が違う傍受は別の配線であり、含めないと乗客を核と誤認した
+    # （ムーンライト / 鬼丸「刀」）。when は束の注釈（b.when）から取る。
+    reason = (when or {}).get("reason")
+    if isinstance(reason, list):
+        reason = tuple(reason)
+    return (prem.kind, prem.frm, prem.to, subj_key, prem.player, prem.zone,
+            reason)
 
 
 def move_key(m) -> tuple:
@@ -47,7 +54,8 @@ def move_key(m) -> tuple:
 
 def bundle_signature(b) -> dict:
     """記録用の署名（前提＋移動の組）。"""
-    return {"prem": prem_key(b.prem), "once": bool(getattr(b, "once", False)),
+    return {"prem": prem_key(b.prem, getattr(b, "when", None)),
+            "once": bool(getattr(b, "once", False)),
             "origin": b.origin, "moves": [move_key(m) for m in b.moves]}
 
 
