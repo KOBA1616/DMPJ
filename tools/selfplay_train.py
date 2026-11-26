@@ -32,8 +32,8 @@ def main(argv=None):
                     help="収集の並列ワーカー数（2以上でマルチプロセス収集）")
     ap.add_argument("--collect", choices=["python", "rust"], default="python",
                     help="収集経路。rust は方策を Rust に埋め込んだ一括収集（Phase 7、pool モデルのみ）")
-    ap.add_argument("--model", choices=["pool", "attn"], default="pool",
-                    help="pool: ゾーン別プーリング / attn: 注意機構つき")
+    ap.add_argument("--model", choices=["pool", "attn", "torch"], default="pool",
+                    help="pool: ゾーン別プーリング / attn: 注意機構つき / torch: torch 版（学習をバッチ化、要 torch）")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--lr", type=float, default=3e-3)
     ap.add_argument("--out", default="workspace_ai/model.npz")
@@ -45,6 +45,12 @@ def main(argv=None):
     if a.model == "attn":
         from dmsim.ai.model_attn import AttnModel
         model = AttnModel(len(vocab), seed=a.seed)
+    elif a.model == "torch":
+        from dmsim.ai.model_torch import TorchModel
+        model = TorchModel(len(vocab), seed=a.seed)
+        if a.collect == "rust":
+            print("torch モデルでは rust 収集を使えないため python 収集に切り替える")
+            a.collect = "python"
     else:
         model = Model(len(vocab), seed=a.seed)
     print(f"vocab={len(vocab)} params={sum(v.size for v in model.p.values())}")
