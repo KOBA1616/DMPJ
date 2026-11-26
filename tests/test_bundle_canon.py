@@ -60,7 +60,7 @@ def test_moves_unbound_ref_counted():
     ops = [{"op": "move", "select": {"ref": "paid"}, "to": "graveyard"}]
     ms = BC.moves_of(ops, cov=cov)
     assert ms[0].src == "?"
-    assert cov.qmark["ref_unbound"] == 1
+    assert cov.qmark["ref_never_bound"] == 1
     assert cov.qmark_ref_names["paid"] == 1
 
 
@@ -179,3 +179,64 @@ def test_loop_cond_delegates_with_annotations(built):
         assert hasattr(b, "when") and hasattr(b, "once")
         for m in b.moves:
             assert hasattr(m, "conds")
+
+
+# ---------------------------------------------------------------- 束縛の解決（課題6）
+
+def _srcs(ops, **kw):
+    return [(m.src, m.dst) for m in BC.moves_of(ops, **kw)]
+
+
+def test_choose_binding_zone_list():
+    # choose の zone がリストでも束縛は残る（置き場所はそのリスト）
+    ops = [{"op": "choose", "select": {"zone": ["graveyard", "mana"]}, "as": "p"},
+           {"op": "move", "select": {"ref": "p"}, "to": "bz"}]
+    ms = BC.moves_of(ops)
+    assert ms[0].src == ["graveyard", "mana"]
+
+
+def test_choose_binding_from_ref_chain():
+    # pile から選び直した hit は pile と同じ場所（山札）にいる
+    ops = [{"op": "choose", "select": {"zone": "deck", "from_top": 3}, "as": "pile"},
+           {"op": "choose", "select": {"ref": "pile", "count": "all"}, "as": "hit"},
+           {"op": "move", "select": {"ref": "hit"}, "to": "graveyard"}]
+    cov = BC.Coverage()
+    ms = BC.moves_of(ops, cov=cov)
+    assert [(m.src, m.dst) for m in ms] == [("deck", "graveyard")]
+    assert not cov.qmark
+
+
+def test_choose_binding_event_ref():
+    prem = Z.Premise("move", to="graveyard")
+    ops = [{"op": "choose", "select": {"ref": "event.subject"}, "as": "dead"},
+           {"op": "move", "select": {"ref": "dead"}, "to": "bz"}]
+    ms = BC.moves_of(ops, prem=prem)
+    assert ms[0].src == "graveyard"
+
+
+def test_repeat_as_follows_over():
+    ops = [{"op": "choose", "select": {"zone": "deck", "from_top": 3}, "as": "casts"},
+           {"op": "repeat", "over": "casts", "as": "it",
+            "body": [{"op": "move", "select": {"ref": "it"}, "to": "bz"}]}]
+    assert _srcs(ops) == [("deck", "bz")]
+
+
+def test_crossed_ref_is_battle_zone():
+    ops = [{"op": "move", "select": {"ref": "crossed"}, "to": "shield"}]
+    assert _srcs(ops) == [("bz", "shield")]
+
+
+def test_never_bound_ref_separated():
+    # どこにも束縛が無い名前は原文データの欠陥として別理由で数える
+    cov = BC.Coverage()
+    BC.moves_of([{"op": "move", "select": {"ref": "ghost"}, "to": "hand"}], cov=cov)
+    assert cov.qmark["ref_never_bound"] == 1 and "ref_unbound" not in cov.qmark
+
+
+def test_full_rules_ref_holes_closed(built):
+    # 全カードで '?' は原文データ欠陥（ref_never_bound）以外残らない
+    _, cov, _ = built
+    rep = cov.report()
+    assert rep["qmark_reasons"].get("ref_unbound", 0) == 0
+    assert rep["qmark_reasons"].get("ref_event_unresolved", 0) == 0
+    assert rep["qmark_moves"] <= 10

@@ -229,6 +229,9 @@ def _resolve_src(sel: dict, ctx: _Ctx, default: str | None = None):
         return ctx.zone, True
     if ref == "self_moved":
         return (ctx.after or ctx.zone), True
+    if ref == "crossed":
+        # クロスギアをクロスしているクリーチャー（selectors の特殊参照）はバトルゾーン
+        return "bz", False
     if ref:
         bound = ctx.bindings.get(ref)
         if bound:
@@ -245,7 +248,9 @@ def _resolve_src(sel: dict, ctx: _Ctx, default: str | None = None):
             # イベントレコードの参照（selectors.candidates の event.* 解釈）。
             # zone 併記があればそれが著者の主張する現在地として最も強い。
             z = sel.get("zone")
-            if isinstance(z, str):
+            if isinstance(z, str) or (isinstance(z, list) and z):
+                if isinstance(z, list) and cov is not None:
+                    cov.zone_list += 1
                 return z, False
             if ref in ("event.attacker", "event.opponent", "event.target"):
                 return "bz", False
@@ -261,7 +266,10 @@ def _resolve_src(sel: dict, ctx: _Ctx, default: str | None = None):
                 cov.qmark_ref_names[str(ref)] += 1
             return "?", False
         if cov is not None:
-            cov.qmark["ref_unbound"] += 1
+            # 名前がどこにも束縛されていない（原文データの欠陥）か、
+            # 束縛はあるが置き場所を決められないか、を分けて数える
+            cov.qmark["ref_never_bound" if ref not in ctx.bindings
+                      else "ref_unbound"] += 1
             cov.qmark_ref_names[str(ref)] += 1
         return "?", False
     for key, zone in SPECIAL_SELECTOR_ZONES.items():
@@ -281,6 +289,29 @@ def _resolve_src(sel: dict, ctx: _Ctx, default: str | None = None):
     if cov is not None:
         cov.qmark["no_zone_no_ref"] += 1
     return "?", False
+
+
+def _choose_binding(sel: dict, ctx: _Ctx):
+    """choose が束縛する名前の置き場所（ゾーン名。決められなければ None）。
+
+    zone があればそれ、ref があれば元の束縛（選び直しは部分集合なので同じ場所）、
+    特殊セレクタは実体のゾーン。どれも無ければ None（束縛先不明）。
+    """
+    z = sel.get("zone")
+    if isinstance(z, (str, list)) and z:
+        return z
+    ref = sel.get("ref")
+    if ref:
+        # 参照は _resolve_src と同じ解釈（event.* は zone 併記・イベント先から）。
+        # 解けなければ None（測定は黙って数えない: 実際に移動へ使われた時に数える）。
+        probe = _Ctx(ctx.zone, ctx.after, ctx.card, ctx.prem, None)
+        probe.bindings = ctx.bindings
+        src, _ = _resolve_src(sel, probe)
+        return None if src == "?" else src
+    for key, zone in SPECIAL_SELECTOR_ZONES.items():
+        if key in sel:
+            return zone
+    return None
 
 
 def _play_free_dst(op: dict, sel: dict, ctx: _Ctx, ref_self: bool) -> str:
@@ -495,9 +526,13 @@ def _handle_op(op: dict, conds: tuple, delayed: bool, ctx: _Ctx) -> None:
     if name in ("choose", "choose_player", "choose_race", "choose_number",
                 "choose_name", "choose_civ"):
         if op.get("as"):
-            sel = op.get("select") or {}
-            z = sel.get("zone")
-            ctx.bindings[op["as"]] = z if isinstance(z, str) else None
+            ctx.bindings[op["as"]] = _choose_binding(op.get("select") or {}, ctx)
+        return
+
+    if name == "repeat":
+        # 「over の各要素を as に束縛して body を回す」: as は over と同じ場所
+        if op.get("as"):
+            ctx.bindings[op["as"]] = ctx.bindings.get(op.get("over"))
         return
 
     if name == "set_var":
