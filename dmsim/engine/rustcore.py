@@ -613,6 +613,48 @@ def run_batch(rules, states, policy: str = "random", seed: int = 1) -> list[dict
     return json.loads(out)
 
 
+def _decode_batch_bytes(raw) -> list[dict]:
+    """run_batch_model / run_batch2 共通の戻りデコード。
+    [u32 メタJSON長][メタJSON][軌跡バイナリ] の軌跡を numpy 配列に復元する。"""
+    import numpy as np
+    mlen = int.from_bytes(raw[:4], "little")
+    results = json.loads(raw[4:4 + mlen])
+    buf = raw[4 + mlen:]
+    i32 = np.frombuffer(buf, dtype="<i4")
+    f32 = np.frombuffer(buf, dtype="<f4")
+    off = 0  # バイト単位のオフセットではなく要素単位で数える（両ビュー共通）
+
+    def take_i(n):
+        nonlocal off
+        out = i32[off // 4: off // 4 + n].copy()
+        off += 4 * n
+        return out
+
+    def take_f(n):
+        nonlocal off
+        out = f32[off // 4: off // 4 + n].copy()
+        off += 4 * n
+        return out
+
+    for r in results:
+        traj = []
+        for m in r.get("traj", []):
+            t, o, k = m["t"], m["o"], m["k"]
+            traj.append({
+                "st": {"tok_defn": take_i(t),
+                       "tok_num": take_f(t * 8).reshape(t, 8),
+                       "tok_zone": take_i(t),
+                       "glob": take_f(12)},
+                "op": {"opt_defn": take_i(o),
+                       "opt_num": take_f(o * 6).reshape(o, 6),
+                       "min": m["min"], "max": m["max"], "kind": "?"},
+                "choice": take_i(k).tolist(),
+                "player": m["player"],
+            })
+        r["traj"] = traj
+    return results
+
+
 def rust_weights(model) -> dict:
     """Rust 埋め込み方策に渡す重み dict（tolist 済み）を作る。
 
@@ -656,63 +698,7 @@ def run_batch_model(rules, states, model, vocab_ids, seed: int = 1) -> list[dict
     軌跡は Rust からバイナリで受け取る（JSON だと文字列化が律速になる）。"""
     if dmcore is None:
         raise RuntimeError("dmcore が無い")
-    import numpy as np
     weights = rust_weights(model)
-    states_json = json.dumps([s.to_json() for s in states])
-    raw = dmcore.run_batch_model(
-        _bundle_json(rules), states_json, json.dumps(weights),
-        json.dumps(list(vocab_ids)), seed)
-def _decode_batch_bytes(raw) -> list[dict]:
-    """run_batch_model / run_batch2 共通の戻りデコード。
-    [u32 メタJSON長][メタJSON][軌跡バイナリ] の軌跡を numpy 配列に復元する。"""
-    import numpy as np
-    mlen = int.from_bytes(raw[:4], "little")
-    results = json.loads(raw[4:4 + mlen])
-    buf = raw[4 + mlen:]
-    i32 = np.frombuffer(buf, dtype="<i4")
-    f32 = np.frombuffer(buf, dtype="<f4")
-    off = 0  # バイト単位のオフセットではなく要素単位で数える（両ビュー共通）
-
-    def take_i(n):
-        nonlocal off
-        out = i32[off // 4: off // 4 + n].copy()
-        off += 4 * n
-        return out
-
-    def take_f(n):
-        nonlocal off
-        out = f32[off // 4: off // 4 + n].copy()
-        off += 4 * n
-        return out
-
-    for r in results:
-        traj = []
-        for m in r.get("traj", []):
-            t, o, k = m["t"], m["o"], m["k"]
-            traj.append({
-                "st": {"tok_defn": take_i(t),
-                       "tok_num": take_f(t * 8).reshape(t, 8),
-                       "tok_zone": take_i(t),
-                       "glob": take_f(12)},
-                "op": {"opt_defn": take_i(o),
-                       "opt_num": take_f(o * 6).reshape(o, 6),
-                       "min": m["min"], "max": m["max"], "kind": "?"},
-                "choice": take_i(k).tolist(),
-                "player": m["player"],
-            })
-        r["traj"] = traj
-    return results
-
-
-def run_batch_model(rules, states, model, vocab_ids, seed: int = 1) -> list[dict]:
-    """Phase 7: モデル方策を Rust に埋め込んで複数局を一括実行し、軌跡まで返す。
-    model は dmsim.ai.model.Model（プーリング版）。戻りは局ごとの
-    {winner, turn, decisions, traj} または {error, traj}。traj の各要素は
-    {st, op, choice, player} で、st/op は numpy 配列に復元済み。
-    軌跡は Rust からバイナリで受け取る（JSON だと文字列化が律速になる）。"""
-    if dmcore is None:
-        raise RuntimeError("dmcore が無い")
-    weights = {k: v.tolist() for k, v in model.p.items()}
     states_json = json.dumps([s.to_json() for s in states])
     raw = dmcore.run_batch_model(
         _bundle_json(rules), states_json, json.dumps(weights),
@@ -773,7 +759,7 @@ def run_batch2(rules, states, seats, vocab_ids=(), seed: int = 1,
                     models.append(spec)
                 row.append({"kind": "model", "model": index[k]})
         seats_json.append(row)
-    models_json = [json.dumps({k: v.tolist() for k, v in m.p.items()})
+    models_json = [json.dumps(rust_weights(m))
                    for m in models]
     raw = dmcore.run_batch2(
         _bundle_json(rules),
