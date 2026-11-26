@@ -442,6 +442,12 @@ def h_attack(eng, t):
                     if not s.cards[c].tapped and eng.permits(c, "block", att[0])
                     and "creature" in eng.chars_ro(c)["types"]   # 507.1: ブロックできるのはクリーチャーだけ（第179弾: 条件を満たさないACEタマシード等を除外）
                     and eng.permits(att[0], "be_blocked", c) and [c, s.cards[c].gen] != t["target"]]
+        if t["target"] != "player" and eng.chars_ro(att[0]).get("unblockable_vs_creatures"):
+            # 「クリーチャーを攻撃するときブロックされない」（第428弾、mod unblockable_vs_creatures）:
+            # 攻撃先がクリーチャーの時だけブロック候補を消す。攻撃先がプレイヤーの時は通常どおり
+            # ブロックできる。ガードマンはブロックではない（507.2b）ので候補に残す（キーワード
+            # unblockable が permits 経由でブロッカーだけを消す現行の効き方と一致）
+            blockers = []
         guards = [] if t["target"] == "player" else [          # 507.1a ガードマン: 攻撃されている自分の他のクリーチャーがいる時だけ
             c for c in eng.bz_tops(1 - a) if not s.cards[c].tapped and [c, s.cards[c].gen] != t["target"]
             and eng.permits(c, "guardman", att[0])]
@@ -449,6 +455,10 @@ def h_attack(eng, t):
         if blim is not None and s.turn_counters.get(f"blk_decl:{1 - a}", 0) >= blim:
             blockers, guards = [], []
         forced = [c for c in blockers if "block" in eng.chars_ro(c)["require"]]   # 507.1b ブロックを強制されたクリーチャーは必ず選ぶ
+        if not forced and blockers and eng.chars_ro(att[0]).get("must_be_blocked"):
+            # 攻撃側の「可能ならブロックされる」（第426弾、mod must_be_blocked）: この攻撃をブロックできる
+            # クリーチャーが1体でもいればブロックしない選択肢は消える（require と同じ扱い）
+            forced = list(blockers)
         opts = [eng._card_option(c) for c in blockers] + \
                [eng._card_option(c, key=f"guard:{s.cards[c].defn}") for c in guards] + ([] if forced else [{"key": "no_block"}])
         ans, d = eng.ask(t, 1 - a, "block", opts)
@@ -460,7 +470,10 @@ def h_attack(eng, t):
             # 第190弾: ブロック宣言のタップも tap イベントを出す（「タップした時」誘発用）。
             # ガードマン（ブロックにならない）でもタップは起きる。後から積むほど先に実行される
             # ため、tap イベントは block イベントより後に積んで先に実行させる
-            to_tap = [c for c in list(forced) + [o["cid"]] if not s.cards[c].tapped]
+            # 第410弾: タップするのは選ばれた1体だけ。強制（507.1b）は
+            # no_block を消すことで効き、選ばれなかった強制クリーチャーは
+            # タップしない（Rust engine.rs の単体タップとも一致する）
+            to_tap = [o["cid"]] if not s.cards[o["cid"]].tapped else []
             t["target"] = s.ref(o["cid"])
             if o["key"].startswith("guard:"):      # 507.2b ガードマンで変更された場合、ブロッククリーチャーにはならない
                 for c in to_tap:

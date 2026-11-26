@@ -746,3 +746,57 @@ loop_stages 40局）:
 特権価値＋トラッカーで組み立て段階そのものを学び直すこと。
 モデルは ~/workspace/phase26/model_league.npz、スナップショットは
 ~/workspace/phase26/snapshots/、学習ログは league_train.log。
+## Phase 25: Rust エンジン API 層の拡充
+
+対戦・学習レイヤーから Rust バッチを使うときの不足は、エンジンの速さでは
+なく API の表面だった（局面から始められない、途中の盤面が観測できない、
+torch モデルが使えない、相手を座席ごとに変えられない）。この4点を
+dmcore.run_batch2 として足した。既存の run_batch / run_batch_model は
+そのまま残してある。
+
+- **局面からの開始**: バッチの開始状態はもともと GameState の JSON だった
+  ので、Python 側に変換を足すだけで済んだ。rustcore.state_from_scenario が
+  dmsim.engine.scenario.build の局面を状態 JSON に変換し、run_batch2 の
+  states には GameState / Python Engine / dmcore State / JSON 文字列の
+  どれでも渡せる。
+- **観測フック**: observe=True で、各決定への回答直後の状態ダイジェストを
+  obs に付ける。obs[step][player][zone] はそのゾーンのカードの defn 添字
+  （vocab_ids の 0 始まり）の列で、枚数だけでなく構成まで分かる。
+  検出ロジックは Rust に複製せず、Python 側の
+  rustcore.condition_counts_from_digest が入口条件の充足数を数える。
+- **torch 接続**: selfplay_train の `--model torch --collect rust` の
+  強制切替を外した。TorchModel.p が numpy 版 Model と同じパラメータ dict
+  を返すので、重みはそのまま run_batch_model / run_batch2 に渡る。
+- **座席ごとの方策指定**: run_batch2 の seats で局ごとに
+  [座席0, 座席1] を "first" | "random" | モデル で指定できる。モデルは
+  複数種類を混ぜられ、モデル座席の決定だけが軌跡に記録される。
+  探索プレイヤーは Python 実装のまま対象外（混在させない）。
+
+検証（tests/test_batch2.py、6件全合格）:
+
+- シナリオ局面から first 方策で回したバッチ結果が、Python 駆動の
+  同一局面・同一方策と勝敗・ターン・決定数まで一致（パリティ）。
+- レガシーデッキの新規対戦で run_batch2(first, first) が run_batch と一致。
+- 座席別方策（model/first、first/model、model/model、random/random）が
+  完走し、軌跡はモデル座席の決定だけに限られる。
+- 観測ダイジェストから再現した入口条件6つの充足数が、実盤面で数えた
+  tools/loop_stages.py の condition_counts と全ステップ・両プレイヤーで
+  一致し、到達（全条件同時充足）の真偽も一致した。
+- torch glue は、TorchModel と同じ .p 互換オブジェクト（代替実装）で
+  collect_games_rust と run_batch2 の両方に渡せることを確認した。
+  selfplay_train --collect rust（pool モデル）の通し実行も確認済み。
+
+必須検証: dmcore を再ビルドし、tests/test_rust_engine.py は 293 件全合格、
+test_rust_connect.py / test_rust_model.py / test_rust_schema_sync.py は
+再スタンプ後に 31 合格 / 1 失敗。スタンプは 1d677f45902b814e に更新済み。
+
+未検証・既存の問題:
+
+- torch そのものはこの VM に無いため、TorchModel 本体での
+  `--model torch --collect rust` の実走は未検証（glue の境界は
+  .p 互換の代替オブジェクトで検証済み）。Colab 側での確認が残る。
+- tests/test_rust_model.py::test_run_batch_model_collects と
+  tests/test_batch.py は、現行 saga.yaml に Rust 未対応の札
+  （dm23bd7-030）が入っているため失敗する。Phase 25 の変更を
+  取り除いた素のベースでも同じ失敗になることを確認済みで、
+  Phase 20 のデッキ差し替え以来の既存問題（今回の変更とは無関係）。

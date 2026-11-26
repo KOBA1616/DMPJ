@@ -4,6 +4,11 @@
 dmx08-010 は支払いのマナタップがイベント化されていない不足
 （mana_tap_trigger）で差し戻した（ブースト側は partial に保存）。
 ファミリーは全解消した。
+
+追記（ラウンド470）: dmx08-010 は第436弾で支払い・コストの
+マナタップがイベント化され、ラウンド470で登録済みになった
+（mana_tap_trigger も完全解消）。test_bounce_state は登録後の
+状態を固定する形に更新した。
 """
 import copy
 import json
@@ -55,11 +60,17 @@ def test_registered_forms():
 
 
 def test_bounce_state():
+    # ラウンド248で差し戻された dmx08-010 は、第436弾
+    # （支払いタップのイベント化）→ラウンド470で登録済み。
     rows = [json.loads(l) for l in open(REJECTS, encoding="utf-8")]
-    b = next(r for r in rows if r["id"] == "dmx08-010")
-    assert b["gaps"] == ["mana_tap_trigger"]
-    # 解けたブースト側は partial に保存されている
-    assert "mana_boost" in json.dumps(b.get("partial"), ensure_ascii=False)
+    left = {r["id"] for r in rows}
+    assert "dmx08-010" not in left
+    assert not [r for r in rows
+                if "mana_tap_trigger" in (r.get("gaps") or [])]
+    card = _converted("dmx08-010")
+    parse_card(copy.deepcopy(card), TABLES)
+    # 差し戻し時に partial へ保存されていたブースト側も登録形に含まれる
+    assert "mana_boost" in _flat(card)
 
 
 def test_family_cleared():

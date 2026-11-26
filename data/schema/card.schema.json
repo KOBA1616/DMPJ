@@ -2691,6 +2691,9 @@
     "from_top": {
      "$ref": "#/$defs/expr"
     },
+    "from_bottom": {
+     "$ref": "#/$defs/expr"
+    },
     "chooser": {
      "anyOf": [
       {
@@ -2786,6 +2789,31 @@
       },
       "distinct_type_count": {
        "$ref": "#/$defs/selector"
+      },
+      "distinct_race_count": {
+       "anyOf": [
+        {
+         "$ref": "#/$defs/selector"
+        },
+        {
+         "type": "object",
+         "properties": {
+          "selector": {
+           "$ref": "#/$defs/selector"
+          },
+          "exclude_races": {
+           "type": "array",
+           "items": {
+            "type": "string"
+           }
+          }
+         },
+         "required": [
+          "selector"
+         ],
+         "additionalProperties": false
+        }
+       ]
       },
       "total_cost": {
        "$ref": "#/$defs/selector"
@@ -2909,6 +2937,9 @@
         },
         "ref": {
          "type": "string"
+        },
+        "distinct": {
+         "type": "boolean"
         }
        },
        "required": [
@@ -3256,6 +3287,7 @@
            "attack",
            "attack_by",
            "attack_on",
+           "battle_win",
            "block",
            "broke_by_self",
            "broke_by_self_attack",
@@ -3370,6 +3402,7 @@
            "attack",
            "attack_by",
            "attack_on",
+           "battle_win",
            "block",
            "broke_by_self",
            "broke_by_self_attack",
@@ -3413,6 +3446,12 @@
      "const": "self"
     },
     "double_power": {
+     "type": "boolean"
+    },
+    "must_be_blocked": {
+     "type": "boolean"
+    },
+    "unblockable_vs_creatures": {
      "type": "boolean"
     },
     "add_races": {
@@ -3561,6 +3600,9 @@
         "blocking",
         "not_attacking"
        ]
+      },
+      "opponent_filter": {
+       "$ref": "#/$defs/filter"
       }
      },
      "required": [
@@ -3871,6 +3913,7 @@
      "mana_number",
      "must_attack_creature",
      "must_be_attacked",
+     "must_be_blocked",
      "must_be_chosen",
      "no_leave",
      "opt_reduce",
@@ -3881,6 +3924,7 @@
      "require",
      "sac_reduce",
      "trigger_double",
+     "unblockable_vs_creatures",
      "win_all_battles"
     ]
    }
