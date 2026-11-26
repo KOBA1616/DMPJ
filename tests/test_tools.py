@@ -1164,3 +1164,61 @@ def test_run_rules_registers_rule_convertible_cards_without_model(tmp_path):
     ids = [c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]]
     assert ids == ["r1", "r2", "r4"] and st["ok"] == 3
     assert cc.run_rules(rows, load_tables(), out, rej)["ok"] == 0
+
+
+_META_COND = {"cmp": [{"count": {"zone": "mana", "owner": "you"}}, ">=", 7]}
+_META_REPLACE = {"kind": "replace",
+                 "when": {"event": "move", "from": "bz", "to": "graveyard", "reason": "destroy", "subject": "self"},
+                 "instead": [{"op": "move", "select": {"ref": "self"}, "to": "hand", "reason": "return"}]}
+
+
+def test_split_metamorph_carries_condition_to_pattern_ability():
+    """メタモーフ（クリーチャー形）: ヘッダの条件は、定型が所有する「次の能力」に if として付く。
+    ヘッダは rest に残らず、merge では条件つき置換が1件だけになる（第375弾の登録ブロッカーの解消）。"""
+    import convert_cards as cc
+    import rule_convert as rc
+    row = {"id": "m1", "card_type": "クリーチャー",
+           "text": "このクリーチャーは、ブロックされない。\n"
+                   "メタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る)\n"
+                   "このクリーチャーが破壊される時、墓地に置くかわりに自分の手札に戻す。"}
+    part = rc.split(row)
+    assert part is not None
+    assert part[0] == ["unblockable"]
+    assert part[1] == ""                       # ヘッダは条件ごと定型が所有するので rest に残らない
+    assert part[2] == [{**_META_REPLACE, "if": _META_COND}]
+    # 回答が条件つき置換を返しても二重に付かない（完全一致で dedupe される）
+    ans = {"id": "m1", "keywords": ["unblockable"], "abilities": [{**_META_REPLACE, "if": _META_COND}]}
+    assert cc.merge_split(ans, row, part)["abilities"] == [{**_META_REPLACE, "if": _META_COND}]
+    # 回答が置換を返さなくても、条件つきの形が付く（無条件形にはならない）
+    ans2 = {"id": "m1", "keywords": ["unblockable"], "abilities": []}
+    assert cc.merge_split(ans2, row, part)["abilities"] == [{**_META_REPLACE, "if": _META_COND}]
+
+
+def test_split_metamorph_trigger_variant():
+    """メタモーフの次の能力が誘発の定型でも条件が付く（dm14-073 型）。"""
+    import rule_convert as rc
+    row = {"id": "m2", "card_type": "クリーチャー",
+           "text": "メタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る)\n"
+                   "このクリーチャーをバトルゾーンに出した時、カードを１枚引いてもよい。"}
+    part = rc.split(row)
+    assert part is not None and part[1] == ""
+    assert part[2] == [{"kind": "trigger", "when": {"event": "move", "to": "bz", "subject": "self"},
+                        "effect": [{"op": "may", "body": [{"op": "draw", "count": 1}]}], "if": _META_COND}]
+
+
+def test_split_metamorph_spell_form_and_unowned_ability_untouched():
+    """呪文形のメタモーフと、次の能力が定型でない場合は従来どおり（ヘッダは rest に残り、条件は付けない）。"""
+    import rule_convert as rc
+    spell = {"id": "m3", "card_type": "呪文",
+             "text": "S・トリガー\n相手のパワー2000以下のクリーチャーを１体破壊する。\n"
+                     "メタモーフ(自分のマナゾーンに７枚以上カードがあれば、この呪文は次の能力を得る)\n"
+                     "パワー2000以下のクリーチャーのかわりに、相手のパワー6000以下のクリーチャーを１体破壊する。"}
+    part = rc.split(spell)
+    assert part is not None and "メタモーフ" in part[1]
+    assert all("if" not in a for a in part[2])
+    unowned = {"id": "m4", "card_type": "クリーチャー",
+               "text": "ブロッカー\nメタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る)\n"
+                       "このクリーチャーのパワーは+2000される。"}
+    part = rc.split(unowned)
+    assert part is not None and "メタモーフ" in part[1]     # 定型が所有しない能力には条件を付けず、ヘッダはモデルへ残す
+    assert all("if" not in a for a in part[2])
