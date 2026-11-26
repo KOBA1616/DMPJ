@@ -263,19 +263,33 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         """攻撃中／ブロック中だけのパワー修整（mod power_when）。攻撃クリーチャーに指定されてから攻撃の終わりまで、
         ブロッククリーチャーはブロックの宣言からその攻撃の終わりまでが対象（バトルをしていない間も含む）。
         not_attacking（第280弾）は attacking の否定: 進行中の攻撃の攻撃クリーチャーでない間ずっと付く
-        （ブロック中・攻撃されている間・どの攻撃も無い間を含む）。"""
+        （ブロック中・攻撃されている間・どの攻撃も無い間を含む）。
+        opponent_filter（第364弾）: バトルの相手（blocking では攻撃クリーチャー、attacking では
+        攻撃対象のクリーチャー）がフィルタに合う時だけ付く。相手がプレイヤー（クリーチャーでない）
+        の時や not_attacking では付かない。"""
         hit = False
         for t in self.s.tasks:
             if t["t"] != "attack":
                 continue
             if pw["when"] == "not_attacking":
+                if "opponent_filter" in pw:
+                    return 0   # 攻撃していない間はバトルの相手が定まらない（第364弾）
                 if t["attacker"] == ref:
                     return 0   # 自分が攻撃クリーチャーである間は付かない
                 hit = True
                 continue
-            if (t["attacker"] if pw["when"] == "attacking" else t["target"] if t.get("blocked") else None) == ref:
-                hit = True
-                break
+            if pw["when"] == "attacking":
+                if t["attacker"] != ref:
+                    continue
+                opp = t["target"] if isinstance(t.get("target"), list) else None
+            else:   # blocking: ブロック宣言から攻撃の終わりまで。相手は攻撃クリーチャー
+                if not (t.get("blocked") and t["target"] == ref):
+                    continue
+                opp = t["attacker"]
+            if "opponent_filter" in pw and (opp is None or not self.filter_match(opp[0], pw["opponent_filter"])):
+                continue   # バトルの相手がフィルタに合わない（第364弾。battle_power の opponent_filter と同義）
+            hit = True
+            break
         if pw["when"] == "not_attacking":
             hit = True   # 攻撃タスクが無い、または自分が攻撃クリーチャーでない攻撃しか無い
         if not hit:
@@ -684,13 +698,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     "breaks": 0, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "sac_gated": [],
                     "evo_reduce": 0, "evo_reduce_min": 0,
                     "opt_reduce": None, "cost_may": [], "no_leave": [], "cross_reduce": [], "must_be_attacked": False,
-                    "must_be_attacked_first": False, "must_be_chosen": False, "must_attack_creature": False,
-                    "must_attack_creature_first": False, "player_rush": False,
+                    "must_be_attacked_first": False, "must_be_blocked": False, "must_be_chosen": False, "must_attack_creature": False,
+                    "must_attack_creature_first": False, "player_rush": False, "unblockable_vs_creatures": False,
                     "battle_indestructible": False, "win_all_battles": False, "crystal_soul": 0, "mana_number": None}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name, "names": [d.name],
               "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "sac_gated": [], "evo_reduce": 0, "evo_reduce_min": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "cross_reduce": [], "must_be_attacked": False, "must_be_attacked_first": False,
-              "must_be_chosen": False, "must_attack_creature": False, "must_attack_creature_first": False, "player_rush": False,
+              "must_be_blocked": False, "must_be_chosen": False, "must_attack_creature": False, "must_attack_creature_first": False, "player_rush": False, "unblockable_vs_creatures": False,
               "battle_indestructible": False, "battle_indestructible_filters": [], "win_all_battles": False,
               "indestructible": False, "crystal_soul": d.crystal_soul, "mana_number": None}
         tkey = self._chars_template_key(cid, face, c, d)
@@ -875,6 +889,10 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["must_be_attacked_first"] = True
             elif _mba:   # 「相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する」（第51弾）
                 ch["must_be_attacked"] = True
+            if m.get("must_be_blocked"):   # 「可能ならブロックされる」（第426弾）: 攻撃側の特性。ブロック宣言の強制は combat 側（phase 2）
+                ch["must_be_blocked"] = True
+            if m.get("unblockable_vs_creatures"):   # 「クリーチャーを攻撃するときブロックされない」（第428弾）: 攻撃側の特性。消費は combat 側（phase 2）
+                ch["unblockable_vs_creatures"] = True
             if m.get("must_be_chosen"):   # 「相手が選ぶ時、可能ならこのクリーチャーを選ぶ」（第199弾）
                 ch["must_be_chosen"] = True
             if m.get("player_rush"):   # 出たターンにプレイヤーだけは攻撃できる（第261弾）
@@ -944,6 +962,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["no_leave"] += sc["no_leave"]
                 ch["must_be_attacked"] = ch["must_be_attacked"] or sc["must_be_attacked"]
                 ch["must_be_attacked_first"] = ch["must_be_attacked_first"] or sc.get("must_be_attacked_first", False)
+                ch["must_be_blocked"] = ch["must_be_blocked"] or sc.get("must_be_blocked", False)
+                ch["unblockable_vs_creatures"] = ch["unblockable_vs_creatures"] or sc.get("unblockable_vs_creatures", False)
                 ch["must_attack_creature"] = ch["must_attack_creature"] or sc["must_attack_creature"]
                 ch["must_attack_creature_first"] = ch["must_attack_creature_first"] or sc.get("must_attack_creature_first", False)
                 ch["battle_indestructible"] = ch["battle_indestructible"] or sc["battle_indestructible"]
