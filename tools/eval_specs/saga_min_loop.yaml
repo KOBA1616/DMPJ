@@ -1,0 +1,11 @@
+# サガループの最小盤面 M（新レシピ版）: 入口条件（data/loops/entry/saga.json
+# の minimal）を満たす最小構成。手札にサガ、墓地にサガ2枚目と
+# クリーチャー2体以上、マナに水文明、出口（ドラゲリオン）と
+# コダマダンスを手札に持つ。
+p0:
+  hand: [dm22ex2-021, dm22ex1-007, dmex10-020, dm22sd1-009, dm23bd7-030]
+  mana: [dm26ex2-071, dmbd17-009, dm22ex1-025, dm24ex2-082]
+  graveyard: [dm22ex2-021, dmrp03-036, dm22ex1-025, dmrp03-s03]
+p1: {}
+deck_size: 40
+deck_left: [15, 40]
