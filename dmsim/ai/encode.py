@@ -10,7 +10,13 @@ encode_state(eng, player) -> {
   "tok_num":  np.float32[T, TOK_NUM]  トークン数値特徴
   "tok_zone": np.int32[T]      ゾーン区分（プーリング用）
   "glob":     np.float32[GLOB]
+  "track":    np.float32[TRACK]  トラッカー特徴（Phase 26-3、公開情報のみ）
 }
+encode_state(..., privileged=True) は学習専用の特権情報を追加する:
+  "priv_defn": np.int32[N]     相手の手札の定義ID（実構成）
+  "priv_num":  np.float32[N, TOK_NUM]
+特権情報は価値ヘッドの学習にだけ使い、方策の入力には一切混ぜない
+（model.Model の特権分岐は価値にのみ接続する）。
 encode_options(eng, state_enc, decision) -> {
   "opt_defn": np.int32[O]      選択肢が参照する札の定義ID（複数は先頭、無い場合は 0）
   "opt_num":  np.float32[O, OPT_NUM]
@@ -33,6 +39,22 @@ OPT_NUM = 6
 # 全体特徴: [turn, 自分が手番か, 自分のマナ数, 相手のマナ数, 自分のシールド数, 相手のシールド数,
 #            自分の手札数, 相手の手札数, 自分の山札数, 相手の山札数, 自分の墓地数, 相手の墓地数]
 GLOB = 12
+# トラッカー特徴（Phase 26-3）: 決定論的に集計できる公開情報の構成。
+# ゾーン別プーリングは平均のため「何が何枚あるか」の構成情報が落ちる。
+# それをコスト帯×種別のヒストグラムで補う（デッキ固有の手書き条件は入れない）。
+#   [0:9]   自分の未見プール（山札＋伏せシールド）のクリーチャー（コスト帯別）
+#   [9:18]  同・呪文
+#   [18]    自分の未見プールの総数 / 40
+#   [19:28] 相手の公開カード（墓地・バトルゾーン・マナ）のクリーチャー
+#   [28:37] 同・呪文
+#   [37]    相手の公開カードの総数 / 40
+#   [38]    自分のバトルゾーンの枚数 / 10
+# 未見プールは「自分の全カード − 公開済み（手札・マナ・バトル・墓地・
+# 下敷き等）」で、実戦のトラッカーがデッキリストと公開情報から正確に
+# 計算できる量そのもの（伏せシールドの中身は個別には分からないが、
+# 山札との合算の構成は分かる）。
+COST_BUCKETS = 9  # コスト 0..7 と 8+
+TRACK = COST_BUCKETS * 2 * 2 + 3
 
 _VERBS = ["charge", "play", "attack", "block", "pass", "yes", "no", "mana",
           "shield", "deck", "bz", "graveyard", "hand", "no_block", "decline"]
@@ -65,6 +87,90 @@ class Vocab:
         return self.index.get(defn, 0)
 
 
+def _hist_add(hist: np.ndarray, base: int, static_row) -> None:
+    """静的特徴 [cost/10, power, is_creature, is_spell, civ数] をコスト帯×
+    種別のヒストグラムへ1枚分加える（クリーチャー帯と呪文帯は独立に数える）。"""
+    bucket = min(int(round(float(static_row[0]) * 10.0)), COST_BUCKETS - 1)
+    if static_row[2] > 0.5:
+        hist[base + bucket] += 1.0
+    if static_row[3] > 0.5:
+        hist[base + COST_BUCKETS + bucket] += 1.0
+
+
+def tracker_features(eng, player: int, vocab: Vocab) -> np.ndarray:
+    """トラッカー特徴 [TRACK]。全て公開情報＋自分の情報から決まる決定的集計。
+
+    注意: バトルゾーンは共有ゾーン（zones["bz"][0] に両者のカードが入り、
+    所有者はカード側の owner で区別する）。数え上げは全て owner 基準で
+    行う（ゾーンリストの添字では数えない）。"""
+    s = eng.s
+    me, op = player, 1 - player
+    feat = np.zeros(TRACK, dtype=np.float32)
+
+    def owned_in_zone(zone: str, p: int) -> list[int]:
+        if zone not in s.zones:
+            return []
+        return [cid for lst in s.zones[zone] for cid in lst
+                if s.cards[cid].owner == p]
+
+    # (a) 自分の未見プール = 山札＋伏せシールドの多重集合。
+    # デッキリスト − 公開済みカード（手札・マナ・バトル・墓地・下敷き等）
+    # と一致し、実戦のトラッカーが正確に計算できる量そのもの。
+    n_unseen = 0
+    for zone in ("deck", "shield"):
+        for cid in owned_in_zone(zone, me):
+            _hist_add(feat, 0, vocab.static[vocab.idx(s.cards[cid].defn)])
+            n_unseen += 1
+    feat[COST_BUCKETS * 2] = n_unseen / 40.0
+
+    # (b) 相手の公開カード: 墓地・バトルゾーン・マナゾーン（＋その下敷き）
+    n_pub = 0
+    base = COST_BUCKETS * 2 + 1
+    for zone in ("graveyard", "bz", "mana"):
+        for cid in owned_in_zone(zone, op):
+            _hist_add(feat, base, vocab.static[vocab.idx(s.cards[cid].defn)])
+            n_pub += 1
+    for c in s.cards:
+        for u in c.under:
+            if s.cards[u].owner == op:
+                _hist_add(feat, base,
+                          vocab.static[vocab.idx(s.cards[u].defn)])
+                n_pub += 1
+    feat[COST_BUCKETS * 4 + 1] = n_pub / 40.0
+    # ヒストグラム本体は枚数 / 40 に正規化する
+    feat[0:COST_BUCKETS * 2] /= 40.0
+    feat[base:base + COST_BUCKETS * 2] /= 40.0
+
+    feat[TRACK - 1] = len(owned_in_zone("bz", me)) / 10.0
+    return feat
+
+
+def encode_privileged(eng, player: int, vocab: Vocab) -> dict:
+    """学習専用の特権情報: 相手の手札の実構成。
+
+    トークン数値特徴の並びは通常トークンと同じ（コスト・パワー・種別等）。
+    方策には渡さず、価値ヘッドの学習にだけ使う（model.Model 側で接続）。"""
+    s = eng.s
+    op = 1 - player
+    priv_defn: list[int] = []
+    priv_num: list[list[float]] = []
+    cids = s.zones["hand"][op] if "hand" in s.zones else []
+    for pos, cid in enumerate(cids):
+        c = s.cards[cid]
+        st = vocab.static[vocab.idx(c.defn)]
+        priv_defn.append(vocab.idx(c.defn))
+        priv_num.append([
+            float(st[0]), float(st[1]),
+            1.0 if c.tapped else 0.0,
+            float(st[2]), float(st[3]), float(st[4]),
+            len(c.under) / 4.0, pos / 10.0,
+        ])
+    return {
+        "priv_defn": np.asarray(priv_defn, dtype=np.int32),
+        "priv_num": np.asarray(priv_num, dtype=np.float32).reshape(-1, TOK_NUM),
+    }
+
+
 def _zone_key(zone: str, owner: int, me: int) -> str | None:
     side = "my" if owner == me else "op"
     if zone == "bz":
@@ -80,7 +186,8 @@ def _zone_key(zone: str, owner: int, me: int) -> str | None:
     return None
 
 
-def encode_state(eng, player: int, vocab: Vocab) -> dict:
+def encode_state(eng, player: int, vocab: Vocab,
+                 privileged: bool = False) -> dict:
     s = eng.s
     me, op = player, 1 - player
     tok_defn: list[int] = []
@@ -126,12 +233,16 @@ def encode_state(eng, player: int, vocab: Vocab) -> dict:
         zlen("deck", me) / 40.0, zlen("deck", op) / 40.0,
         zlen("graveyard", me) / 20.0, zlen("graveyard", op) / 20.0,
     ], dtype=np.float32)
-    return {
+    out = {
         "tok_defn": np.asarray(tok_defn, dtype=np.int32),
         "tok_num": np.asarray(tok_num, dtype=np.float32).reshape(-1, TOK_NUM),
         "tok_zone": np.asarray(tok_zone, dtype=np.int32),
         "glob": glob,
+        "track": tracker_features(eng, player, vocab),
     }
+    if privileged:
+        out.update(encode_privileged(eng, player, vocab))
+    return out
 
 
 def option_groups(keys) -> np.ndarray:

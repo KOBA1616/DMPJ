@@ -14,18 +14,43 @@
 
 学習は REINFORCE（価値ヘッドをベースラインにする）＋価値の二乗誤差。
 torch が無い環境でも動くよう numpy の手書き逆伝播で実装している。
+
+Phase 26-3 の追加:
+- トラッカー特徴（encode.tracker_features）: トランクの入力に glob と
+  並べて接続する（Wc の入力幅が GLOB+TRACK に拡張）。公開情報のみ。
+- 特権価値ヘッド: 学習時の軌跡（encode_state(privileged=True)）に限り、
+  相手の手札の集約ベクトルを価値ヘッドへ追加入力する。方策ヘッドと
+  個数ヘッドには接続しないため、対戦時の手の選択は特権情報に一切
+  依存しない。価値への接続（Wv1 の特権列）はゼロ初期化し、旧 npz の
+  読み込みでもゼロ埋めするので、移行直後の価値は旧モデルと完全
+  一致する。Wpv 自体は小さな乱数で初期化して対称性を壊す（両方を
+  ゼロにすると勾配が永遠に流れず死に分岐になる。勾配はまず Wv1 の
+  特権列へ、次に Wpv へ流れ始める）。
 """
 from __future__ import annotations
 
 import numpy as np
 
-from .encode import GLOB, OPT_NUM, TOK_NUM, ZONES
+from .encode import GLOB, OPT_NUM, TOK_NUM, TRACK, ZONES
 
 D_EMB = 24
 H_TOK = 64
 H_CTX = 128
 H_MID = 64
+H_PRIV = 32  # 特権ベクトル（相手の手札の集約）の次元
 MAXK = 16  # 個数ヘッドの上限（max がこれを超える決定では頭打ち）
+
+
+def full_glob(st: dict) -> np.ndarray:
+    """glob とトラッカー特徴を連結したトランク入力の全体特徴部分。
+
+    "track" が無い局面（Rust エンコードの軌跡など）ではゼロで埋める
+    （移行直後の旧モデルでは Wc の該当列もゼロのため挙動は不変）。"""
+    g = st["glob"]
+    t = st.get("track")
+    if t is None:
+        t = np.zeros(TRACK, dtype=np.float32)
+    return np.concatenate([g, t])
 
 
 def _tanh(x):
@@ -99,6 +124,14 @@ def _agg_target(op: dict, choice, aggregate: bool):
     return grp
 
 
+def _pad_cols(a: np.ndarray, extra: int) -> np.ndarray:
+    """行列の右にゼロ列を足す（新規入力の寄与を初期状態で 0 にする）。"""
+    if extra <= 0:
+        return a
+    return np.concatenate(
+        [a, np.zeros((a.shape[0], extra), np.float32)], axis=1)
+
+
 class Model:
     def __init__(self, vocab_size: int, seed: int = 0):
         rng = np.random.default_rng(seed)
@@ -106,12 +139,24 @@ class Model:
         self.p = {
             "emb": s(vocab_size, D_EMB),
             "W1": s(H_TOK, D_EMB + TOK_NUM), "b1": np.zeros(H_TOK, np.float32),
-            "Wc": s(H_CTX, len(ZONES) * H_TOK + GLOB), "bc": np.zeros(H_CTX, np.float32),
-            "Wv1": s(H_MID, H_CTX), "bv1": np.zeros(H_MID, np.float32),
+            # Wc/Wv1 は旧形状で初期化してからゼロ列で広げる。新規モデルは
+            # 従来モデル＋寄与ゼロの新分岐と完全一致し、乱数の消費順も
+            # 従来と変わらない（既存テストの初期値前提を保つ）。
+            "Wc": _pad_cols(s(H_CTX, len(ZONES) * H_TOK + GLOB), TRACK),
+            "bc": np.zeros(H_CTX, np.float32),
+            # 価値ヘッドは [ctx, 特権ベクトル] を入力にする（特権なしでは後半 0）
+            "Wv1": _pad_cols(s(H_MID, H_CTX), H_PRIV),
+            "bv1": np.zeros(H_MID, np.float32),
             "wv2": s(1, H_MID), "bv2": np.zeros(1, np.float32),
             "Wk": s(MAXK + 1, H_CTX), "bk": np.zeros(MAXK + 1, np.float32),
             "Wo1": s(H_MID, H_CTX + D_EMB + OPT_NUM), "bo1": np.zeros(H_MID, np.float32),
             "wo2": s(1, H_MID), "bo2": np.zeros(1, np.float32),
+            # 特権分岐（相手の手札トークンの平均 → tanh 投影）は辞書の
+            # 最後に置く: Wpv の乱数を最後に引くことで、他のパラメータの
+            # 乱数消費は従来と変わらない。Wv1 の特権列がゼロのため初期の
+            # 価値への寄与は 0 で、Wpv の乱数は対称性を壊すためにある。
+            "Wpv": s(H_PRIV, D_EMB + TOK_NUM),
+            "bpv": np.zeros(H_PRIV, np.float32),
         }
         self.vocab_size = vocab_size
         self._adam_m = {k: np.zeros_like(v) for k, v in self.p.items()}
@@ -129,7 +174,7 @@ class Model:
         np.add.at(zone_vecs, st["tok_zone"], h)
         cnt = np.bincount(st["tok_zone"], minlength=len(ZONES)).astype(np.float32)
         zone_vecs /= np.maximum(cnt, 1.0)[:, None]
-        ctx_in = np.concatenate([zone_vecs.reshape(-1), st["glob"]])
+        ctx_in = np.concatenate([zone_vecs.reshape(-1), full_glob(st)])
         ctx = _tanh(ctx_in @ p["Wc"].T + p["bc"])                # [H_CTX]
         return ctx, (x, h, ctx_in, ctx, cnt)
 
@@ -152,10 +197,40 @@ class Model:
         grads["b1"] += dhp.sum(axis=0)
         np.add.at(grads["emb"], st["tok_defn"], dx[:, :D_EMB])
 
-    # ---- ヘッド（局面ベクトル→スコア/価値/個数） ----
-    def _heads(self, ctx, op: dict):
+    # ---- 特権分岐（学習時のみ: 相手の手札の集約 → 価値ヘッド専用入力） ----
+    def _priv(self, st: dict):
+        """st に "priv_defn" があれば相手の手札の集約ベクトルを返す。
+
+        戻り: (priv_vec[H_PRIV], cache)。特権情報が無い局面（対戦時・
+        通常の軌跡）ではゼロベクトルを返し、価値は非特権の値になる。"""
         p = self.p
-        hv = _tanh(ctx @ p["Wv1"].T + p["bv1"])
+        defn = st.get("priv_defn")
+        if defn is None or len(defn) == 0:
+            return np.zeros(H_PRIV, np.float32), None
+        x = np.concatenate([p["emb"][defn], st["priv_num"]], axis=1)
+        mx = x.mean(axis=0)
+        pv = _tanh(mx @ p["Wpv"].T + p["bpv"])
+        return pv, (x, mx, pv)
+
+    def _priv_backward(self, grads, st: dict, pcache, dpriv):
+        if pcache is None:
+            return
+        x, mx, pv = pcache
+        p = self.p
+        du = dpriv * (1 - pv ** 2)
+        grads["Wpv"] += du[:, None] * mx[None, :]
+        grads["bpv"] += du
+        dmx = du @ p["Wpv"]
+        dx = np.broadcast_to(dmx / len(x), x.shape)
+        np.add.at(grads["emb"], st["priv_defn"], dx[:, :D_EMB])
+
+    # ---- ヘッド（局面ベクトル→スコア/価値/個数） ----
+    def _heads(self, ctx, op: dict, priv=None):
+        p = self.p
+        pv, pcache = priv if priv is not None else (
+            np.zeros(H_PRIV, np.float32), None)
+        vin = np.concatenate([ctx, pv])
+        hv = _tanh(vin @ p["Wv1"].T + p["bv1"])
         value = float(hv @ p["wv2"][0] + p["bv2"][0])
         count_logits = ctx @ p["Wk"].T + p["bk"]                 # [MAXK+1]
         emb_opt = p["emb"][op["opt_defn"]]                       # [O, D]
@@ -164,10 +239,11 @@ class Model:
         ], axis=1)
         ho = _tanh(ox @ p["Wo1"].T + p["bo1"])
         scores = ho @ p["wo2"][0] + p["bo2"][0]                  # [O]
-        return scores, value, count_logits, (hv, ox, ho)
+        return scores, value, count_logits, (hv, ox, ho, vin, pcache)
 
-    def _heads_backward(self, grads, op: dict, ctx, hcache, dscores, dcount, dvalue):
-        hv, ox, ho = hcache
+    def _heads_backward(self, grads, st: dict, op: dict, ctx, hcache,
+                        dscores, dcount, dvalue):
+        hv, ox, ho, vin, pcache = hcache
         p = self.p
         dho = dscores[:, None] * p["wo2"][0][None, :] * (1 - ho ** 2)
         grads["wo2"][0] += (dscores[:, None] * ho).sum(axis=0)
@@ -181,9 +257,12 @@ class Model:
         dhv = dvalue * p["wv2"][0] * (1 - hv ** 2)
         grads["wv2"][0] += dvalue * hv
         grads["bv2"][0] += dvalue
-        dctx += dhv @ p["Wv1"]
-        grads["Wv1"] += dhv[:, None] * ctx[None, :]
+        dvin = dhv @ p["Wv1"]
+        dctx += dvin[:H_CTX]
+        grads["Wv1"] += dhv[:, None] * vin[None, :]
         grads["bv1"] += dhv
+        # 特権分岐への勾配は価値からだけ流れる（方策・個数には接続しない）
+        self._priv_backward(grads, st, pcache, dvin[H_CTX:])
         dctx += dcount @ p["Wk"]
         grads["Wk"] += dcount[:, None] * ctx[None, :]
         grads["bk"] += dcount
@@ -192,7 +271,8 @@ class Model:
     # ---- forward ----
     def forward(self, st: dict, op: dict):
         ctx, tcache = self._trunk(st)
-        scores, value, count_logits, hcache = self._heads(ctx, op)
+        scores, value, count_logits, hcache = self._heads(
+            ctx, op, priv=self._priv(st))
         return scores, value, count_logits, (tcache, hcache, ctx)
 
     # ---- 行動のサンプリングと log 確率 ----
@@ -319,7 +399,7 @@ class Model:
             dvalue = 2.0 * value_coef * (value - ret)
             total += -logp * adv + value_coef * (value - ret) ** 2
 
-            dctx = self._heads_backward(grads, op, ctx, hcache, dscores, dcount, dvalue)
+            dctx = self._heads_backward(grads, st, op, ctx, hcache, dscores, dcount, dvalue)
             self._trunk_backward(grads, st, tcache, dctx)
         n = max(1, len(batch))
         for k in grads:
@@ -372,7 +452,7 @@ class Model:
                     dcount[kk] -= 1.0
             logp += logp_k
             total += -logp
-            dctx = self._heads_backward(grads, op, ctx, hcache, dscores,
+            dctx = self._heads_backward(grads, st, op, ctx, hcache, dscores,
                                         dcount, 0.0)
             self._trunk_backward(grads, st, tcache, dctx)
         n = max(1, len(batch))
@@ -396,9 +476,22 @@ class Model:
 
     @classmethod
     def load(cls, path: str) -> "Model":
+        """旧形式の npz（Phase 26-2 以前）もそのまま読める。
+
+        幅が広がったパラメータ（Wc: トラッカー列、Wv1: 特権列）は
+        ゼロ埋めで移行し、欠けた特権分岐（Wpv/bpv）は初期化値のまま
+        にする（Wv1 の特権列がゼロのため価値への寄与は 0）。したが
+        って移行直後のモデルの出力（方策・価値・個数）は旧モデルと
+        完全一致する。"""
         z = np.load(path)
         m = cls(int(z["emb"].shape[0]))
         for k in m.p:
             if k in z:
-                m.p[k] = z[k].astype(np.float32)
+                arr = z[k].astype(np.float32)
+                if arr.shape != m.p[k].shape:
+                    padded = np.zeros_like(m.p[k])
+                    sl = tuple(slice(0, s) for s in arr.shape)
+                    padded[sl] = arr
+                    arr = padded
+                m.p[k] = arr
         return m

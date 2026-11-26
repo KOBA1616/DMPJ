@@ -17,9 +17,9 @@ from .model import Model
 
 
 def model_policy(model: Model, vocab: Vocab, rng, greedy: bool = False,
-                 aggregate: bool = False):
+                 aggregate: bool = False, privileged: bool = False):
     def pol(eng, d):
-        st = encode_state(eng, d["player"], vocab)
+        st = encode_state(eng, d["player"], vocab, privileged=privileged)
         op = encode_options(eng, d, vocab)
         choice, _, _ = model.act(st, op, rng, greedy=greedy,
                                  aggregate=aggregate)
@@ -29,12 +29,14 @@ def model_policy(model: Model, vocab: Vocab, rng, greedy: bool = False,
 
 def collect_games(rules, vocab: Vocab, model: Model, deck_a, deck_b,
                   games: int, seed: int = 0, greedy: bool = False,
-                  aggregate: bool = False):
+                  aggregate: bool = False, privileged: bool = False):
     """自己対戦で軌跡を集める。戻り: (batch, 勝者リスト)。batch の各要素は学習用 dict。
 
     aggregate=True で等価手の集約（Phase 26-1、単一選択のみ）を有効にする。
     軌跡の choice はグループ代表の番号になり、学習側も同じ aggregate 指定で
-    グループ確率の logp を使うこと。"""
+    グループ確率の logp を使うこと。
+    privileged=True で軌跡の局面に特権情報（相手の手札）を含める
+    （Phase 26-3。価値ヘッドの学習専用で、方策の選択には影響しない）。"""
     rng = np.random.default_rng(seed)
     py_rng = __import__("random").Random(seed)
     batch: list[dict] = []
@@ -46,7 +48,7 @@ def collect_games(rules, vocab: Vocab, model: Model, deck_a, deck_b,
         traj: list[tuple[dict, dict, list[int], int]] = []
 
         def pol(e, d, _traj=traj):
-            st = encode_state(e, d["player"], vocab)
+            st = encode_state(e, d["player"], vocab, privileged=privileged)
             op = encode_options(e, d, vocab)
             choice, _, _ = model.act(st, op, rng, greedy=greedy,
                                      aggregate=aggregate)
