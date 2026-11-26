@@ -90,8 +90,12 @@ def test_registry_covers_defs_constants(rules):
     assert events <= set(voc["event"])
 
 
-def test_append_only_schema(rules, schema):
-    """語彙が増えても旧スキーマは接頭辞のまま保たれる。"""
+def test_append_only_schema(rules):
+    """語彙が増えても凍結した v1 スキーマは接頭辞のまま保たれる。
+
+    比較の基準は凍結 v1（BASE_VOCABULARIES）。現在の語彙で足された末尾の
+    特徴は、さらに語彙を足すと並びが変わりうるので基準にしない。"""
+    schema = AF.FeatureSchema(AF.BASE_VOCABULARIES)
     voc = AF.current_vocabularies(rules)
     ext = {g: list(v) for g, v in voc.items()}
     ext["kind"] = ext["kind"] + ["zz_fake_kind"]
