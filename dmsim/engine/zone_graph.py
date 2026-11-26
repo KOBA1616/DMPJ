@@ -58,6 +58,7 @@ class Premise:
     subject: object = None    # None / "self" / {owner, filter}
     player: str | None = None
     zone: str = "bz"          # その能力が働くゾーン
+    draw_gated: bool = False  # draw 前提のみ: ターン開始時のドロー(turn_draw)や「n枚目」(ord)に限る。効果のドローでは満たせない
 
 
 @dataclass
@@ -130,6 +131,19 @@ def _moves_of(ops, zone: str = "bz") -> list[Move]:
     return out
 
 
+def draw_feeds(m: "Move", p: "Premise") -> bool:
+    """効果のドロー m が draw 前提 p を満たせるか。引く主体を区別する:
+    前提が自分(you/None)のドローなら自分が引く移動、opp なら相手が引く移動だけ。
+    ターン開始のドロー・「n枚目」に限る前提は、効果のドローでは満たせない。"""
+    if not m.draw or p.draw_gated:
+        return False
+    want = "opp" if p.player == "opp" else "you"
+    own = m.owner if isinstance(m.owner, str) else "you"
+    if p.player == "each" or own == "each":
+        return True
+    return own == want
+
+
 def _premise(ab) -> Premise | None:
     w = ab.get("when") or {}
     ev = w.get("event")
@@ -137,7 +151,8 @@ def _premise(ab) -> Premise | None:
         return None if w.get("player") == "opp" else Premise("move", "bz", subject=w.get("subject"), zone=ab.get("zone", "bz"))
     if ev not in ("move", "cast", "draw", *TICKS) or (ev == "move" and "to" not in w):
         return None
-    return Premise(ev, w.get("to"), w.get("from"), w.get("subject"), w.get("player"), ab.get("zone", "bz"))
+    return Premise(ev, w.get("to"), w.get("from"), w.get("subject"), w.get("player"), ab.get("zone", "bz"),
+                   draw_gated=ev == "draw" and bool(w.get("turn_draw") or w.get("ord")))
 
 
 def bundles_of(rules) -> list[Bundle]:
@@ -239,7 +254,7 @@ def feeds(a: Bundle, b: Bundle, rules) -> int:
         sf = (p.subject or {}).get("filter", {}) if isinstance(p.subject, dict) else {}
         return 2 if _match(sf, rules.cards[a.card]) else 0
     if p.kind == "draw":
-        return 2 if any(m.draw for m in a.moves) else 0
+        return 2 if any(draw_feeds(m, p) for m in a.moves) else 0
     # TICKS: そのターンの流れで起きる。a の効果で b のカードがその働くゾーンにあれば、次の機会にも誘発する
     if a is b:
         if p.kind in ("attack", "battle_win") and not a.rearm:

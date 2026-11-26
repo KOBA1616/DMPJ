@@ -84,7 +84,7 @@ def bundle_meta(b) -> dict:
             "gate": C.gate(b),
             "prem": ({"kind": p.kind, "frm": p.frm, "to": p.to,
                       "subject": _subj_json(p.subject), "player": p.player,
-                      "zone": p.zone} if p else None),
+                      "zone": p.zone, "draw_gated": bool(getattr(p, "draw_gated", False))} if p else None),
             "moves": [{"src": m.src, "dst": m.dst, "ref_self": bool(m.ref_self),
                        "draw": bool(m.draw), "owner": _owner_key(m.owner),
                        "flt": m.flt or {}, "delayed": bool(m.delayed),

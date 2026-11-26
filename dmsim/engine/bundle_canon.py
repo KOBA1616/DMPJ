@@ -173,7 +173,8 @@ def premise_of(ab: dict) -> Z.Premise | None:
         return Z.Premise("move", "bz", None, subj, w.get("player"), zone)
     if ev in PREMISE_EVENTS:
         return Z.Premise(ev, w.get("to"), w.get("from"), w.get("subject"),
-                         w.get("player"), zone)
+                         w.get("player"), zone,
+                         draw_gated=ev == "draw" and bool(w.get("turn_draw") or w.get("ord")))
     return None
 
 

@@ -102,3 +102,15 @@ def test_trace_akashic_zebrue_closed(graph, rules):
     d = CS.trace_control(graph, rules, ctrl)
     assert d["witness"] is not None, d
     assert d["stage"] == "pass", d["witness"]
+
+
+def test_draw_feeds_distinguishes_drawer():
+    from dmsim.engine import zone_graph as Z
+    mine = Z.Move("deck", "hand", draw=True, blind=True, owner="you")
+    theirs = Z.Move("deck", "hand", draw=True, blind=True, owner="opp")
+    assert Z.draw_feeds(mine, Z.Premise("draw", player="you"))
+    assert not Z.draw_feeds(theirs, Z.Premise("draw", player="you"))
+    assert Z.draw_feeds(theirs, Z.Premise("draw", player="opp"))
+    assert not Z.draw_feeds(mine, Z.Premise("draw", player="opp"))
+    # ターン開始ドロー限定の前提は効果のドローでは満たせない
+    assert not Z.draw_feeds(mine, Z.Premise("draw", player="you", draw_gated=True))
