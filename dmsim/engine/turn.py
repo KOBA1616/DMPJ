@@ -831,15 +831,23 @@ class TurnMixin:
         mana_boost（scope 適用前）と mana_all_civs の bz 発生源を集める。
         出すカードには依存しない（scope は呼び出し側で適用）ため盤面指紋で
         キャッシュし、check モードでは毎回フレッシュ計算と照合する。"""
-        key = ("mb_src", self._gtoken, p, self._board_sig())
-        hit = self._xcache.get(key)
-        if hit is not None and not self.check:
-            return hit
+        # _mb_defns / _mac_defns はルールだけに依存する集合で、_mana_choices が
+        # 「用意済み」前提で参照する。キャッシュヒットで早期 return すると
+        # このインスタンス（複製等）に用意されないままになるため、先に用意する。
         mb_defns = getattr(self, "_mb_defns", None)
         if mb_defns is None:
             mb_defns = self._mb_defns = {dn for dn, cd in self.rules.cards.items()
                                          if any(ab.get("mana_boost") for f in (cd.faces or [cd])
                                                 for ab in f.abilities if ab.get("kind") == "static")}
+        mac_defns = getattr(self, "_mac_defns", None)
+        if mac_defns is None:
+            mac_defns = self._mac_defns = {dn for dn, cd in self.rules.cards.items()
+                                           if any(ab.get("mana_all_civs") for f in (cd.faces or [cd])
+                                                  for ab in f.abilities if ab.get("kind") == "static")}
+        key = ("mb_src", self._gtoken, p, self._board_sig())
+        hit = self._xcache.get(key)
+        if hit is not None and not self.check:
+            return hit
         statics = []
         for src in self.s.zones["bz"][0]:
             sc = self.s.cards[src]
@@ -852,11 +860,6 @@ class TurnMixin:
                 if "if" in mb and not self.eval_cond(mb["if"], {"you": p, "self": self.s.ref(src)}):
                     continue
                 statics.append(mb)
-        mac_defns = getattr(self, "_mac_defns", None)
-        if mac_defns is None:
-            mac_defns = self._mac_defns = {dn for dn, cd in self.rules.cards.items()
-                                           if any(ab.get("mana_all_civs") for f in (cd.faces or [cd])
-                                                  for ab in f.abilities if ab.get("kind") == "static")}
         mac_bz = []
         for src in self.s.zones["bz"][0]:
             sc = self.s.cards[src]
