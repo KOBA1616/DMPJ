@@ -280,9 +280,11 @@ class TurnSearch:
       fast_forward で必要な周回だけ進め、その局面を子として探索を続ける。"""
 
     def __init__(self, me: int, budget: int = 200, weights: Weights | None = None, opp_policy=charge_only_policy,
-                 combo_cap: int = 6, value_fn=None, time_limit: float | None = None):
+                 combo_cap: int = 6, value_fn=None, time_limit: float | None = None,
+                 order_fn=None):
         self.time_limit = time_limit          # 1手の探索の実時間の上限（秒）。超えたら budget 切れと同じく貪欲に打ち切る。None は無制限（再現性のため既定）
         self.value_fn = value_fn              # 葉の評価を差し替える関数 f(eng, me)（None なら evaluate）。勝敗を使わない局面評価の測定用
+        self.order_fn = order_fn              # 候補の並べ替え f(eng, d, cands) -> cands（Phase 12: 学習方策による並べ替え用。None は従来どおり）
         self.me = me
         self.budget = budget
         self.w = weights or Weights()
@@ -426,6 +428,8 @@ class TurnSearch:
             cands = self._lookahead_order(eng, cands)
         if self._rf and len(cands) > 1:
             cands = self._repeat_order(eng, d, cands)
+        if self.order_fn is not None and len(cands) > 1:
+            cands = self.order_fn(eng, d, cands)
         for choice in cands:
             if self.left <= 0 and best is not None:
                 break
