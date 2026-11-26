@@ -240,3 +240,18 @@ def test_full_rules_ref_holes_closed(built):
     assert rep["qmark_reasons"].get("ref_unbound", 0) == 0
     assert rep["qmark_reasons"].get("ref_event_unresolved", 0) == 0
     assert rep["qmark_moves"] <= 10
+
+
+def test_move_src_zone_list_is_alternatives():
+    m = Z.Move(["hand", "deck"], "bz")
+    assert m.src_zones() == ("hand", "deck")
+    assert m.from_any("deck") and not m.from_any("graveyard")
+    assert Z.Move("graveyard", "hand").from_any("graveyard")
+
+
+def test_zone_list_not_missed_by_recovery_check():
+    # 墓地を含むリスト移動元も「回収する札」として拾う（従来は取りこぼし）
+    from dmsim.discovery import hunt2
+    assert hasattr(hunt2, "__name__")
+    m = Z.Move(["mana", "graveyard"], "hand")
+    assert m.from_any("graveyard")

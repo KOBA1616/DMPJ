@@ -48,6 +48,14 @@ class Move:
     alias: str | None = None  # この移動で動かした札の名前（op の as）
     ref: str | None = None    # 前の移動で名前を付けた札を動かす（select.ref、self 以外）
 
+    def src_zones(self) -> tuple:
+        """移動元ゾーンの候補（src がリストなら「どれか」の選択肢。文字列なら1つ）。"""
+        return tuple(self.src) if isinstance(self.src, (list, tuple)) else (self.src,)
+
+    def from_any(self, *zones) -> bool:
+        """移動元の候補のどれかが zones に入るか（リストの src を取りこぼさない）。"""
+        return any(z in zones for z in self.src_zones())
+
 
 @dataclass
 class Premise:
