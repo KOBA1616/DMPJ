@@ -109,6 +109,38 @@ def _teacher_choice(eng, d, me: int, budget: int) -> list[int]:
     return best
 
 
+def record_game_demo(rules, vocab, start_eng, me: int = 0,
+                     budget: int = 600, max_decisions: int = 600) -> list[dict]:
+    """任意の開始局面から教師で1局指し切り、自分の決定を教材化する（Phase 15）。
+    自分のターンの決定は TurnSearch 教師、相手ターン中の反応的な決定は
+    貪欲方策で指す。勝てなければ例外（教材は勝ち手順だけから作る）。"""
+    eng = start_eng.clone()
+    items: list[dict] = []
+    greedy = greedy_policy()
+    for _ in range(max_decisions):
+        d = eng.advance()
+        if d is None:
+            break
+        if d["player"] != me:
+            eng.answer(charge_only_policy(eng, d))
+            continue
+        if eng.s.active == me:
+            try:
+                choice = _teacher_choice(eng, d, me, budget)
+            except Exception:
+                choice = greedy(eng, d)
+        else:
+            choice = greedy(eng, d)
+        items.append({"st": encode_state(eng, me, vocab),
+                      "op": encode_options(eng, d, vocab),
+                      "choice": sorted(choice), "ret": 1.0})
+        eng.answer(choice)
+    res = eng.s.result
+    if not res or res.get("winner") != me:
+        raise RuntimeError(f"teacher game did not win: {res}")
+    return items
+
+
 def record_demo(rules, vocab, finding, cycles: int, me: int = 0,
                 budget: int = 800) -> list[dict]:
     """検証済み Finding（ループ＋勝ち）から教材バッチを作る。勝てなければ例外。"""
