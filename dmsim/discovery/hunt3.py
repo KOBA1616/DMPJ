@@ -500,7 +500,8 @@ def judge_conversion3(rules, core_cards: dict[str, int], conv_cards: list[str], 
                       engine_turns: int = 2, conv_turns: int = 6, seeds=(1,),
                       delta: dict | None = None, lap_cap: int = 12,
                       deck_cards: list[str] | None = None,
-                      shield_cards: list[str] | None = None) -> dict:
+                      shield_cards: list[str] | None = None,
+                      controls: bool = True) -> dict:
     """変換判定 v3: 認定済みエンジンを実際に回して得た実局面から勝ちを探す。
 
     段1（蓄積）: 仕込み局面（最小コア＋変換札1枚）を _play_accum で進める（ターンは探索に
@@ -563,5 +564,27 @@ def judge_conversion3(rules, core_cards: dict[str, int], conv_cards: list[str], 
                         "lost": res2.lost, "error": res2.error,
                         "pass": res2.kill_turn is not None})
         row["seconds"] = round(time.time() - t0, 1)
+        row["raw_pass"] = row["pass"]
+        if controls and row["pass"]:
+            # 対照: 核からカードを1種ずつ外した局面（と核なし）でも勝てるなら、勝ちは
+            # エンジン由来ではない（ただ殴って勝った等）。不合格にはせず値つきで残す。
+            variants = [(c, {k: v for k, v in core_cards.items() if k != c})
+                        for c in core_cards]
+            ctl = []
+            for removed, sub in variants:
+                try:
+                    cv = judge_conversion3(rules, sub, conv_cards, by_card, engine_budget=engine_budget,
+                                           conv_budget=conv_budget, engine_turns=engine_turns,
+                                           conv_turns=conv_turns, seeds=(sd,), delta=delta,
+                                           lap_cap=lap_cap, controls=False)
+                    r0 = cv["rows"][0]
+                    ctl.append({"removed": removed, "pass": cv["pass"], "kill_turn": r0.get("kill_turn")})
+                except Exception as ex:      # 核が空など、局面を作れない対照は「勝てない」扱いで理由を残す
+                    ctl.append({"removed": removed, "pass": False, "kill_turn": None,
+                                "error": f"{type(ex).__name__}: {ex}"})
+            row["controls"] = ctl
+            row["attributed"] = not any(c["pass"] for c in ctl)
+            row["pass"] = row["attributed"]
         rows.append(row)
-    return {"pass": any(r["pass"] for r in rows), "rows": rows}
+    return {"pass": any(r["pass"] for r in rows),
+            "raw_pass": any(r.get("raw_pass") for r in rows), "rows": rows}
