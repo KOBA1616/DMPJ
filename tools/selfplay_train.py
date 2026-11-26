@@ -37,6 +37,8 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--init", default=None,
                     help="既存の npz から重みを読み込んで続きを学習する（中断耐性用）")
+    ap.add_argument("--aggregate", action="store_true",
+                    help="等価手の集約（Phase 26-1、単一選択のみ）を有効にする")
     ap.add_argument("--lr", type=float, default=3e-3)
     ap.add_argument("--out", default="workspace_ai/model.npz")
     a = ap.parse_args(argv)
@@ -70,11 +72,12 @@ def main(argv=None):
               f"({before[opp]['wins']}W/{before[opp]['losses']}L/{before[opp]['draws']}D)")
 
     train_iters(rules, vocab, model, deck, deck, a.iters, a.games_per_iter,
-                seed=a.seed, lr=a.lr, workers=a.workers, collect=a.collect)
+                seed=a.seed, lr=a.lr, workers=a.workers, collect=a.collect,
+                aggregate=a.aggregate)
 
     for opp in opponents:
         after[opp] = evaluate(rules, vocab, model, deck, deck, a.eval_games,
-                              seed=999, opponent=opp)
+                              seed=999, opponent=opp, aggregate=a.aggregate)
         print(f"[eval after]  vs {opp}: win rate = {after[opp]['win_rate']:.2f} "
               f"({after[opp]['wins']}W/{after[opp]['losses']}L/{after[opp]['draws']}D)")
     print(f"total {time.perf_counter() - t0:.1f}s")

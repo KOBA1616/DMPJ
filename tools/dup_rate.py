@@ -48,6 +48,15 @@ def measure(rules, deck, policy_fn, games: int, seed: int):
             stats["distinct"] += u
             if u < n:
                 stats["dup_decisions"] += 1
+            if d["min"] == 1 and d["max"] == 1:
+                # 単一選択（集約の対象、Phase 26-1）だけの内訳。
+                # 集約後の選択肢はグループそのもの（= distinct）になる。
+                stats["ss_decisions"] += 1
+                stats["ss_options"] += n
+                stats["ss_distinct"] += u
+                stats["ss_agg_options"] += u
+                if u < n:
+                    stats["ss_dup_decisions"] += 1
             k = by_kind.setdefault(d["kind"], Counter())
             k["decisions"] += 1
             k["options"] += n
@@ -64,6 +73,13 @@ def show(name, stats, by_kind):
           f"{stats['dup_decisions']} 件（{stats['dup_decisions'] / dec:.1%}）、"
           f"選択肢 {stats['options']} 個 → 等価でないもの {stats['distinct']} 個"
           f"（重複 {1 - stats['distinct'] / stats['options']:.1%}）")
+    if stats["ss_decisions"]:
+        ss = stats["ss_decisions"]
+        print(f"  単一選択のみ: 決定 {ss} 件、集約前の重複を含む決定 "
+              f"{stats['ss_dup_decisions']} 件"
+              f"（{stats['ss_dup_decisions'] / ss:.1%}）、選択肢 "
+              f"{stats['ss_options']} 個 → 集約後 {stats['ss_agg_options']} 個"
+              f"（重複 0 件）")
     top = sorted(by_kind.items(),
                  key=lambda kv: kv[1]["options"] - kv[1]["distinct"],
                  reverse=True)[:5]
@@ -78,6 +94,8 @@ def main() -> int:
     ap.add_argument("--games", type=int, default=20)
     ap.add_argument("--model", default=None)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--aggregate", action="store_true",
+                    help="学習済み方策に等価手の集約（Phase 26-1）を適用して測る")
     args = ap.parse_args()
 
     t0 = time.time()
@@ -95,7 +113,8 @@ def main() -> int:
         s, bk = measure(
             rules, deck,
             lambda: model_policy(model, vocab,
-                                 np.random.default_rng(rng.randrange(1 << 30))),
+                                 np.random.default_rng(rng.randrange(1 << 30)),
+                                 aggregate=args.aggregate),
             args.games, args.seed)
         show("学習済み方策", s, bk)
     print(f"合計 {time.time() - t0:.0f}s")

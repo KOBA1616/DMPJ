@@ -5,8 +5,10 @@
   （トランク。注意機構版は model_attn.AttnModel がトランクだけ差し替える）
 - 方策ヘッド: 選択肢ごとにスコア（局面ベクトル＋選択肢特徴）。選択は
   Plackett-Luce 型の逐次サンプリング（重みなし抽出）で、単一選択・複数選択・
-  順序付け（order_cards）の全決定形を1つの分布で扱う。同値合法手は同じ特徴を
-  持つため自然に同スコアになり、集約はサンプリング側で効く。
+  順序付け（order_cards）の全決定形を1つの分布で扱う。
+- 等価手の集約（Phase 26-1、任意）: 意味キーが同じ選択肢をグループとして
+  確率を合算してから選び、REINFORCE の log 確率もグループ確率で計算する
+  （act / loss_and_grads / bc_loss_and_grads の aggregate 引数、単一選択のみ）。
 - 個数ヘッド: 選ぶ個数 k（min..max）の分布。
 - 価値ヘッド: 局面ベクトルから勝敗予測（最終勝敗のみを教師にする疎な報酬）。
 
@@ -28,6 +30,73 @@ MAXK = 16  # 個数ヘッドの上限（max がこれを超える決定では頭
 
 def _tanh(x):
     return np.tanh(x)
+
+
+# ---- 等価手の集約（Phase 26-1） ----
+# 意味キー（encode_options の "grp"）が同じ選択肢は盤面上の結果が同一。
+# 集約時はグループ確率（メンバーの softmax 確率の合計）で選び・学ぶ。
+# 対象は単一選択（min == max == 1）の決定のみ。複数選択では「同じ札を
+# 2枚選ぶ」が正当な別結果になるため集約しない。
+
+def group_log_probs(scores: np.ndarray, grp) -> tuple[list[int], np.ndarray]:
+    """グループごとの log 確率と代表インデックスを返す。
+
+    戻り: (reps, logp)。グループは id の昇順で並び、reps[g] はその
+    グループの代表（最小の選択肢番号）、logp[g] はグループ確率の log
+    （= メンバーのスコアの logsumexp − 全体の logsumexp）。
+    グループ確率の合計は 1 になる（元の softmax の総和保存）。
+    """
+    scores = np.asarray(scores, dtype=np.float64)
+    grp = np.asarray(grp)
+    z = scores - scores.max()
+    log_z = float(scores.max() + np.log(np.exp(z).sum()))
+    reps: list[int] = []
+    lps: list[float] = []
+    for g in np.unique(grp):
+        idx = np.nonzero(grp == g)[0]
+        s = scores[idx]
+        m = float(s.max())
+        reps.append(int(idx[0]))
+        lps.append(m + float(np.log(np.exp(s - m).sum())) - log_z)
+    return reps, np.asarray(lps)
+
+
+def _group_dscores(scores: np.ndarray, grp, chosen: int,
+                   adv: float) -> np.ndarray:
+    """集約時のスコア勾配: loss = -logp_group * adv に対する d loss/d scores。
+
+    d(-logp_g)/ds_i = p_i（全体 softmax）− q_i。q は選ばれたグループ内での
+    softmax（メンバー外は 0）で、合計は 1。非集約時の one-hot の一般化。
+    """
+    scores64 = np.asarray(scores, dtype=np.float64)
+    grp = np.asarray(grp)
+    z = scores64 - scores64.max()
+    pr = np.exp(z)
+    pr /= pr.sum()
+    d = adv * pr
+    idx = np.nonzero(grp == grp[chosen])[0]
+    s = scores64[idx]
+    zz = s - s.max()
+    q = np.exp(zz)
+    q /= q.sum()
+    d[idx] -= adv * q
+    return d.astype(np.float32)
+
+
+def _agg_target(op: dict, choice, aggregate: bool):
+    """集約を適用すべき決定なら grp を、そうでなければ None を返す。
+
+    条件: 集約 ON、op に "grp" がある（Rust エンコード経路の軌跡には無い）、
+    単一選択（min == max == 1）、記録された選択がちょうど1つ。
+    """
+    if not aggregate:
+        return None
+    grp = op.get("grp")
+    if grp is None or len(choice) != 1:
+        return None
+    if op["min"] != 1 or op["max"] != 1:
+        return None
+    return grp
 
 
 class Model:
@@ -169,9 +238,22 @@ class Model:
         pr /= pr.sum()
         return mn, pr
 
-    def act(self, st: dict, op: dict, rng, greedy: bool = False):
+    def act(self, st: dict, op: dict, rng, greedy: bool = False,
+            aggregate: bool = False):
         scores, value, count_logits, _ = self.forward(st, op)
         mn, mx = op["min"], op["max"]
+        grp = op.get("grp") if aggregate else None
+        if grp is not None and mn == 1 and mx == 1:
+            # 単一選択の集約: グループ確率で選び、代表を返す。
+            # 結果の分布は非集約時と同一（同値手の結果は同じため）。
+            reps, glp = group_log_probs(scores, grp)
+            if greedy:
+                j = int(np.argmax(glp))
+                return [reps[j]], 0.0, value
+            pr = np.exp(glp - glp.max())
+            pr /= pr.sum()
+            j = int(rng.choice(len(reps), p=pr))
+            return [reps[j]], float(glp[j]), value
         if mn == mx:
             k, logp_k = mn, 0.0
         else:
@@ -186,7 +268,8 @@ class Model:
         return choice, (logp_pl + logp_k), value
 
     # ---- 学習（REINFORCE + 価値ベースライン） ----
-    def loss_and_grads(self, batch: list[dict], value_coef: float = 0.5):
+    def loss_and_grads(self, batch: list[dict], value_coef: float = 0.5,
+                       aggregate: bool = False):
         """batch: [{st, op, choice, ret}]。ret はその決定をしたプレイヤーの最終勝敗（+1/-1）。"""
         grads = {k: np.zeros_like(v) for k, v in self.p.items()}
         total = 0.0
@@ -196,20 +279,29 @@ class Model:
             tcache, hcache, ctx = cache
             adv = ret - value
             # スコアへの勾配: PL logp の勾配 × (-adv)
-            dscores = np.zeros_like(scores)
-            rest = list(range(len(scores)))
-            logp = 0.0
-            for c in choice:
-                sc = scores[rest]
-                z = sc - sc.max()
-                pr = np.exp(z)
-                pr /= pr.sum()
-                logp += float(np.log(pr[rest.index(c)] + 1e-12))
-                # loss = -logp * adv なので d loss/d s_i = adv * (p_i - 1[i==c])
-                for jj, idx in enumerate(rest):
-                    dscores[idx] += adv * pr[jj]
-                dscores[c] -= adv
-                rest.remove(c)
+            grp = _agg_target(op, choice, aggregate)
+            if grp is not None:
+                # 集約: logp はグループ確率、勾配はグループ内 softmax で一般化
+                _reps, glp = group_log_probs(scores, grp)
+                gpos = int(np.nonzero(
+                    np.unique(np.asarray(grp)) == grp[choice[0]])[0][0])
+                logp = float(glp[gpos])
+                dscores = _group_dscores(scores, grp, choice[0], adv)
+            else:
+                dscores = np.zeros_like(scores)
+                rest = list(range(len(scores)))
+                logp = 0.0
+                for c in choice:
+                    sc = scores[rest]
+                    z = sc - sc.max()
+                    pr = np.exp(z)
+                    pr /= pr.sum()
+                    logp += float(np.log(pr[rest.index(c)] + 1e-12))
+                    # loss = -logp * adv なので d loss/d s_i = adv * (p_i - 1[i==c])
+                    for jj, idx in enumerate(rest):
+                        dscores[idx] += adv * pr[jj]
+                    dscores[c] -= adv
+                    rest.remove(c)
             # 個数ヘッドへの勾配（loss に -logp_k * adv を含める）
             dcount = np.zeros(MAXK + 1, np.float32)
             mn, mx = op["min"], op["max"]
@@ -234,7 +326,7 @@ class Model:
             grads[k] /= n
         return total / n, grads
 
-    def bc_loss_and_grads(self, batch: list[dict]):
+    def bc_loss_and_grads(self, batch: list[dict], aggregate: bool = False):
         """模倣学習（BC）専用の損失と勾配（Phase 18）。
 
         loss_and_grads と違い、方策の勾配の重みを常に 1 に固定し
@@ -246,19 +338,27 @@ class Model:
             st, op, choice = item["st"], item["op"], item["choice"]
             scores, value, count_logits, cache = self.forward(st, op)
             tcache, hcache, ctx = cache
-            dscores = np.zeros_like(scores)
-            rest = list(range(len(scores)))
-            logp = 0.0
-            for c in choice:
-                sc = scores[rest]
-                z = sc - sc.max()
-                pr = np.exp(z)
-                pr /= pr.sum()
-                logp += float(np.log(pr[rest.index(c)] + 1e-12))
-                for jj, idx in enumerate(rest):
-                    dscores[idx] += pr[jj]
-                dscores[c] -= 1.0
-                rest.remove(c)
+            grp = _agg_target(op, choice, aggregate)
+            if grp is not None:
+                _reps, glp = group_log_probs(scores, grp)
+                gpos = int(np.nonzero(
+                    np.unique(np.asarray(grp)) == grp[choice[0]])[0][0])
+                logp = float(glp[gpos])
+                dscores = _group_dscores(scores, grp, choice[0], 1.0)
+            else:
+                dscores = np.zeros_like(scores)
+                rest = list(range(len(scores)))
+                logp = 0.0
+                for c in choice:
+                    sc = scores[rest]
+                    z = sc - sc.max()
+                    pr = np.exp(z)
+                    pr /= pr.sum()
+                    logp += float(np.log(pr[rest.index(c)] + 1e-12))
+                    for jj, idx in enumerate(rest):
+                        dscores[idx] += pr[jj]
+                    dscores[c] -= 1.0
+                    rest.remove(c)
             dcount = np.zeros(MAXK + 1, np.float32)
             mn, mx = op["min"], op["max"]
             logp_k = 0.0
