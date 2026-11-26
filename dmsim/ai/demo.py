@@ -49,12 +49,14 @@ def policy_order_fn(model, vocab, cap: int | None = None):
     return order
 
 
-def model_policy(model, vocab, rng, greedy: bool = False):
+def model_policy(model, vocab, rng, greedy: bool = False,
+                 aggregate: bool = False):
     """モデルを (eng, decision) -> choice の方策関数にする。"""
     def pol(eng, d):
         st = encode_state(eng, d["player"], vocab)
         op = encode_options(eng, d, vocab)
-        choice, _, _ = model.act(st, op, rng, greedy=greedy)
+        choice, _, _ = model.act(st, op, rng, greedy=greedy,
+                                 aggregate=aggregate)
         return sorted(choice)
     return pol
 
@@ -104,6 +106,8 @@ def _teacher_choice(eng, d, me: int, budget: int) -> list[int]:
         score = 1e18 if (r and r.get("winner") == me) else evaluate(leaf, me, _W)
         if score > best_score:
             best, best_score = sorted(c), score
+    if best is None:  # 全候補が不合法・範囲外のときは常に合法な基準候補へ
+        best = sorted(cands[0])
     return best
 
 

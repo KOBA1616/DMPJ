@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 
 from .encode import TOK_NUM, ZONES
-from .model import D_EMB, H_CTX, H_TOK, Model, _tanh
+from .model import D_EMB, H_CTX, H_TOK, Model, _tanh, full_glob
 
 HEADS = 2
 DH = H_TOK // HEADS
@@ -33,14 +33,14 @@ class AttnModel(Model):
 
     def _trunk(self, st: dict):
         p = self.p
-        emb_tok = p["emb"][st["tok_defn"]]
+        emb_tok = self._embed(st["tok_defn"])
         x = np.concatenate([emb_tok, st["tok_num"]], axis=1)
         h0 = _tanh(x @ p["W1"].T + p["b1"])                    # [T, H]
         h = h0 + p["zemb"][st["tok_zone"]]
         T = h.shape[0]
         if T == 0:
             zone_vecs = np.zeros((len(ZONES), H_TOK), np.float32)
-            ctx_in = np.concatenate([zone_vecs.reshape(-1), st["glob"]])
+            ctx_in = np.concatenate([zone_vecs.reshape(-1), full_glob(st)])
             ctx = _tanh(ctx_in @ p["Wc"].T + p["bc"])
             return ctx, (x, h0, h, None, ctx_in, ctx)
         Q = (h @ p["attn_q"].T).reshape(T, HEADS, DH).transpose(1, 0, 2)
@@ -58,7 +58,7 @@ class AttnModel(Model):
             m = st["tok_zone"] == z
             if m.any():
                 zone_vecs[z] = h2[m].mean(axis=0)
-        ctx_in = np.concatenate([zone_vecs.reshape(-1), st["glob"]])
+        ctx_in = np.concatenate([zone_vecs.reshape(-1), full_glob(st)])
         ctx = _tanh(ctx_in @ p["Wc"].T + p["bc"])
         cache = (x, h0, h, (Q, K, V, A, O, h2), ctx_in, ctx)
         return ctx, cache

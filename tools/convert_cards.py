@@ -34,9 +34,19 @@ sys.path.insert(0, str(ROOT / "tools"))
 from dmsim.cards import cardstore, identity, schema  # noqa: E402
 from dmsim.cards.defs import DATA, DefError, dedupe_list, load_tables, parse_card  # noqa: E402
 import rule_convert  # noqa: E402
-from llm_offload.providers import CallTimeout  # noqa: E402
-from llm_offload.providers import (  # noqa: E402,F401  無料モデル呼び出しは llm_offload に集約
-    OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, OPENCODE_URL, BadResponse, Fatal, OpenCodeCLI, OpenCodeLLM, Chain, GeminiLLM, LLM7LLM, OpenRouterLLM, check_free_model)
+
+
+class BadResponse(ValueError):
+    """応答に本文がないなど、モデルの出力が使えない。"""
+
+
+class CallTimeout(RuntimeError):
+    """1回の呼び出しが上限秒内に終わらなかった。"""
+
+
+class Fatal(Exception):
+    """続行すると無駄打ちになるエラー。実行全体を止める。"""
+
 
 MODEL = "claude-opus-5-5"
 
@@ -255,17 +265,20 @@ class AnthropicLLM:
         return "".join(b.text for b in msg.content if b.type == "text")
 
 
-def make_llm(provider: str, model: str | None, interval: float):
-    if provider == "opencode":
-        return OpenCodeLLM(model or OPENCODE_DEFAULT, interval)
-    if provider == "opencode-cli":
-        llm = OpenCodeCLI(model or OPENCODE_DEFAULT, interval)
-        # OpenCode 全滅時の切り替え先。Gemini・OpenRouter はキーがあるときだけ、LLM7 は匿名で（DMPJ_NO_LLM7=1 で無効）
-        llm.external = Chain(GeminiLLM(interval) if os.environ.get("GEMINI_API_KEY") else None,
-                             OpenRouterLLM(interval) if os.environ.get("OPENROUTER_API_KEY") else None,
-                             None if os.environ.get("DMPJ_NO_LLM7") else LLM7LLM(interval))
-        return llm
+def make_llm(provider: str, model: str | None, interval: float = 0.0):
+    if provider != "anthropic":
+        raise Fatal(f"provider {provider!r} は使えない（外部AI連携は削除済み。anthropic のみ）")
     return AnthropicLLM(model or MODEL)
+
+
+def newest_key():
+    """台帳 sets.json は新しい弾が先。その並びで弾を前から、弾の中はID順。台帳に無い弾は最後。"""
+    try:
+        order = list((json.loads((DATA / "cards" / "catalog" / "sets.json").read_text(encoding="utf-8")).get("products") or {}))
+    except (OSError, ValueError):
+        order = []
+    rank = {p: i for i, p in enumerate(order)}
+    return lambda r: (rank.get(str(r.get("product", "")), len(rank)), r["id"])
 
 
 def pack_prompt(rows: list[dict]) -> str:
@@ -624,10 +637,9 @@ def main(argv=None):
     ap.add_argument("--order", choices=["file", "short"], default="file", help="short: 原文の短い順（簡単なものから）")
     ap.add_argument("--workers", type=int, default=1, help="並列数（API のレート制限に合わせる）")
     ap.add_argument("--pack", type=int, default=1, help="1回の呼び出しでまとめて変換する枚数（1=従来どおり1枚ずつ。指示文を共有してトークンを減らす）")
-    ap.add_argument("--provider", choices=["anthropic", "opencode", "opencode-cli"], default="anthropic",
-                    help="opencode は無料モデル専用（OPENCODE_API_KEY、許可リスト外のモデルは拒否）")
-    ap.add_argument("--model", help="モデルID（既定: anthropic は claude-opus-5-5、opencode は glm-5.3-flash-free）")
-    ap.add_argument("--interval", type=float, default=3.0, help="opencode のリクエスト間隔（秒、全ワーカー合計）")
+    ap.add_argument("--provider", choices=["anthropic"], default="anthropic")
+    ap.add_argument("--model", help="モデルID（既定: claude-opus-5-5）")
+    ap.add_argument("--interval", type=float, default=0.0, help="互換のため残す（未使用）")
     ap.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
     ap.add_argument("--dry-run", action="store_true", help="API を呼ばずにプロンプトと対象枚数を表示する")
     a = ap.parse_args(argv)

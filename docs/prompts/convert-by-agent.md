@@ -43,5 +43,5 @@ AI が KOBA1616/DMPJ（非公開）を読め、コマンドを実行できる場
 ```
 
 ## 注意
-- 登録先を main の `data/cards/converted.yaml` にすると、PC のワーカーや Actions が書く `cards-data` の同名ファイルと別々に育つ。取り込みは `cards-data` 側と ID ごとの和集合で合流する（docs/offload.md の合流規則）。クラウドのエージェントがどちらに書くかは、PR の運用で決める（既定は PR で main へ）。
-- 精度は `tools/eval_convert.py` と同じ基準（手作業の real.yaml との一致率）で、最初の20枚を人が確認してから量を増やす。
+- 登録先を main の `data/cards/converted.yaml` にすると、別経路で書かれる `cards-data` の同名ファイルと別々に育つ。取り込みは `cards-data` 側と ID ごとの和集合で合流する（docs/offload.md の合流規則）。クラウドのエージェントがどちらに書くかは、PR の運用で決める（既定は PR で main へ）。
+- 精度は手作業の real.yaml との一致率を基準にし、最初の20枚を人が確認してから量を増やす。
