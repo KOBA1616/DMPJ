@@ -469831,3 +469831,4506 @@ cards:
         - 0
     mod:
       must_be_attacked: true
+- id: dm21-048
+  name: 肝っ玉メリー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 4000
+  races:
+  - ドリームメイト
+  mana: 1
+  text: 自分のビークル・ビーがブロックされた時、バトルの後、ブロックしたクリーチャーを破壊する。
+  source:
+    official: dm21-048
+    review: pending
+    notes: '再変換ラウンド390。第355弾の再変換。未解決条項「自分のビークル・ビーがブロックされた時、バトルの後、ブロックしたクリーチャーを破壊する」は第355弾の確立形（trigger
+      {event: block, attacker: {owner: you, filter: {race_has: ビークル・ビー}}} → delayed_trigger
+      {when: {event: attack_end, subject: 同形}, duration: during_attack} → destroy
+      {select: {ref: event.target}}、第320弾の block attacker 照合＋第319弾の delayed attack_end＋第280弾
+      dm19-s02 の第三者観測先例）で登録。正本判定: identity の canon_id 実測で自ID、aliases なし。'
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      attacker:
+        owner: you
+        filter:
+          race_has: ビークル・ビー
+    effect:
+    - op: delayed_trigger
+      when:
+        event: attack_end
+        subject:
+          owner: you
+          filter:
+            race_has: ビークル・ビー
+      duration: during_attack
+      effect:
+      - op: destroy
+        select:
+          ref: event.target
+- id: dm24rp2-064
+  name: プランタ＝ランター
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーが攻撃する時、その攻撃の後、このクリーチャーを破壊する。
+
+    自分の超化獣クリーチャーがあれば、このクリーチャーに「スレイヤー」を与える。（「スレイヤー」を持つクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）'
+  source:
+    official: dm24rp2-064
+    review: pending
+    notes: '再変換ラウンド391。第356弾の再変換。未解決条項「このクリーチャーが攻撃する時、その攻撃の後、このクリーチャーを破壊する」は第319弾形Aそのもの（攻撃誘発
+      {event: attack, subject: self} → delayed_trigger {when: {event: attack_end,
+      subject: self}, duration: during_attack} → destroy {select: {ref: self}}）で、「自分の超化獣クリーチャーがあれば、このクリーチャーに『スレイヤー』を与える」は条件つき
+      static grant の登録先例 dm21-s04 と同形（static {affects: self, if: {exists: {zone: bz,
+      owner: you, filter: {race_has: 超化獣}}}, mod: {grant: [slayer]}}）で登録。正本判定: identity
+      の canon_id 実測で自ID、aliases なし。'
+  power: 1000
+  races:
+  - アビスロイヤル
+  keywords:
+  - blocker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: delayed_trigger
+      when:
+        event: attack_end
+        subject: self
+      duration: during_attack
+      effect:
+      - op: destroy
+        select:
+          ref: self
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          race_has: 超化獣
+    mod:
+      grant:
+      - slayer
+- id: dmex08-049
+  name: 十極 ジョバンチュ / Genesis of Drillball
+  faces:
+  - name: 十極 ジョバンチュ
+    types:
+    - creature
+    civs:
+    - light
+    cost: 3
+    power: 4000
+    races:
+    - エンジェル・コマンド
+    - 侵略者
+    - ナイト
+    keywords:
+    - blocker
+    - cannot_attack_player
+    abilities:
+    - kind: trigger
+      when:
+        event: turn_end
+        player: you
+      effect:
+      - op: choose
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            cost_le: 9
+            cost_ge: 9
+          count: any
+        as: pick
+      - op: move
+        select:
+          ref: pick
+          count: all
+        to: hand
+        reason: return
+    text: 'ブロッカー
+
+      このクリーチャーは、相手プレイヤーを攻撃できない。
+
+      自分のターンの終わりに、コスト９のカードを好きな枚数、自分の墓地から手札に戻す。'
+  - name: Genesis of Drillball
+    types:
+    - spell
+    civs:
+    - light
+    cost: 9
+    spell:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: shield
+      reason: put
+    - op: modify
+      select:
+        zone: shield
+        owner: you
+      mod:
+        allow:
+        - s_trigger
+      dynamic: true
+      duration: until_next_own_turn_start
+    text: 自分の山札の上から２枚を裏向きのまま、それぞれ新しいシールドとして自分のシールドゾーンに置く。次の自分のターンのはじめまで、手札に加える自分のシールドカードすべてに「S・トリガー」を与える。
+  mana: 1
+  text: ブロッカー このクリーチャーは、相手プレイヤーを攻撃できない。 自分のターンの終わりに、コスト９のカードを好きな枚数、自分の墓地から手札に戻す。 ／
+    自分の山札の上から２枚を裏向きのまま、それぞれ新しいシールドとして自分のシールドゾーンに置く。次の自分のターンのはじめまで、手札に加える自分のシールドカードすべてに「S・トリガー」を与える。
+  source:
+    official: dmex08-049
+    review: pending
+    notes: '再変換ラウンド392。第357弾の再変換。クリーチャー面は第357弾の確立形（turn_end 誘発 {player: you} → choose
+      {count: any, filter {cost_le: 9, cost_ge: 9}} → move hand。dm10-041／dm22-043
+      先例）。呪文面は move {zone: deck, from_top: 2} → shield（既存形）＋「次の自分のターンのはじめまで、手札に加えるシールドカードすべてに
+      S・トリガーを与える」を modify {select: {zone: shield, owner: you}, mod: {allow: [s_trigger]},
+      dynamic: true, duration: until_next_own_turn_start} で表現（キーワード s_trigger の定義そのものが
+      static {zone: shield, affects: self, mod: {allow: [s_trigger]}} であり、宣言判定はシールドゾーンにある間に
+      chars の allow を見るため、窓内の後入れシールドにも及び、自分の次のターン開始で失効する。ラウンド392のプローブで実挙動検証済み）。正本判定:
+      対象 id は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / converted.yaml
+      のいずれにも無し（proto.yaml のヒットは T1073 の notes 内参照のみ）。'
+- id: dm22rp1-039
+  name: 落下男
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 2000
+  races:
+  - ヘドリアン
+  mana: 1
+  text: 'スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    相手のクリーチャーが、出たターンに攻撃する時、その攻撃の後、そのクリーチャーを破壊する。'
+  source:
+    official: dm22rp1-039
+    review: pending
+    notes: '再変換ラウンド393。第358弾の再変換。未解決条項「相手のクリーチャーが、出たターンに攻撃する時、その攻撃の後、そのクリーチャーを破壊する」は確立済み部品の組合せ（ドリフト）で登録:
+      攻撃誘発の第三者観測形 {event: attack, subject: {owner: opp, filter: {entered_this_turn:
+      true}}}（dm30-041／dm24rp1-066 先例＋第134弾フィルタ）→ 第319弾形A／第355弾の delayed_trigger {when:
+      {event: attack_end, subject: 同形}, duration: during_attack} → destroy {select:
+      {ref: event.subject}}。正本判定: 対象 id は real.yaml / real_akashic.yaml / real_vocab.yaml
+      / real_zone.yaml / converted.yaml のいずれにも無し（proto.yaml のヒットは T1076 の notes 内参照のみ）。identity
+      の canon_id 実測で自ID、aliases_for は空。'
+  keywords:
+  - slayer
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: opp
+        filter:
+          entered_this_turn: true
+    effect:
+    - op: delayed_trigger
+      when:
+        event: attack_end
+        subject:
+          owner: opp
+          filter:
+            entered_this_turn: true
+      duration: during_attack
+      effect:
+      - op: destroy
+        select:
+          ref: event.subject
+- id: dm27-042
+  name: パナオン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 1000
+  races:
+  - サイバーロード
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    このクリーチャーがブロックする時、バトルの後、ブロックされたクリーチャーを持ち主の手札に戻す。'
+  source:
+    official: dm27-042
+    review: pending
+    notes: '再変換ラウンド394。第359弾の再変換。未解決条項「このクリーチャーがブロックする時、バトルの後、ブロックされたクリーチャーを持ち主の手札に戻す」は確立済み部品の組合せ（ドリフト）で登録:
+      block レコードの subject 照合 {event: block, subject: self}（第320弾形B、dm20-045 先例）→ 第319弾形Bの
+      delayed_trigger {when: {event: attack_end, target: self}, duration: during_attack}（dmr06-043／dm22rp2x-061
+      の登録形。delayed は状態レベルで保持されブロッカーがバトルで破壊されても発火）→ move {select: {ref: event.subject},
+      to: hand, reason: return}（戻す対象は attack_end レコードの event.subject＝攻撃したクリーチャー。第358弾が破壊対象に使った参照と同一。バトルで既に破壊されていれば
+      no-op）。正本判定: 対象 id は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml
+      / converted.yaml のいずれにも無し（proto.yaml のヒットは T1079 の notes 内参照のみ）。identity の canon_id
+      実測で自ID、aliases_for は空。'
+  keywords:
+  - blocker
+  - cannot_attack
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      subject: self
+    effect:
+    - op: delayed_trigger
+      when:
+        event: attack_end
+        target: self
+      duration: during_attack
+      effect:
+      - op: move
+        select:
+          ref: event.subject
+        to: hand
+        reason: return
+- id: dm14-s08
+  name: ファイナル・ドラグアーマー
+  types:
+  - cross_gear
+  civs:
+  - fire
+  cost: 3
+  mana: 1
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーは｢パワーアタッカー+5000｣を得、シールドをもう１枚ブレイクし、種族にアーマード・ドラゴンを追加する。
+  abilities:
+  - kind: static
+    affects: crossed
+    mod:
+      power_when:
+        amount: 5000
+        when: attacking
+      add_races:
+      - アーマード・ドラゴン
+      breaks_add: 1
+  source:
+    official: dm14-s08
+    review: pending
+    notes: '再変換ラウンド395。第360弾の再変換。未解決条項「これをクロスしたクリーチャーは、シールドをもう1枚ブレイクする」は既存の相対ブレイク
+      mod breaks_add: 1（breaks_add 統一機構、第224弾 T588 の crossed ホスト先例）で登録: partial の既存
+      static {affects: crossed, mod: {power_when +5000/attacking, add_races [アーマード・ドラゴン]}}
+      の mod に breaks_add: 1 を足しただけ（ドリフト、追加語彙なし）。partial に keywords は無し。正本判定: 対象 id
+      は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / converted.yaml
+      のいずれにも無し（proto.yaml のヒットは T1083 の notes 内参照のみ）。identity の canon_id 実測で自ID、aliases_for
+      は空。'
+- id: dm36-023
+  name: 奈落の魔黒ジャック・ライガー
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: '進化-自分の(E・ソウル)クリーチャー１体の上に置く。
+
+    このクリーチャーが自分の山札から墓地に置かれた時、このクリーチャーを墓地から手札に加えてもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm36-023
+    review: pending
+    notes: '再変換ラウンド396。第361弾の再変換。未解決条項「このクリーチャーが自分の山札から墓地に置かれた時、このクリーチャーを墓地から手札に加えてもよい」は
+      move 誘発 {event: move, from: deck, to: graveyard, subject: self}＋zone: graveyard（登録先例
+      dm22ex1-110 と同形）＋ may [move {ref: self, count: 1} to: hand, reason: return]
+      で登録（ドリフト、追加語彙なし）。partial は stub で types に evolution が無く evolve_from も欠けていたため、提出形で
+      types [creature, evolution] と evolve_from {race_has: E・ソウル} を補った（第361弾の確立形どおり）。keywords
+      は partial の [double_breaker] のまま。正本判定: 対象 id は real.yaml / real_akashic.yaml
+      / real_vocab.yaml / real_zone.yaml / converted.yaml のいずれにも無し（proto.yaml のヒットは
+      T1086 の notes 内参照のみ）。identity の canon_id 実測で自ID、aliases_for は空。'
+  power: 6000
+  races:
+  - ゴースト
+  keywords:
+  - double_breaker
+  evolve_from:
+    race_has: E・ソウル
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      from: deck
+      to: graveyard
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: hand
+        reason: return
+- id: dm23bd6-003
+  name: アカシック・B / 「バブルの泡に溺れるのヨ！」
+  faces:
+  - name: アカシック・B
+    types:
+    - creature
+    civs:
+    - water
+    cost: 3
+    power: 3000
+    races:
+    - マジック・コマンド
+    - マーメイド
+    abilities:
+    - kind: static
+      affects:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          entered_this_turn: true
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+    text: 相手のクリーチャーは出たターン、自分や自分のクリーチャーを攻撃できない。
+  - name: 「バブルの泡に溺れるのヨ！」
+    types:
+    - spell
+    civs:
+    - water
+    cost: 7
+    keywords:
+    - s_trigger
+    spell:
+    - op: bounce
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+    - op: may
+      body:
+      - op: draw
+        count: 1
+    text: 'S・トリガー
+
+      相手１人につき、その相手のクリーチャーを１体選んで手札に戻し、カードを１枚引いてもよい。'
+  mana: 1
+  text: 相手のクリーチャーは出たターン、自分や自分のクリーチャーを攻撃できない。 ／ S・トリガー 相手１人につき、その相手のクリーチャーを１体選んで手札に戻し、カードを１枚引いてもよい。
+  source:
+    official: dm23bd6-003
+    review: pending
+    notes: '再変換ラウンド397。第362弾の再変換。クリーチャー面は第362弾の確立形（static {affects: {zone: bz, owner:
+      opp, filter: {types: [creature], entered_this_turn: true}}, mod: {deny: [attack_player,
+      attack_creature]}}、登録先例 dm23rp4x-014 と同形）1能力のみ。呪文面「バブルの泡に溺れるのヨ！」（コスト7・水・S・トリガー）は
+      partial に無くラウンド397で検証し、既存語彙で正確に表せることを確認した: S・トリガーは面キーワード s_trigger（ツインパクト呪文面の先例
+      dm23rp3-048）、戻しは op: bounce {select: {zone: bz, owner: opp, filter: {types:
+      [creature]}, count: 1}}（dm23rp4x-058 の効果・スパイラル・ゲートの呪文形と同形）、「カードを１枚引いてもよい」は may
+      {body: [draw 1]}（may の内側はドローのみ。戻しは必須の選択で may の外）。「相手１人につき」は2人戦前提で相手1人＝1回分として登録する既存の慣行に従った（dm23bd5-007
+      の notes「2人戦前提（各相手＝相手）」、dm23bd7-005 の notes「『相手１人につき』は2人戦前提で1体として登録した」と同扱い）。正本判定:
+      対象 id は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / converted.yaml
+      のいずれにも無し（proto.yaml のヒットは T1089 の notes 内参照のみ）。identity の canon_id 実測で自ID、aliases_for
+      は空。'
+- id: dm22rp2x-023
+  name: 試練の大地ダン・ティラン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - ガイア・コマンド
+  mana: 1
+  text: 'マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    相手のクリーチャーが出たターンに攻撃する時、相手はそのクリーチャーを自身のマナゾーンに置く。'
+  source:
+    official: dm22rp2x-023
+    review: pending
+    notes: '再変換ラウンド398。第363弾の再変換。提出形は partial 既存のマッハファイター展開形1能力＋第363弾の確立形1能力の2能力ちょうど（補完なし）。確立形は攻撃誘発の第三者観測形
+      {event: attack, subject: {owner: opp, filter: {entered_this_turn: true}}}（第358弾・登録先例
+      dm22rp1-039 と同形）で、タイミングが「攻撃する時」のため delayed_trigger を挟まず直接 move {select: {ref:
+      event.subject}, to: mana, reason: put} する。「相手はそのクリーチャーを自身のマナゾーンに置く」は対象が event.subject
+      に固定され選択の余地が無いため行為者は効果の形に影響せず、置き先は持ち主のマナゾーン（move の既定の帰属）。正本判定: 対象 id dm22rp2x-023
+      と alias dm22rp2-023 の両方を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml
+      / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml のヒットは T1092 の notes
+      内参照のみ）。identity の canon_id 実測で対象 id が正本そのもの、alias dm22rp2-023 の canon は dm22rp2x-023、aliases_for(名前,
+      対象id) = [dm22rp2-023]。'
+    aliases:
+    - dm22rp2-023
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: opp
+        filter:
+          entered_this_turn: true
+    effect:
+    - op: move
+      select:
+        ref: event.subject
+      to: mana
+      reason: put
+- id: dm34-025
+  name: ワダツミ・フィッシュ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    進化ではないクリーチャーをブロックしている時、このクリーチャーのパワーは+2000される。'
+  source:
+    official: dm34-025
+    review: pending
+    notes: '再変換ラウンド399。第364弾の再変換。提出形は partial の骨格（keywords [blocker, cannot_attack]、abilities
+      無し）に第364弾の確立形〔static {affects: self, mod: {power_when: {amount: 2000, when:
+      blocking, opponent_filter: {not_types: [evolution]}}}}〕1能力を足し、unsupported を外したもの（補完なし）。正本判定:
+      対象 id dm34-025 を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml
+      / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml のヒットは T1095 の notes
+      内参照のみ）。identity の canon_id 実測で対象 id が正本そのもの、aliases_for(名前, 対象id) = []（alias
+      なし）。'
+  power: 3000
+  races:
+  - フィッシュ
+  - オリジン
+  keywords:
+  - blocker
+  - cannot_attack
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: blocking
+        opponent_filter:
+          not_types:
+          - evolution
+- id: dm22ex1-cho37
+  name: 月砂 フロッガ-1
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - デューンゲッコー
+  - ディスタス
+  mana: 1
+  text: '相手の進化ではないクリーチャーは、出たターン、攻撃できない。
+
+    ササゲール１（ディスペクターを召喚する時、コストを１少なくしてもよい。そうしたら、このクリーチャーを破壊する。そのディスペクターのコストは０以下にはならない）'
+  source:
+    official: dm22ex1-cho37
+    review: pending
+    notes: '再変換ラウンド400。第365弾の再変換。提出形は partial の既存能力（ササゲール1の static {affects: self,
+      mod: {sac_reduce: 1}}）に第365弾の確立形〔static {affects: {zone: bz, owner: opp, filter:
+      {types: [creature], not_types: [evolution], entered_this_turn: true}}, mod:
+      {deny: [attack_player, attack_creature]}}〕1能力を足した2能力で、unsupported を外したもの（補完なし）。正本判定:
+      対象 id dm22ex1-cho37 と alias dmrp19-041 の両方を real.yaml / real_akashic.yaml /
+      real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml
+      のヒットは T1098 の notes 内参照のみ）。alias dmrp19-041 は partial の source.aliases にあるだけで
+      rejects に独自行は無く、畳み込み不要。'
+    aliases:
+    - dmrp19-041
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 1
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        not_types:
+        - evolution
+        entered_this_turn: true
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+- id: dm24rp2-054
+  name: ケルビ・チゼン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    自分の超化獣クリーチャーがあれば、このクリーチャーはバトル中破壊されない。'
+  source:
+    official: dm24rp2-054
+    review: pending
+    notes: '再変換ラウンド401。第366弾の再変換。提出形は partial の骨格（keywords [blocker]、abilities 無し）に第366弾の確立形〔static
+      {affects: self, if: {exists: {zone: bz, owner: you, filter: {race_has: 超化獣}}},
+      mod: {battle_indestructible: true}}〕1能力を足し unsupported を外したもの（補完なし）。正本判定: 対象
+      id dm24rp2-054 を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml
+      / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml のヒットは T1101 の notes
+      内参照のみ）。alias は無い。'
+  power: 1500
+  races:
+  - メカ・デル・ディネロ
+  keywords:
+  - blocker
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          race_has: 超化獣
+    mod:
+      battle_indestructible: true
+- id: dm14-s01
+  name: 太陽の精霊マルシアス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  mana: 1
+  text: このクリーチャーはすべてのバトルに勝つ。(相手クリーチャーのパワーの方が大きくても、相手クリーチャーはバトルに負ける。バトルしているクリーチャー両方がこの能力を持っている場合は、どちらも破壊されない)
+  source:
+    official: dm14-s01
+    review: pending
+    notes: '再変換ラウンド402。第367弾の再変換。提出形は partial の骨格（光 / コスト5 / パワー2000 / 種族 エンジェル・コマンド、keywords
+      無し、abilities 無し）に第367弾の確立形〔static {affects: self, mod: {win_all_battles: true}}〕1能力を足し
+      unsupported を外したもの（補完なし）。正本判定: 対象 id dm14-s01 を real.yaml / real_akashic.yaml
+      / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml
+      のヒットは T1104 の notes 内参照のみ）。alias は無い。'
+  power: 2000
+  races:
+  - エンジェル・コマンド
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      win_all_battles: true
+- id: dm21-011
+  name: グレート・リンク・テクノロジー
+  types:
+  - spell
+  civs:
+  - water
+  cost: 10
+  mana: 1
+  text: 'シンパシー：グレートメカオーとキカイヒーロー(この呪文を唱える時支払うコストは、バトルゾーンにある自分のグレートメカオーまたはキカイヒーロー１体につき１少なくなる。ただし、コストは１より少なくならない)
+
+    バトルゾーンにあるクリーチャーを１体選ぶ。そのクリーチャーのコストの数と同じ枚数のカードを引く。'
+  source:
+    official: dm21-011
+    review: pending
+    notes: '再変換ラウンド403。第368弾の再変換。提出形は partial の骨格（水 / コスト10 / mana 1、types [spell]）に第368弾の確立形〔シンパシーの
+      static 1件（dm21-020 の登録先例と同形、cost_min: 1）＋ spell の choose {select: {zone: bz,
+      owner: any, filter: {types: [creature]}, count: 1}, as: pick} / draw {count:
+      {cost_of: pick}} の2 op〕を足し unsupported を外したもの（補完あり: partial の text は引く条項だけのため、シンパシー条項を
+      abilities として補い、text には行の公式テキスト全文を入れた）。正本判定: 対象 id dm21-011 を real.yaml / real_akashic.yaml
+      / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml
+      のヒットは T1108 の notes 内参照のみ）。identity 実測で canon_id = dm21-011、alias は無い。'
+  abilities:
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - グレートメカオー
+            - キカイヒーロー
+      cost_min: 1
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+      count: 1
+    as: pick
+  - op: draw
+    count:
+      cost_of: pick
+- id: dmex03-061
+  name: 夜のポンの助
+  types:
+  - creature
+  civs:
+  - zero
+  cost: 1
+  mana: 1
+  text: 'このクリーチャーはシールドをブレイクできない。
+
+    自分は「S・トリガー」能力を使えない。
+
+    このカードは、４枚より多くデッキに入れることができる。'
+  power: 820
+  races:
+  - ジョーカーズ
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      breaks: 0
+  - kind: static
+    affects:
+      zone: shield
+      owner: you
+    mod:
+      deny:
+      - s_trigger
+  source:
+    official: dmex03-061
+    review: pending
+    notes: '再変換ラウンド404。第369弾の再変換。提出形は partial の骨格（ゼロ / コスト1 / パワー820 / 種族 ジョーカーズ、keywords・abilities
+      無し）に第369弾の確立形2能力〔static {affects: self, mod: {breaks: 0}}（dmex17-106 の登録先例と同形）＋
+      static {affects: {zone: shield, owner: you}, mod: {deny: [s_trigger]}}（dm04-022
+      の登録先例の変種）〕を足し unsupported を外したもの（補完あり: partial の text は第1条項だけのため、text には行の公式テキスト全文（3条項）を入れた。第3条項はデッキ構築ルールで
+      dmex13-057 の先例どおりテキストのみ）。正本判定: 対象 id dmex03-061 を real.yaml / real_akashic.yaml
+      / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml
+      のヒットは T1112 の notes 内参照のみ）。identity 実測で canon = dmex03-061、alias は無い。'
+- id: dm24ex2-042
+  name: 騎士のコード オルタナティブ
+  types:
+  - creature
+  civs: []
+  cost: 7
+  power: 6543
+  races:
+  - アンノウン・セレス
+  mana: 1
+  crystal_soul: 2
+  text: '水晶ソウル２（このクリーチャーを召喚する時、自分のマナゾーンにある裏向きのカードのマナの数字は２になる）
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを０にする。（パワー０以下のクリーチャーは破壊される）
+
+    このクリーチャーが破壊された時、無色ゼニス・クリーチャーを１体、自分の手札からコストを支払わずに召喚してもよい。'
+  source:
+    official: dm24ex2-042
+    review: pending
+    notes: 第154弾で水晶ソウルを宣言化。残り set_power_to_zero は語彙が無いため unsupported
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: victim
+    - op: modify
+      select:
+        ref: victim
+      mod:
+        power_set: 0
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            colorless: true
+            race_has: ゼニス
+          count: 1
+- id: dmex15-b025
+  name: 永遠の無
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 5
+  mana: 1
+  text: 相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを０にする。（パワー０以下のクリーチャーは破壊される）
+  source:
+    official: dmex15-b025
+    review: pending
+    notes: パワーを固定値にする語彙が無いため unsupported に残した
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+    as: victim
+  - op: modify
+    select:
+      ref: victim
+    mod:
+      power_set: 0
+    duration: end_of_turn
+- id: dm32-011
+  name: 超神龍イエス・ヤザリス
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 5
+  mana: 1
+  text: 'ブロッカー
+
+    進化-自分の「ブロッカー」を持つクリーチャー１体の上に置く。
+
+    このクリーチャーをバトルゾーンに出した時、そのターン、バトルゾーンにある相手の進化ではないクリーチャーすべてのパワーは500になる。'
+  source:
+    official: dm32-011
+    review: pending
+    notes: '再変換ラウンド407。第372弾の再変換。提出形は partial の骨格（光 / コスト5 / パワー5500 / 種族 アポロニア・ドラゴン、keywords
+      [blocker]）に補完2点（types への evolution 追加・evolve_from {types: [creature], keyword:
+      blocker} の追加。同セットの登録先例 dm32-002・dm32-072 と同文・同形）と第372弾の確立形 CIP 誘発〔trigger {event:
+      move, to: bz, subject: self} → modify {select: {zone: bz, owner: opp, filter:
+      {types: [creature], not_types: [evolution]}, count: all}, mod: {power_set: 500},
+      duration: end_of_turn}〕1件を足し、unsupported を外したもの。text は partial の時点で公式全文と一致するため
+      text の補完はなし。正本判定: 対象 id dm32-011 と alias dm32-011hc の両方を real.yaml / real_akashic.yaml
+      / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml
+      のヒットは T1116 の notes 内参照のみ）。identity 実測で canon(dm32-011) = dm32-011（対象 id が正本）、canon(dm32-011hc)
+      = dm32-011、aliases_for(超神龍イエス・ヤザリス, dm32-011) = [dm32-011hc]。alias dm32-011hc
+      は partial の source.aliases にあるだけで rejects に独自行は無く、畳み込み不要。'
+    aliases:
+    - dm32-011hc
+  power: 5500
+  races:
+  - アポロニア・ドラゴン
+  keywords:
+  - blocker
+  evolve_from:
+    types:
+    - creature
+    keyword: blocker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          not_types:
+          - evolution
+        count: all
+      mod:
+        power_set: 500
+      duration: end_of_turn
+- id: dmrp04s-011
+  name: ラジコンBOY
+  types:
+  - creature
+  civs:
+  - zero
+  cost: 6
+  power: 3000
+  races:
+  - ジョーカーズ
+  mana: 1
+  text: スーパー・S・トリガー（このクリーチャーを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい。その時自分のシールドが１つもなければ、このクリーチャーにxB能力を与える）このクリーチャーがバトルゾーンに出た時、自分の山札の一番下のカードを手札に加える。xBこのクリーチャーがバトルゾーンに出た時、相手は自身のクリーチャーを３体選び、そのうちの１体を自身の手札に加え、１体をマナゾーンに置き、１体を山札の一番下に置く。
+  keywords:
+  - super_s_trigger
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_bottom: 1
+      to: hand
+      reason: draw
+  - kind: trigger
+    sst: true
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        filter:
+          types:
+          - creature
+        count: 3
+      as: trio
+    - op: choose
+      select:
+        ref: trio
+        chooser: opp
+        count: 1
+      as: tohand
+    - op: move
+      select:
+        ref: tohand
+      to: hand
+      reason: return
+    - op: choose
+      select:
+        ref: trio
+        chooser: opp
+        count: 1
+      as: tomana
+    - op: mana_put
+      select:
+        ref: tomana
+    - op: move
+      select:
+        ref: trio
+        count: all
+      to: deck
+      reason: put
+      position: bottom
+  source:
+    official: dmrp04s-011
+    review: pending
+    notes: '再変換ラウンド408。第373弾の再変換。提出形は partial の骨格（ゼロ / コスト6 / パワー3000 / 種族 ジョーカーズ、keywords
+      [super_s_trigger]、xB 誘発〔sst: true〕1件）に第373弾の確立形 CIP 誘発〔trigger {event: move,
+      to: bz, subject: self} → move {select: {zone: deck, owner: you, from_bottom:
+      1}, to: hand, reason: draw}（第287弾形A・登録先例 dmr06-002 と同形）〕を abilities の先頭に足し、unsupported
+      を外したもの。abilities は [CIP, xB] の2件ちょうど。text は partial の時点で公式全文と一致するため text の補完はなし。正本判定:
+      対象 id dmrp04s-011（alias は無い）を real.yaml / real_akashic.yaml / real_vocab.yaml
+      / real_zone.yaml / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml のヒットは
+      T1121 の notes 内参照のみ）。identity 実測で canon(dmrp04s-011) = dmrp04s-011（対象 id が正本）、aliases_for(ラジコンBOY,
+      dmrp04s-011) = []。'
+- id: dm23rp1-t2
+  name: 石像男
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 5000
+  races:
+  - ヘドリアン
+  mana: 1
+  text: 自分のクリーチャーで、すべての文明が揃っていれば、相手は自身の「S・トリガー」を使えない。
+  source:
+    official: dm23rp1-t2
+    review: pending
+    notes: '再変換ラウンド409。第374弾の再変換。提出形は partial の骨格（闇 / コスト6 / パワー5000 / 種族 ヘドリアン、keywords・abilities
+      ともに無し）に第374弾の確立形〔static {affects: {zone: shield, owner: opp}, if: {all: [cmp
+      count {zone: bz, owner: you, filter: {types: [creature], civs: [文明]}} >= 1 ×5文明]},
+      mod: {deny: [s_trigger]}}（第317弾の全文明条件イディオム＋第369弾・登録先例 dm04-022 の deny 変種）〕1能力を足し、unsupported
+      を外したもの。abilities は1件ちょうど、keywords は無いまま。text は partial の時点で公式全文と一致するため text
+      の補完はなし。正本判定: 対象 id dm23rp1-t2 と alias dm23rp1-tf2 / dm24-020 を real.yaml / real_akashic.yaml
+      / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml
+      のヒットは T1122 の notes 内参照のみ）。identity 実測で canon(dm23rp1-t2) = dm23rp1-t2（対象 id
+      が正本）、canon(dm23rp1-tf2) = canon(dm24-020) = dm23rp1-t2、aliases_for(石像男, dm23rp1-t2)
+      = [dm23rp1-tf2, dm24-020]。alias 2件は rejects に独自行が無いため畳み込みは無く、source.aliases
+      に記録されるのみ。'
+    aliases:
+    - dm23rp1-tf2
+    - dm24-020
+  abilities:
+  - kind: static
+    affects:
+      zone: shield
+      owner: opp
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+              civs:
+              - light
+        - '>='
+        - 1
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+              civs:
+              - water
+        - '>='
+        - 1
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+              civs:
+              - darkness
+        - '>='
+        - 1
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+              civs:
+              - fire
+        - '>='
+        - 1
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+              civs:
+              - nature
+        - '>='
+        - 1
+    mod:
+      deny:
+      - s_trigger
+- id: dm14-018
+  name: サルベージ・クラスター
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 3000
+  races:
+  - サイバー・クラスター
+  mana: 1
+  text: 'このクリーチャーは、ブロックされない。
+
+    メタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーが破壊される時、墓地に置くかわりに自分の手札に戻す。'
+  source:
+    official: dm14-018
+    review: pending
+    notes: '再変換ラウンド410。第375弾の再変換。提出形は partial の組立て済み部分（keywords [unblockable]＋破壊置換〔replace
+      {when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self},
+      instead: [move {ref: self} to hand, reason: return]}〕）に第375弾の確立形の条件 if {cmp:
+      [{count: {zone: mana, owner: you}}, ">=", 7]}（登録先例 dm14-024 の static if と同形のイディオム）を足し、unsupported
+      を外したもの。abilities は条件つき置換1件ちょうど。partial の text は公式全文と一致するため text の補完はなし。第375弾で見つかった登録ブロッカー（rule_convert.split
+      が破壊置換を無条件形で所有し merge_split が完全一致でしか dedupe しない）は、変換ツール改修ステージ（コミット 964746b、(a)
+      split にメタモーフ条件を伝える改修）で解消済み。submit 前に split/merge を実測し、merge 結果が条件つき置換1件ちょうど（無条件形の混入なし）であることを目視で確認した。正本判定:
+      対象 id dm14-018（alias は無い）を real.yaml / real_akashic.yaml / real_vocab.yaml /
+      real_zone.yaml / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml のヒットは
+      T1123 の notes 内参照のみ）。identity 実測で canon(dm14-018) = dm14-018（対象 id が正本）、aliases_for(サルベージ・クラスター,
+      dm14-018) = []。'
+  keywords:
+  - unblockable
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 7
+- id: dmex14-010
+  name: 暴歌の妖精
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  mana: 1
+  text: '自分のマナゾーンにあるカードを、すべての文明のカードとして扱う。
+
+    レインボーナス：このクリーチャーがバトルゾーンに出た時、バトルゾーンに自分の多色クリーチャーがあれば、自分の山札の上から１枚目をマナゾーンに置く。'
+  source:
+    official: dmex14-010
+    review: pending
+    notes: '再変換ラウンド411。第376弾の再変換。提出形は partial の骨格（自然 / コスト3 / パワー3000 / 種族 スノーフェアリー・暴拳王国、mana
+      1、keywords・abilities ともに無し）に第376弾の確立形2能力〔static {affects: {zone: mana, owner:
+      you}, mod: {add_civs: [light, water, darkness, fire, nature]}}（第123弾・登録先例 dmex01-014
+      と同形）＋ CIP 誘発 {event: move, to: bz, subject: self, if: {exists 多色クリーチャー} → move
+      {select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}}（第206弾レインボーナスのイディオム、登録先例
+      dmex14-083 と同形）〕を足し、unsupported を外したもの。abilities はこの2件ちょうど、keywords は無いまま。補完あり:
+      partial の text は第1条項の断片だけのため、text には行の公式テキスト全文を入れた。第260弾の常在キー mana_all_civs
+      は支払い計算専用で意味が違うため使っていない。正本判定: 対象 id dmex14-010（alias は無い）を real.yaml / real_akashic.yaml
+      / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml
+      のヒットは T1124 の notes 内参照のみ）。identity 実測で canon(dmex14-010) = dmex14-010（対象 id
+      が正本）、aliases_for(暴歌の妖精, dmex14-010) = []。'
+  power: 3000
+  races:
+  - スノーフェアリー
+  - 暴拳王国
+  abilities:
+  - kind: static
+    affects:
+      zone: mana
+      owner: you
+    mod:
+      add_civs:
+      - light
+      - water
+      - darkness
+      - fire
+      - nature
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          multicolor: true
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+- id: dmd05-001
+  name: 無限鉄拳オニナグリ
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  - fire
+  cost: 6
+  power: 7000
+  races:
+  - ヒューマノイド
+  - ハンター
+  - エイリアン
+  mana: 1
+  evolve_from:
+    races:
+    - ハンター
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    進化-自分のハンター・クリーチャー１体の上に置く。
+
+    光のクリーチャーとバトル中、このクリーチャーのパワーは+2000される。
+
+    このクリーチャーがバトルに勝った時、このクリーチャーをアンタップする。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 2000
+        opponent_filter:
+          civs:
+          - light
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: untap
+      select:
+        ref: self
+  source:
+    official: dmd05-001
+    review: pending
+    notes: '再変換ラウンド412。第377弾の再変換。提出形は partial の組立て済み部分（進化クリーチャー / 闇・火 / コスト6 / パワー7000
+      / 種族 ヒューマノイド・ハンター・エイリアン、mana 1、evolve_from {races: [ハンター]}、keywords [double_breaker]、battle_win
+      アンタップ誘発）に第377弾の確立形 static {affects: self, mod: {battle_power: {amount: 2000,
+      opponent_filter: {civs: [light]}}}}（第122弾 battle_power の文明フィルタ版）を公式テキストの条項順どおりアンタップ誘発の前に足し、unsupported
+      を外したもの。abilities はこの2件ちょうど。補完なし（partial の text は行の公式テキスト全文と一致）。「マナゾーンに置く時タップして置く」は多色ルールのリマインダで
+      canonical が吸収（テキストのみ保持）。W・ブレイカーは known_keywords（ルール処理済み）。正本判定: 対象 id dmd05-001（alias
+      は無い）を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml
+      / converted.yaml と照合し、いずれにも登録なし（proto.yaml のヒットは T1125 の notes 内参照のみ）。identity
+      実測で canon(dmd05-001) = dmd05-001（対象 id が正本）、aliases_for(無限鉄拳オニナグリ, dmd05-001)
+      = []。'
+  keywords:
+  - double_breaker
+- id: dmd15-003
+  name: 超竜サンバースト・NEX
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 7
+  power: 11000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  evolve_from:
+    races:
+    - アーマード・ドラゴン
+  text: 進化-自分のアーマード・ドラゴン１体の上に置く。このクリーチャーがバトルに勝った時、このクリーチャーをアンタップしてもよい。パワー12000以上のクリーチャーとバトル中、このクリーチャーのパワーは+11000される。W・ブレイカー
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 11000
+        opponent_filter:
+          power_ge: 12000
+  source:
+    official: dmd15-003
+    review: pending
+    notes: '再変換ラウンド413。第378弾の再変換。提出形は partial の組立て済み部分（進化クリーチャー / 火 / コスト7 / パワー11000
+      / 種族 アーマード・ドラゴン、mana 1、evolve_from {races: [アーマード・ドラゴン]}、keywords [double_breaker]、battle_win
+      may アンタップ誘発）に第378弾の確立形 static {affects: self, mod: {battle_power: {amount: 11000,
+      opponent_filter: {power_ge: 12000}}}}（第122弾 battle_power のパワー閾値版、第377弾の文明フィルタ版と同形）を公式テキストの条項順どおり誘発の後に足し、unsupported
+      を外したもの。abilities はこの2件ちょうど。補完なし（partial の text は行の公式テキスト全文と一致）。W・ブレイカーは known_keywords（ルール処理済み）。正本判定:
+      対象 id dmd15-003 と alias dmc62-002 / dmc67-004 / promoy11-027 / promoy8-010 を
+      real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml
+      / converted.yaml と照合し、いずれにも登録なし（proto.yaml のヒットは T1128 の notes 内参照のみ）。identity
+      実測で canon_id(dmd15-003) = dmd15-003（対象 id が正本）、全 alias の canon_id も dmd15-003、aliases_for(超竜サンバースト・NEX,
+      dmd15-003) = [dmc62-002, dmc67-004, promoy11-027, promoy8-010]（partial の source.aliases
+      と一致）。'
+    aliases:
+    - dmc62-002
+    - dmc67-004
+    - promoy11-027
+    - promoy8-010
+  keywords:
+  - double_breaker
+- id: dmx22b-110
+  name: 素晴らしい犬 ワンワンワン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1111
+  races:
+  - アウトレイジ犬
+  mana: 1
+  text: '{Dog Souls}《素晴らしい犬 ワンワンワン》は、４枚より多くデッキに入れることができる。バトルゾーンにある自分の他のアウトレイジ犬１匹につき、このクリーチャーのパワーを+1111する。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1111
+        count:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - アウトレイジ犬
+          other: true
+  source:
+    official: dmx22b-110
+    review: pending
+    notes: '再変換ラウンド414。第379弾の再変換。提出形は partial の骨格（クリーチャー / 自然 / コスト2 / パワー1111 / 種族
+      アウトレイジ犬、mana 1、keywords・abilities ともに無し）に第379弾の確立形 static {affects: self, mod:
+      {power: {amount: 1111, count: {zone: bz, owner: you, filter: {races: [アウトレイジ犬]},
+      other: true}}}}（登録先例 dm22ex2-1a の墓地数えと同形の汎用 count 機構＋セレクタ other: true の自己除外）を足し、unsupported
+      を外したもの。abilities はこの1件ちょうど、keywords は無いまま。補完あり: partial の text はデッキ条項の断片のみのため、text
+      には行の公式テキスト全文を入れた。デッキ条項「４枚より多くデッキに入れることができる」はデッキ構築ルールで、登録先例 dmex13-057 どおり text
+      のみで保持し能力化しない。正本判定: 対象 id dmx22b-110 と alias dmx22b-111 を real.yaml / real_akashic.yaml
+      / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml
+      のヒットは T1131 の notes 内参照のみ）。identity 実測で canon_id(dmx22b-110) = dmx22b-110（対象
+      id が正本）、canon_id(dmx22b-111) = dmx22b-110、aliases_for(素晴らしい犬 ワンワンワン, dmx22b-110)
+      = [dmx22b-111]（partial の source.aliases と一致）。'
+    aliases:
+    - dmx22b-111
+- id: dm23rp4x-tf03
+  name: 西南の超人 / 断断打つべしナウ
+  faces:
+  - name: 西南の超人
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 4
+    power: 3000
+    races:
+    - ジャイアント
+    - サムライ
+    text: 自分のジャイアント・クリーチャーの召喚コストを最大２少なくしてもよい。ただし、コストは０以下にはならない。セイバー：ジャイアント（自分のジャイアントが破壊される時、このクリーチャーをかわりに破壊してもよい）
+    abilities:
+    - kind: static
+      affects:
+        zone: hand
+        owner: you
+        filter:
+          races:
+          - ジャイアント
+      mod:
+        cost: -2
+    - kind: replace
+      optional: true
+      when:
+        event: move
+        to: graveyard
+        reason: destroy
+        subject:
+          owner: you
+          filter:
+            races:
+            - ジャイアント
+          other: true
+      instead:
+      - op: destroy
+        select:
+          ref: self
+          count: 1
+  - name: 断断打つべしナウ
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 1
+    keywords:
+    - s_trigger
+    text: S・トリガー / 自分のクリーチャーを１体、タップする。次の自分のターンのはじめまで、相手のクリーチャーが攻撃する時、可能ならそのクリーチャーを攻撃する。
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: t
+    - op: tap
+      select:
+        ref: t
+    - op: modify
+      select:
+        ref: t
+      mod:
+        must_be_attacked: true
+      duration: until_next_own_turn_start
+  mana: 1
+  text: 自分のジャイアント・クリーチャーの召喚コストを最大２少なくしてもよい。ただし、コストは０以下にはならない。セイバー：ジャイアント（自分のジャイアントが破壊される時、このクリーチャーをかわりに破壊してもよい）
+    ／ S・トリガー 自分のクリーチャーを１体、タップする。次の自分のターンのはじめまで、相手のクリーチャーが攻撃する時、可能ならそのクリーチャーを攻撃する。
+  source:
+    official: dm23rp4x-tf03
+    review: pending
+    notes: '再変換ラウンド415。第380弾の再変換。提出形は partial の組立て済み部分（クリーチャー面のセイバー置換・呪文面の choose→tap→modify
+      3 op）に第347弾の確立形 static {affects: {zone: hand, owner: you, filter: {races: [ジャイアント]}},
+      mod: {cost: -2}}（登録済み dmbd02-014 西南の超人＝同一カードの単体版と同文同形）をクリーチャー面の条項順どおりセイバー置換の前に足し、unsupported
+      を外したもの。クリーチャー面の abilities はこの2件ちょうど、呪文面の spell は3 op ちょうど。補完あり: top の text は行にクリーチャー面分しか無いため、面テキストを「
+      ／ 」で連結した全文を入れた（クリーチャー面は「。/ セイバー」を dmbd02-014 登録形に倣い「。セイバー」に直し、呪文面は「S・トリガー 自分…」の平坦形）。正本判定:
+      対象 id dm23rp4x-tf03 と alias 5件（dm23rp4-t03 / dm23rp4-tf03 / dmex04-017 / dmex13-017
+      / dmex15-b073）を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml
+      / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml のヒットは T1134 の notes
+      内参照のみ）。identity 実測で canon_id は対象・全 alias とも dm23rp4x-tf03、aliases_for がこの5件を返す（partial
+      の source.aliases と一致）。'
+    aliases:
+    - dm23rp4-t03
+    - dm23rp4-tf03
+    - dmex04-017
+    - dmex13-017
+    - dmex15-b073
+- id: dm21-014
+  name: デビル・リンク・タブー
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 10
+  mana: 1
+  text: 'シンパシー：グランド・デビルとディープ・マリーン(この呪文を唱える時支払うコストは、バトルゾーンにある自分のグランド・デビルまたはディープ・マリーン１体につき１少なくなる。ただし、コストは１より少なくならない)
+
+    相手は、次の自分自身のターンにクリーチャーを召喚できず、呪文を唱えることもできない。'
+  abilities:
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - グランド・デビル
+            - ディープ・マリーン
+      cost_min: 1
+  spell:
+  - op: modify
+    select:
+      zone: hand
+      owner: opp
+      filter:
+        types:
+        - creature
+    mod:
+      deny:
+      - summon
+    duration: until_next_own_turn_start
+  - op: modify
+    select:
+      zone: hand
+      owner: opp
+      filter:
+        types:
+        - spell
+    mod:
+      deny:
+      - cast
+    duration: until_next_own_turn_start
+  source:
+    official: dm21-014
+    review: pending
+    notes: '再変換ラウンド416。第381弾の再変換。提出形は partial の骨格（呪文 / 闇 / コスト10 / mana 1、abilities・keywords
+      ともに無し）に第381弾の確立形〔abilities = シンパシーの static 1件{zone: hand, affects: self, mod:
+      {cost: {amount: -1, count: {zone: bz, owner: you, filter: {races: [グランド・デビル,
+      ディープ・マリーン]}}}, cost_min: 1}}（dm21-020 / dm21-011 の登録先例と同形）、spell = modify {select:
+      {zone: hand, owner: opp, filter: {types: [creature]}}, mod: {deny: [summon]},
+      duration: until_next_own_turn_start} ＋ modify {select: {zone: hand, owner: opp,
+      filter: {types: [spell]}}, mod: {deny: [cast]}, duration: until_next_own_turn_start}
+      の2 op（ファイナル・ストップ dm26sd1-e007 と同型）〕を足し、unsupported を外したもの。abilities は static
+      1件ちょうど、spell は2 op ちょうど、keywords は無いまま。補完あり: partial の text はロック条項のみのため、text
+      には行の公式テキスト全文（シンパシー条項を含む）を入れた。正本判定: 対象 id dm21-014 を real.yaml / real_akashic.yaml
+      / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml
+      のヒットは T1135 の notes 内参照のみ）。identity 実測で canon_id(dm21-014) = dm21-014（対象 id
+      が正本）、aliases_for(デビル・リンク・タブー, dm21-014) = []（alias なし）。'
+- id: dm30-033
+  name: 森の格闘家ガンバレット
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 1
+  mana: 1
+  text: このターン、自分のクリーチャーがバトルに勝った後でしか、このクリーチャーは攻撃できない。
+  source:
+    official: dm30-033
+    review: pending
+    notes: '再変換ラウンド417。第382弾の再変換。提出形は partial の骨格（自然 / コスト1 / パワー5000 / 種族 ドリームメイト、mana
+      1、keywords・abilities ともに無し）に第382弾の確立形 static 1件〔{kind: static, affects: self,
+      if: {cmp: [{turn_count: {kind: battle_win, owner: you}}, "==", 0]}, mod: {deny:
+      [attack_player, attack_creature]}}〕（promoy21-051 の登録先例と同形。条件の履歴 kind battle_win
+      は第382弾で追加した新規語彙）を足し、unsupported を外したもの。abilities は static 1件ちょうど、keywords は無いまま。補完あり:
+      partial の text は条項の短縮メモのため、text には行の公式テキスト全文を入れた。正本判定: 対象 id dm30-033 を real.yaml
+      / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml
+      と照合し、いずれにも登録なし（proto.yaml のヒットは T1138 の notes 内参照のみ）。identity 実測で canon_id(dm30-033)
+      = dm30-033（対象 id が正本）、aliases_for(森の格闘家ガンバレット, dm30-033) = []（alias なし）。'
+  power: 5000
+  races:
+  - ドリームメイト
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - turn_count:
+          kind: battle_win
+          owner: you
+      - ==
+      - 0
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+- id: dm06-029
+  name: シグマ・トゥレイト
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 6
+  power: 9000
+  races:
+  - サバイバー
+  mana: 1
+  evolve_from:
+    races:
+    - サバイバー
+  text: 進化ー自分のサバイバー１体の上に置く。 / クルー・ブレイカー:サバイバー(シールドを攻撃したとき、バトルゾーンにある自分の他のサバイバー１体につき、シールドをさらにもう１枚ブレイクする)
+  source:
+    official: dm06-029
+    review: pending
+    notes: '再変換ラウンド418。第383弾の再変換。提出形は partial の組立て済み部分（進化クリーチャー / 火 / コスト6 / パワー9000
+      / 種族 サバイバー、mana 1、evolve_from {races: [サバイバー]}）に第383弾の確立形 static 1件〔{kind: static,
+      affects: self, mod: {breaks: {count: {zone: bz, owner: you, filter: {races:
+      [サバイバー]}, other: true}}}}〕（第130弾の breaks {count}、登録先例 dmc51-006 / dm26-009 /
+      dmr01-002 と同形）を足し、unsupported を外したもの。abilities は static 1件ちょうど。補完なし: partial
+      の text は行の公式テキストの「 / 」連結形で全文と一致。正本判定: 対象 id dm06-029 を real.yaml / real_akashic.yaml
+      / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml
+      のヒットは T1141 の notes 内参照のみ）。identity 実測で canon_id(dm06-029) = dm06-029（対象 id
+      が正本）、aliases_for(シグマ・トゥレイト, dm06-029) = []（alias なし）。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      breaks:
+        count:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - サバイバー
+          other: true
+- id: dm06-001
+  name: 銀界の守護者ル・ギラ・レシール
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 4000
+  races:
+  - ガーディアン
+  mana: 1
+  keywords:
+  - blocker
+  - cannot_attack_player
+  text: 'ブロッカー(相手クリーチャーが攻撃するとき、このクリーチャーをタップして、その攻撃を阻止してよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーがバトルゾーンにある間、進化クリーチャーはタップされた状態でバトルゾーンに出る。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  source:
+    official: dm06-001
+    review: pending
+    notes: '再変換ラウンド419。第384弾の再変換。提出形は partial の組立て済み部分（クリーチャー / 光 / コスト5 / パワー4000
+      / 種族 ガーディアン、mana 1、keywords [blocker, cannot_attack_player]）に第384弾の確立形 static
+      1件〔{kind: static, affects: {zone: bz, owner: any, filter: {types: [evolution]}},
+      mod: {grant: [enters_tapped]}}〕（第339弾の grant [enters_tapped] 確立形の一般化、登録先例 dmex19-m20
+      型）を足し、unsupported を外したもの。abilities は static 1件ちょうど。補完なし: partial の text は行の公式テキスト全文と一致。正本判定:
+      対象 id dm06-001 を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml
+      / proto.yaml / converted.yaml と照合し、いずれにも登録なし（proto.yaml のヒットは T1144 の notes
+      内参照のみ）。identity 実測で canon_id(dm06-001) = dm06-001（対象 id が正本）、aliases_for(銀界の守護者ル・ギラ・レシール,
+      dm06-001) = []（alias なし）。'
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - evolution
+    mod:
+      grant:
+      - enters_tapped
+- id: promoy18-087
+  name: リッチ警官 キャッシュ！
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  cost: 8
+  power: 2500
+  races:
+  - ヒューマノイド
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、自分の手札を１枚、相手に見せてもよい。そうしたら、そのカードのコストと同じ枚数のカードを引く。
+  source:
+    official: promoy18-087
+    review: pending
+    notes: '再変換ラウンド420。第385弾の再変換。提出形は partial の骨格（クリーチャー / 光・水 / コスト8 / パワー2500 /
+      種族 ヒューマノイド、mana 1、keywords・abilities ともに無し）に第385弾の確立形1能力〔CIP 誘発 may [choose
+      {select: {zone: hand, owner: you, count: 1}, as: pick}, draw {count: {cost_of:
+      pick}}]〕（「見せてもよい」は登録先例 dmr05-046 の may 内 choose 形、ドロー枚数は第368弾の draw {count:
+      {cost_of: pick}}）を足し、unsupported を外したもの。abilities はこの1件ちょうど、keywords は無いまま。補完あり:
+      partial の text は条項の断片（「コストと同じ枚数引く」）のみのため、text には行の公式テキスト全文を入れた。正本判定: 対象 id promoy18-087
+      を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml
+      / converted.yaml と照合し、いずれにも登録なし（proto.yaml のヒットは T1148 の notes 内参照のみ）。identity
+      実測で canon_id(promoy18-087) = promoy18-087（対象 id が正本）、aliases_for(リッチ警官 キャッシュ！,
+      promoy18-087) = []（alias なし）。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        as: pick
+      - op: draw
+        count:
+          cost_of: pick
+- id: dm26ex4-cho046
+  name: 夜露死苦 キャロル
+  types:
+  - creature
+  civs:
+  - water
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - アウトレイジ
+  mana: 1
+  text: このクリーチャーがどこからでも墓地に置かれる時、自分のマナゾーンに水と火文明があれば、かわりに手札に戻す。
+  source:
+    official: dm26ex4-cho046
+    review: pending
+    notes: '再変換ラウンド421。第386弾の再変換。提出形は partial の骨格（クリーチャー / 水・火 / コスト3 / パワー2000 /
+      種族 アウトレイジ、mana 1、keywords・abilities ともに無し）に第386弾の確立形1能力〔replace {when: {event:
+      move, to: graveyard, subject: self}, if: {all: [exists マナ水, exists マナ火]}, instead:
+      [move {ref: subject} → hand]}〕（登録済み dm23ex1-062＝同名カード別刷りの登録形と完全一致）を足し、unsupported
+      を外したもの。abilities はこの1件ちょうど、keywords は無いまま。補完あり: partial の text は条項の断片のみのため、text
+      には行の公式テキスト全文を入れた。正本判定: 新規登録として扱う。identity 実測で canon_id(dm26ex4-cho046) = dm26ex4-cho046（対象
+      id 自身が最新版の正本）で、dm23ex1-062 の登録エントリの source.aliases は [dmex03-029, dmex13-056,
+      dmx14-031, promoy12-031] の4件で対象 id を含まない（対象はどの converted エントリからもカバーされていない）。dm02-046
+      型 stale は正本 dmsd16-013 が登録済みでその aliases に dm02-046 が含まれ行が重複していたケースであり、本件とは異なる。登録時の
+      source.aliases は validate が identity.aliases_for から自動付与する5件（dm23ex1-062 を含む）で、dm23ex1-062
+      の独立エントリとの id∩aliases 重なりが生じるが、同種の重なりは既存データに多数ある（ラウンド415で確認）ほか、AliasDict は ID
+      として存在する alias を別名解決から除外するため無害。既知の制限: 置換の発生源走査規則により本形は bz 起点でのみ発火する（dm23ex1-062
+      も同一。第386弾で記録、専用ステージ送り）。'
+    aliases:
+    - dm23ex1-062
+    - dmex03-029
+    - dmex13-056
+    - dmx14-031
+    - promoy12-031
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      to: graveyard
+      subject: self
+    if:
+      all:
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - water
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - fire
+    instead:
+    - op: move
+      select:
+        ref: subject
+        count: 1
+      to: hand
+      reason: return
+- id: dm25ex3-rp4s04
+  name: 楽蛇の虚 フミガルド
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 6000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  text: 'このターン攻撃したクリーチャー１体につき、このクリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。
+
+    D・D・D [ff05]
+
+    スピードアタッカー
+
+    W・ブレイカー
+
+    自分のターンに１度、相手のクリーチャーが出る時、自分の手札が１枚以下なら、かわりにそのクリーチャーを墓地に置いてもよい。'
+  source:
+    official: dm25ex3-rp4s04
+    review: pending
+    notes: '再変換ラウンド422。第387弾の再変換。提出形は partial の骨格（クリーチャー / 火 / コスト5 / パワー6000 / デーモン・コマンド、mana
+      1、keywords [speed_attacker, double_breaker]、abilities [declare, replace] は構築済み）に第387弾の確立形
+      static〔hand 常在型 {cost: {amount: -2, count: {turn_count: {kind: attack, owner:
+      any, distinct: true}}}, cost_min: 1}〕を条項順の先頭へ1件足し、unsupported を外したもの。abilities
+      は [static, declare, replace] の3件ちょうど。補完なし（text は公式テキスト全文のまま）。第1条項の体数読みは公式QA
+      47928（2025.12.19）で確定し、turn_count の distinct: true（第387弾で追加した新規語彙）で表す。正本判定は通常型:
+      identity 実測で canon_id は対象 id 自身が正本、alias 3件（dm25ex3-rp4sec05 / dm25rp4-s04 /
+      dm25rp4-sec05）はいずれも rejects に独自行が無く、登録時の source.aliases は validate が identity.aliases_for
+      から自動付与する。'
+    aliases:
+    - dm25ex3-rp4sec05
+    - dm25rp4-s04
+    - dm25rp4-sec05
+  keywords:
+  - speed_attacker
+  - double_breaker
+  abilities:
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -2
+        count:
+          turn_count:
+            kind: attack
+            owner: any
+            distinct: true
+      cost_min: 1
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: play_self
+        cost: 5
+        civs:
+        - fire
+  - kind: replace
+    once_per_turn: true
+    optional: true
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+    if:
+      all:
+      - is_turn: you
+      - cmp:
+        - count:
+            zone: hand
+            owner: you
+        - <=
+        - 1
+    instead:
+    - op: move
+      select:
+        ref: event.subject
+      to: graveyard
+      reason: put
+- id: dm24rp4-065
+  name: カンテ＝ランタン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  power: 1000
+  races:
+  - アビスロイヤル
+  text: このクリーチャーがバトルする時、そのバトルの終わりまで、バトルしている相手クリーチャーのパワーを－3000する。（パワー０以下のクリーチャーは破壊される）
+  source:
+    official: dm24rp4-065
+    review: pending
+    notes: '再変換ラウンド423。第388弾の再変換。提出形は partial の骨格（クリーチャー / 闇 / コスト2 / パワー1000 / 種族
+      アビスロイヤル、mana 1、keywords・abilities ともに無し）に第388弾の確立形2能力〔攻撃側 trigger {battle_start,
+      subject: self} → modify {ref: event.opponent, power: -3000, duration: during_attack}、守備側
+      trigger {battle_start, opponent: self} → modify {ref: event.subject, power:
+      -3000, duration: during_attack}〕（第75弾の battle_start 両面誘発＋登録先例 dm26rp1-039 の
+      modify 形のドリフト）を足し、unsupported を外したもの。abilities はこの2件ちょうど、keywords は無いまま。補完あり:
+      partial の text は条項の断片のみのため、text には行の公式テキスト全文を入れた。正本判定は通常型: 対象 id を real / real_akashic
+      / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは T1152 の notes
+      内参照のみ）、identity 実測で canon_id(dm24rp4-065) = dm24rp4-065、alias は無い。ファミリーのもう1件
+      dmr01-049 は reopen の対象にならなかった（行に reason が無く reopen の reason: vocab 条件に該当しないため。出力は対象1件ちょうど）ので差し戻しは不要で、gaps
+      = [battle_opponent_reference]・partial 無しのまま rejects に残る。battle_opponent_reference
+      は完全解消しない（1件残る）。'
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_start
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: event.opponent
+      mod:
+        power: -3000
+      duration: during_attack
+  - kind: trigger
+    when:
+      event: battle_start
+      opponent: self
+    effect:
+    - op: modify
+      select:
+        ref: event.subject
+      mod:
+        power: -3000
+      duration: during_attack
+- id: dmex10-014
+  name: 死罠の杖
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 4
+  mana: 1
+  power: 5000
+  races:
+  - ビーストフォーク
+  - 不死樹王国
+  text: このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。そのクリーチャーのコストと同じ枚数のカードを、自分の山札の上から墓地に置く。
+  source:
+    official: dmex10-014
+    review: pending
+    notes: '再変換ラウンド424。第389弾の再変換。提出形は partial の骨格（クリーチャー / 闇・自然 / コスト4 / パワー5000 /
+      種族 ビーストフォーク・不死樹王国、mana 1、keywords・abilities ともに無し）に第389弾の確立形1能力〔CIP 誘発 [choose
+      {select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as:
+      pick}, mana_put {select: {ref: pick}}, mill {owner: you, count: {cost_of: pick}}]〕を足し、unsupported
+      を外したもの。abilities はこの1件ちょうど、keywords は無いまま。補完あり: partial の text は条項の断片のみのため、text
+      には行の公式テキスト全文を入れた。正本判定は通常型: 対象 id を real / real_akashic / real_vocab / real_zone
+      / proto / converted と照合し登録なし（proto のヒットは T1154 の notes 内参照のみ）、identity 実測で canon_id(dmex10-014)
+      = dmex10-014、alias は無い。mill の count への式渡し（{cost_of: pick}）は本カードが初の登録。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: pick
+    - op: mana_put
+      select:
+        ref: pick
+    - op: mill
+      owner: you
+      count:
+        cost_of: pick
+- id: dmsd07-003
+  name: ハンマノ裁徒
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  mana: 1
+  power: 6000
+  races:
+  - メタリカ
+  - サバキスト
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このターン中にカードが自分のシールドゾーンに置かれていなければ、このクリーチャーは相手プレイヤーを攻撃できない。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  source:
+    official: dmsd07-003
+    review: pending
+    notes: '再変換ラウンド425。第390弾の再変換。提出形は partial の骨格（クリーチャー / 光 / コスト4 / パワー6000 / 種族
+      メタリカ・サバキスト、mana 1、keywords [blocker, double_breaker]、abilities 無し）に第390弾の確立形
+      static 1件〔if {cmp: [{turn_count: {kind: shield_put, owner: you}}, "==", 0]}
+      の間 mod: {deny: [attack_player]}〕を足し、unsupported を外したもの。abilities はこの1件ちょうど、keywords
+      は [blocker, double_breaker] のまま。補完なし: partial の text は行の公式テキスト全文と一致。正本判定は通常型:
+      対象 id を real / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto
+      のヒットは T1155 の notes 内参照のみ）、identity 実測で canon_id(dmsd07-003) = dmsd07-003、alias
+      は無い。確立形は登録済み dmrp08-032 ブロクノ裁徒Z の第1能力と同一。'
+  keywords:
+  - blocker
+  - double_breaker
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - turn_count:
+          kind: shield_put
+          owner: you
+      - ==
+      - 0
+    mod:
+      deny:
+      - attack_player
+- id: dmd15-005
+  name: ギャノバズガ・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  mana: 1
+  power: 4000
+  races:
+  - アーマード・ドラゴン
+  text: 自分の火のクリーチャーがバトルする時、そのバトルの終わりまで、そのクリーチャーのパワーは+3000される。
+  source:
+    official: dmd15-005
+    review: pending
+    notes: '再変換ラウンド426。第391弾の再変換。提出形は partial の骨格（クリーチャー / 火 / コスト5 / パワー4000 / 種族
+      アーマード・ドラゴン、mana 1、keywords 無し）に第391弾の確立形 static 1件〔affects {zone: bz, owner:
+      you, filter: {types: [creature], civs: [fire]}}, mod {battle_power: {amount:
+      3000}}〕を足し、unsupported を外したもの。abilities はこの1件ちょうど、keywords は無いまま。補完あり: partial
+      の text は条項の断片のため、text には行の公式テキスト全文を入れた。正本判定は通常型: 対象 id を real / real_akashic
+      / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは T1156 の notes
+      内参照のみ）、identity 実測で canon_id(dmd15-005) = dmd15-005、alias は無い。確立形は第122弾の battle_power（バトル中だけのパワー修整）の他者付与形で、登録先例
+      dmrp15-040 / dmr17-054 と同型。'
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - fire
+    mod:
+      battle_power:
+        amount: 3000
+- id: dm27-010
+  name: 彩強の巨人
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 9
+  mana: 1
+  power: 11000
+  races:
+  - ジャイアント
+  text: 文明ブレイカー(このクリーチャーは、自分のマナゾーンにある文明ひとつにつき１枚、シールドをブレイクする)
+  source:
+    official: dm27-010
+    review: pending
+    notes: '再変換ラウンド427。第392弾の再変換。提出形は partial の骨格（クリーチャー / 自然 / コスト9 / パワー11000 /
+      種族 ジャイアント、mana 1、keywords・abilities 無し）に第392弾の確立形 static 1件〔affects: self, mod:
+      {breaks: {civ_count: {zone: mana, owner: you}, base: 0}}〕を足し、unsupported を外したもの。abilities
+      はこの1件ちょうど、keywords は無いまま。補完あり: partial の text は「文明ブレイカー」だけのため、text には行の公式テキスト全文を入れた。正本判定は通常型:
+      対象 id を real / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto
+      のヒットは T1159 の notes 内参照のみ）、identity 実測で canon_id(dm27-010) = dm27-010、alias
+      は無い。確立形は mod breaks の式形式 {civ_count: セレクタ}（第79弾。登録先例 dmc34-025 は「追加で」型で base
+      既定1の base＋式値）に、第145弾で実挙動検証済みの base: 0（バラエティ・ブレイカーと同機構）を組み合わせたもので、breaks の {civ_count
+      ＋ base: 0} の組み合わせは本カードが初の登録。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      breaks:
+        civ_count:
+          zone: mana
+          owner: you
+        base: 0
+- id: dmrp06-062
+  name: 青守銀 ノチェス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  mana: 1
+  power: 4500
+  races:
+  - メタリカ
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このターン中に自分のシールドゾーンにカードが置かれていなければ、このクリーチャーは相手プレイヤーを攻撃できない。'
+  source:
+    official: dmrp06-062
+    review: pending
+    notes: '再変換ラウンド428。第393弾の再変換。対象行は partial も reason も無い素行（keys は gaps / id / text
+      のみ）のため、提出形の骨格は partial 由来ではなく公式データ（data/cards/raw/by_product/rp06.jsonl の dmrp06-062
+      行: クリーチャー / 光 / コスト3 / パワー4500 / 種族 メタリカ、mana 1）から起こしたもの。これに第393弾の確立形 static
+      1件〔if {cmp: [{turn_count: {kind: shield_put, owner: you}}, "==", 0]} の間 mod:
+      {deny: [attack_player]}〕を足したもの。abilities はこの1件ちょうど、keywords は [blocker] のまま。補完なし:
+      text は行の公式テキスト全文と一致（文面は dmsd07-003 と語順が異なるため行の文面をそのまま使用）。正本判定は通常型: 対象 id を real
+      / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは
+      T1160 の notes 内参照のみ）、identity 実測で canon_id(dmrp06-062) = dmrp06-062、alias は無い。確立形は登録済み
+      dmrp08-032 ブロクノ裁徒Z の第1能力と同一（第390弾 placed_this_turn_condition と同一条項）。reopen（shield_placed_this_turn_condition）の出力は0件（対象行に
+      reason が無いため正常。cmd_submit が登録成功時に rejects から行を外す）。'
+  keywords:
+  - blocker
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - turn_count:
+          kind: shield_put
+          owner: you
+      - ==
+      - 0
+    mod:
+      deny:
+      - attack_player
+- id: dm26rp3-056
+  name: 龍装者 クシュトル
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  mana: 1
+  power: 2500
+  races:
+  - ドラゴンギルド
+  - メタリカ
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    自分のクリーチャーがこのクリーチャーだけなら、このクリーチャーは離れない。'
+  source:
+    official: dm26rp3-056
+    review: pending
+    notes: '再変換ラウンド429。第394弾の再変換。提出形は partial の骨格（クリーチャー / 光 / コスト3 / パワー2500 / 種族
+      ドラゴンギルド・メタリカ、mana 1、keywords [blocker]、abilities 無し）に第394弾の確立形 static 1件〔if
+      {cmp: [{count: {zone: bz, owner: you, filter: {types: [creature]}}}, "==", 1]}
+      の間 mod: {no_leave: true}〕を足し、unsupported を外したもの。abilities はこの1件ちょうど、keywords
+      は [blocker] のまま。補完なし: partial の text は公式テキスト全文と一致。正本判定は通常型: 対象 id を real / real_akashic
+      / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは T1161 の notes
+      内参照のみ）、identity 実測で canon_id(dm26rp3-056) = dm26rp3-056、alias は無い。確立形は mod no_leave（第49弾）を
+      static の if で門番する登録先例 dmx22b-040 の門番パターンの自己版。reopen（only_creature_condition）の出力は対象1件ちょうど。'
+  keywords:
+  - blocker
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+      - ==
+      - 1
+    mod:
+      no_leave: true
+- id: dmex15-b099
+  name: 生魂転霊
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 2
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    自分のクリーチャーを１体破壊する。その後、そのクリーチャーが持っていた文明の数だけ、自分の山札の上からカードをマナゾーンに置く。'
+  source:
+    official: dmex15-b099
+    review: pending
+    notes: '再変換ラウンド430。第395弾の再変換。提出形は partial の骨格（呪文 / 自然 / コスト2、mana 1、keywords [s_trigger]、abilities・spell
+      ともに無し）に第395弾の確立形 spell 4 op〔choose {select: {zone: bz, owner: you, filter: {types:
+      [creature]}, count: 1}, as: victim} → set_var {name: n_civs, value: {civ_count:
+      {ref: victim}}} → destroy {select: {ref: victim}} → mana_put {select: {zone:
+      deck, owner: you, from_top: {var: n_civs}}}〕を足し、unsupported を外したもの。spell はこの4
+      op ちょうど、keywords は [s_trigger] のまま。補完なし: partial の text は公式テキスト全文と一致。正本判定は通常型:
+      対象 id と alias 2件（dm24-110 / promoy24-026）を real / real_akashic / real_vocab
+      / real_zone / proto / converted と照合し登録なし（proto のヒットは T1162 の notes 内参照のみ）、identity
+      実測で canon_id は対象・全 alias とも dmex15-b099、aliases_for = 2件で partial の source.aliases
+      と一致。alias はいずれも rejects に独自行が無く、登録時の source.aliases は validate が identity.aliases_for
+      から自動付与する。確立形は第79弾の式 civ_count を破壊前に第322弾の set_var で数えて束縛する「移動前に数えて束縛する」パターン（破壊後に直接数える形は
+      candidates の ref 分岐が alive で絞るため gen 不一致で 0 に倒れることを第395弾で実測）。reopen（civ_count_of_destroyed）の出力は対象1件ちょうど。'
+    aliases:
+    - dm24-110
+    - promoy24-026
+  keywords:
+  - s_trigger
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    as: victim
+  - op: set_var
+    name: n_civs
+    value:
+      civ_count:
+        ref: victim
+  - op: destroy
+    select:
+      ref: victim
+  - op: mana_put
+    select:
+      zone: deck
+      owner: you
+      from_top:
+        var: n_civs
+- id: dm25-055
+  name: 虹色の霊光
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 3
+  mana: 1
+  text: 'このターン、バトルゾーンにある自分のクリーチャー１体のパワーは、そのクリーチャーが持つ文明ひとつにつき+2000される。
+
+    カードを１枚引く。'
+  source:
+    official: dm25-055
+    review: pending
+    notes: '再変換ラウンド431。第396弾の再変換。提出形は partial の骨格（呪文 / 自然 / コスト3、mana 1、keywords・abilities・spell
+      ともに無し）に第396弾の確立形 spell 4 op〔choose {select: {zone: bz, owner: you, filter: {types:
+      [creature]}, count: 1}, as: pick} → set_var {name: p_up, value: {mul: [{civ_count:
+      {ref: pick}}, 2000]}} → modify {select: {ref: pick}, mod: {power: {amount: {var:
+      p_up}}}, duration: end_of_turn} → draw {player: you, count: 1}〕を足し、unsupported
+      を外したもの。spell はこの4 op ちょうど、keywords は無いまま。補完あり: text のみ（partial の text は条項の断片「そのクリーチャーが持つ文明ひとつにつき+2000」のため、text
+      には行の公式テキスト全文を入れた）。正本判定は通常型: 対象 id を real / real_akashic / real_vocab / real_zone
+      / proto / converted と照合し登録なし（proto のヒットは T1163 の notes 内参照のみ）、identity 実測で canon_id(dm25-055)
+      = dm25-055、aliases_for = []（alias は無い）。確立形は第79弾の式 civ_count を第322弾の set_var
+      で修整の生成前に数えて束縛し、op_modify の生成時ベイクで amount へリテラルに固定する形（当初候補形は第396弾で実測して却下: mod
+      の count への {civ_count: {ref: pick}} は特性計算時の env_self に解決時の束縛が無く空に倒れ、{ref: self}
+      形は civ_count の chars_ro 再入で RecursionError）。reopen（power_per_civilization）の出力は対象1件ちょうど。'
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    as: pick
+  - op: set_var
+    name: p_up
+    value:
+      mul:
+      - civ_count:
+          ref: pick
+      - 2000
+  - op: modify
+    select:
+      ref: pick
+    mod:
+      power:
+        amount:
+          var: p_up
+    duration: end_of_turn
+  - op: draw
+    player: you
+    count: 1
+- id: dmrp06-027
+  name: マ・スクメーロ・タンク
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 8000
+  races:
+  - グランセクト
+  mana: 1
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーはタップしてバトルゾーンに置かれ、自分のターンのはじめにアンタップしない。
+
+    自分のマナゾーンにカードを置く時、それがそのターンに自分のマナゾーンに置く最初のカードでなければ、このクリーチャーをアンタップする。'
+  source:
+    official: dmrp06-027
+    review: pending
+    notes: '再変換ラウンド432。第397弾の再変換。提出形は partial の骨格（クリーチャー / 自然 / コスト4 / パワー8000 / 種族
+      グランセクト、mana 1、keywords [double_breaker, enters_tapped]、abilities は static {affects:
+      self, mod: {deny: [untap_at_start]}} の1件が構築済み）に第397弾の確立形 trigger 1件〔when {event:
+      move, to: mana, subject: {owner: you}, ord: {kind: mana_put, ge: 2}} → untap
+      {select: {ref: self}}〕を足し、unsupported を外したもの。abilities はこの2件ちょうど（static → trigger
+      の条項順）、keywords は [double_breaker, enters_tapped] のまま。補完なし: partial の text は公式テキスト全文と一致。正本判定は通常型:
+      対象 id を real / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto
+      のヒットは T1164 の notes 内参照のみ）、identity 実測で canon_id(dmrp06-027) = dmrp06-027、aliases_for
+      = []（alias は無い）。確立形は登録先例 dm23rp2x-047（「各ターン2枚目のカードを自分のマナゾーンに置いた時」に ord {kind:
+      mana_put, eq: 2}）の ord 比較を ge: 2 に変えた形（「最初のカードでなければ」＝2枚目以降すべて）。reopen（mana_placed_count_this_turn）の出力は対象1件ちょうど。'
+  keywords:
+  - double_breaker
+  - enters_tapped
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - untap_at_start
+  - kind: trigger
+    when:
+      event: move
+      to: mana
+      subject:
+        owner: you
+      ord:
+        kind: mana_put
+        ge: 2
+    effect:
+    - op: untap
+      select:
+        ref: self
+- id: dmex11-004
+  name: ディオーネ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 3000
+  races:
+  - シー・ハッカー
+  mana: 1
+  text: 'ブロッカー
+
+    「スピードアタッカー」を持つクリーチャーは、バトルゾーンに出たターン、攻撃できない。
+
+    このクリーチャーは攻撃できない。'
+  source:
+    official: dmex11-004
+    review: pending
+    notes: '再変換ラウンド433。第398弾の再変換。提出形は partial の骨格（クリーチャー / 水 / コスト3 / パワー3000 / 種族
+      シー・ハッカー、mana 1、keywords [blocker, cannot_attack]、abilities 無し）に第398弾の確立形 static
+      1件〔affects {zone: bz, owner: any, filter: {types: [creature], keyword: speed_attacker,
+      entered_this_turn: true}}, mod {deny: [attack_player, attack_creature]}〕を足し、unsupported
+      を外したもの。abilities はこの1件ちょうど、keywords は [blocker, cannot_attack] のまま。補完なし: partial
+      の text は公式テキスト全文と一致。正本判定は通常型: 対象 id と alias 2件（dm14-004 / dmx22a-002）を real
+      / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは
+      T1165 の notes 内参照のみ）、identity 実測で canon_id は対象・全 alias とも dmex11-004、aliases_for
+      = [dm14-004, dmx22a-002]（alias に rejects の独自行は無い）。確立形は第362弾の登録先例 dm23rp4x-014
+      / dm23bd6-003 の形の owner を any に広げ、フィルタに keyword: speed_attacker を足したもの。reopen（speed_attacker_rule）の出力は対象1件ちょうど。既知の制限:
+      静的効果の affects 照合は base（印刷特性）のため、他の効果で付与されたスピードアタッカーはフィルタに掛からない（keyword フィルタを使う登録済み静的効果8件と共有するエンジン全体の規約。解消は専用ステージ判断）。'
+    aliases:
+    - dm14-004
+    - dmx22a-002
+  keywords:
+  - blocker
+  - cannot_attack
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+        keyword: speed_attacker
+        entered_this_turn: true
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+- id: dmr22-s04
+  name: 聖者の精霊龍 セレナーデ
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  cost: 7
+  power: 7500
+  races:
+  - エンジェル・コマンド・ドラゴン
+  - 革命軍
+  mana: 1
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    ブロッカー
+
+    W・ブレイカー
+
+    「スピードアタッカー」を持つクリーチャーはすべて、バトルゾーンに出たターン、攻撃できない。'
+  source:
+    official: dmr22-s04
+    review: pending
+    notes: '再変換ラウンド434。第399弾の再変換。提出形は partial の骨格（クリーチャー / 光・水 / コスト7 / パワー7500 /
+      種族 エンジェル・コマンド・ドラゴン / 革命軍、mana 1）に keywords [blocker, double_breaker] と第399弾の確立形
+      static 1件〔affects {zone: bz, owner: any, filter: {types: [creature], keyword:
+      speed_attacker, entered_this_turn: true}}, mod {deny: [attack_player, attack_creature]}〕を足し、unsupported
+      を外したもの。abilities はこの1件ちょうど、keywords は [blocker, double_breaker]。補完あり: text のみ
+      — partial の text は条項の断片のため、text には行の公式テキスト全文を条項ごとに改行したものを入れた。「マナゾーンに置く時、このカードはタップして置く」の条項にはキーワード・能力を付けない（多色カードのルール
+      405.1 でエンジンが処理し、変換済みカードは一貫して text のみ）。正本判定は通常型: 対象 id（alias は無い）を real / real_akashic
+      / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは T1166 の notes
+      内参照のみ）、identity 実測で canon_id(dmr22-s04) = dmr22-s04、aliases_for = []。確立形は第398弾と同一（第362弾の登録先例の
+      owner を any に広げ keyword フィルタを足した形）。reopen（summon_turn_attack_restriction）の出力は対象1件ちょうど。既知の制限:
+      静的効果の affects 照合は base（印刷特性）のため、他の効果で付与されたスピードアタッカーはフィルタに掛からない（keyword フィルタを使う登録済み静的効果と共有するエンジン全体の規約。解消は専用ステージ判断）。'
+  keywords:
+  - blocker
+  - double_breaker
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+        keyword: speed_attacker
+        entered_this_turn: true
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+- id: dmrp21-t14
+  name: ブルース・ガー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 1
+  mana: 1
+  text: '【K・ソウル】
+
+    このクリーチャーは、自分のターンのはじめにアンタップしない。'
+  power: 1000
+  races:
+  - ファイアー・バード
+  - K・ソウル
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - untap_at_start
+  source:
+    official: dmrp21-t14
+    review: pending
+    notes: '再変換ラウンド435。第400弾の再変換。提出形は partial の骨格（クリーチャー / 火 / コスト1 / パワー1000 / 種族
+      ファイアー・バード、mana 1、keywords・abilities ともに無し）に第400弾の確立形 static 1件〔affects: self,
+      mod {deny: [untap_at_start]}〕を足し、unsupported を外したもの。abilities はこの1件ちょうど、keywords
+      は無いまま。補完あり: races と text のみ（【K・ソウル】は種族特性で、登録先例 dmex01-043 / dm36-032 と同様に races
+      へ ''K・ソウル'' を入れて [ファイアー・バード, K・ソウル] とした。partial の races は [ファイアー・バード] のみ。text
+      には公式テキスト全文を入れた。partial の text は断片「アンタップしない」）。正本判定は通常型: 対象 id と alias 2件（dm38-029
+      / dmrp21-tf14）を real / real_akashic / real_vocab / real_zone / proto / converted
+      と照合し登録なし（proto のヒットは T1167 の notes 内参照のみ）、identity 実測で canon_id は対象・全 alias
+      とも dmrp21-t14、aliases_for = [dm38-029, dmrp21-tf14]（alias に rejects の独自行は無い）。確立形は登録済み
+      dmrp06-027（第397弾・ラウンド432）の登録形そのもの（登録先例 dmrp18-025 も同形）。reopen（untap_restriction）の出力は3件で、残り2件（dm26rp1-td004
+      / dmx15-011）は形が異なるため unsupported を残した partial のまま差し戻し（ファミリーは完全解消しない）。'
+    aliases:
+    - dm38-029
+    - dmrp21-tf14
+- id: dm33-001
+  name: 超神龍レイ・ソレイユ
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 4
+  mana: 1
+  text: 'ブロッカー
+
+    進化-自分の「ブロッカー」を持つクリーチャー１体の上に置く。
+
+    自分のクリーチャーがブロックした時、そのクリーチャーは相手のシールドを１枚ブレイクする。'
+  power: 6000
+  races:
+  - アポロニア・ドラゴン
+  keywords:
+  - blocker
+  evolve_from:
+    types:
+    - creature
+    keyword: blocker
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+    mod:
+      gain:
+      - kind: trigger
+        when:
+          event: block
+          subject: self
+        effect:
+        - op: break
+          player: opp
+          count: 1
+  source:
+    official: dm33-001
+    review: pending
+    notes: '再変換ラウンド436。第401弾の再変換。提出形は partial の骨格（進化クリーチャー / 光 / コスト4 / パワー6000 /
+      種族 アポロニア・ドラゴン、mana 1、keywords [blocker]）に第401弾の確立形 static 1件〔affects {zone:
+      bz, owner: you, filter: {types: [creature]}}, mod {gain: [trigger {when: {event:
+      block, subject: self}, effect: [break {player: opp, count: 1}]}]}〕を足し、unsupported
+      を外したもの。abilities はこの1件ちょうど、keywords は [blocker] のまま。補完あり: types と evolve_from
+      のみ（types は [creature, evolution]、evolve_from は {types: [creature], keyword:
+      blocker}。第372弾・登録先例 dm32-011 と同文・同形。text は partial の時点で公式全文と一致し補完なし）。正本判定は通常型:
+      対象 id（alias は無い）を real / real_akashic / real_vocab / real_zone / proto / converted
+      と照合し登録なし（proto のヒットは T1168 の notes 内参照のみ）、identity 実測で canon_id は対象自身、aliases_for
+      = []。確立形は登録先例 dmd26-015（静的効果の gain で誘発を付与）＋第326弾形B（gain した誘発が break を解決）の合成で追加語彙なし。reopen（block_break）の出力は対象1件ちょうど。'
+- id: promoy13-019
+  name: 天英雄 ヴァルハラ・デューク
+  types:
+  - creature
+  civs:
+  - light
+  cost: 7
+  mana: 1
+  text: 'マナ武装 ７：このクリーチャーをバトルゾーンに出した時、自分のマナゾーンに光のカードが７枚以上あれば、次の自分のターンのはじめまで自分のクリーチャーは破壊されない。
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）'
+  source:
+    official: promoy13-019
+    review: pending
+    notes: '再変換ラウンド437。第402弾の再変換。提出形は partial の骨格（クリーチャー / 光 / コスト7 / パワー7000 / 種族
+      エンジェル・コマンド・ドラゴン、mana 1、keywords [double_breaker]）に第402弾の確立形 trigger 1件〔when
+      {event: move, to: bz, subject: self}、if {cmp: [{count: {zone: mana, owner: you,
+      filter: {civs: [light]}}}, ">=", 7]}、effect [modify {select: {zone: bz, owner:
+      you, filter: {types: [creature]}, count: all}, mod: {indestructible: true},
+      duration: until_next_own_turn_start}]〕を足し、unsupported を外したもの。abilities はこの1件ちょうど、keywords
+      は [double_breaker] のまま。補完なし（partial の text は公式テキスト全文と一致）。正本判定は通常型: 対象 id（alias
+      は無い）を real / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto
+      のヒットは T1169 の notes 内参照のみ）、identity 実測で canon_id は対象自身、aliases_for = []。確立形は登録済み
+      dm23sd2-013（出た時誘発→modify count: all の indestructible、duration: end_of_turn）と同型で、duration:
+      until_next_own_turn_start との併用は dmrp15-030 の先例あり。一括 modify は解決時に集合が固定される（非 dynamic）。reopen（indestructible_duration）の出力は対象1件ちょうど。'
+  power: 7000
+  races:
+  - エンジェル・コマンド・ドラゴン
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - light
+      - '>='
+      - 7
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        indestructible: true
+      duration: until_next_own_turn_start
+- id: dmex03-g02
+  name: ゴールデン・ザ・ジョニー
+  types:
+  - creature
+  civs:
+  - zero
+  cost: 7
+  power: 10000
+  races:
+  - ジョーカーズ
+  mana: 1
+  text: 'スピードアタッカー　W・ブレイカー
+
+    マスター・ブラスター（このクリーチャーが攻撃する時、バトルゾーンまたはマナゾーンに自分のジョーカーズが合計４枚以上あれば、バトルゾーンにある相手のカードを１枚選ぶ。相手はそれを自身の山札の一番下に置く）
+
+    相手は、各ターンに一度しか呪文を唱えられない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if:
+      cmp:
+      - sum:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              race_has: ジョーカーズ
+        - count:
+            zone: mana
+            owner: you
+            filter:
+              race_has: ジョーカーズ
+      - '>='
+      - 4
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        count: 1
+      as: target
+    - op: move
+      select:
+        ref: target
+      to: deck
+      position: bottom
+      reason: put
+  - kind: static
+    affects:
+      zone: hand
+      owner: opp
+      filter:
+        types:
+        - spell
+    mod:
+      deny:
+      - action: cast
+        max_per_turn: 1
+  source:
+    official: dmex03-g02
+    review: pending
+    notes: '再変換ラウンド438。第403弾の再変換。提出形は partial の骨格（クリーチャー / 無色 / コスト7 / パワー10000 /
+      種族 ジョーカーズ、mana 1、keywords [speed_attacker, double_breaker]、構築済みマスター・ブラスター攻撃時誘発1件）に第403弾の確立形
+      static 1件〔affects {zone: hand, owner: opp, filter: {types: [spell]}}, mod {deny:
+      [{action: cast, max_per_turn: 1}]}〕を足し、unsupported を外したもの。abilities はこの2件ちょうど、keywords
+      は [speed_attacker, double_breaker] のまま。補完なし（partial の text は公式テキスト全文と一致）。正本判定は通常型:
+      対象 id と alias 2件（dmex01-076 / promoy16-063）を real / real_akashic / real_vocab
+      / real_zone / proto / converted と照合し登録なし（proto のヒットは T1170 の notes 内参照のみ）、identity
+      実測で canon_id は対象・全 alias とも dmex03-g02。reopen（cast_limit_once_per_turn）の出力は対象1件ちょうど:
+      reopen は gaps ⊆ 指定集合 かつ reason == "vocab" の行だけを外すため、gaps が2件の multi 2件（一音の妖精
+      dm26ex2-pr006 / dm26ex4-cho031、opponent_creature_entry_limit_once_per_turn との複合）は巻き込まれず、gaps・partial
+      を保ったまま rejects に残留することを実測確認した（差し戻しは発生せず）。cast_limit_once_per_turn は pure は解消するが
+      multi 2件が残るため完全解消しない。'
+    aliases:
+    - dmex01-076
+    - promoy16-063
+  keywords:
+  - speed_attacker
+  - double_breaker
+- id: dmr05-021
+  name: 知識の包囲網
+  types:
+  - spell
+  civs:
+  - water
+  cost: 7
+  mana: 1
+  text: 自分の手札を１枚見せる。そのカードのコストと同じ枚数のカードを引く。
+  spell:
+  - op: choose
+    select:
+      zone: hand
+      owner: you
+      count: 1
+    as: pick
+  - op: draw
+    count:
+      cost_of: pick
+  source:
+    official: dmr05-021
+    review: pending
+    notes: '再変換ラウンド439。第404弾の再変換。提出形は partial の骨格（呪文 / 水 / コスト7 / mana 1、spell・abilities
+      ともに無し）に第404弾の確立形 spell 2 op〔choose {select: {zone: hand, owner: you, count:
+      1}, as: pick}, draw {count: {cost_of: pick}}〕を足し、unsupported を外したもの。spell はこの2
+      op ちょうど、abilities は無いまま。補完あり: spell と text（partial の text は断片「そのカードのコストと同じ枚数」のため、text
+      には行の公式テキスト全文を入れた。登録後の全文一致も照合済み）。正本判定は通常型: 対象 id（alias は無い）を real / real_akashic
+      / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは T1171 の notes
+      内参照のみ）、identity 実測で canon_id は対象自身、aliases_for は []。reopen（draw_count_by_card）の出力は対象1件ちょうど。draw_count_by_card
+      は完全解消。'
+- id: dm20-037
+  name: 反骨鉄拳バーニアン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 2000
+  races:
+  - グレートメカオー
+  mana: 1
+  text: このクリーチャーのパワーは、バトルゾーンにある相手のクリーチャーの種族ひとつにつき+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 2000
+        count:
+          distinct_race_count:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+  source:
+    official: dm20-037
+    review: pending
+    notes: '再変換ラウンド440。第405弾の再変換。提出形は partial の骨格（クリーチャー / 光 / コスト4 / パワー2000 / 種族
+      グレートメカオー、mana 1、keywords・abilities ともに無し）に第405弾の確立形 static 〔affects: self, mod
+      {power: {amount: 2000, count: {distinct_race_count: {zone: bz, owner: opp, filter:
+      {types: [creature]}}}}}}〕1件を足し、unsupported を外したもの。abilities はこの1件ちょうど、keywords
+      は無いまま。補完なし（partial の text は行の公式テキスト全文と一致し、登録後の全文一致も照合済み）。正本判定は通常型: 対象 id（alias
+      は無い）を real / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto
+      のヒットは T1172 の notes 内参照のみ）、identity 実測で canon_id は対象自身、aliases_for は []。reopen（count_distinct_races）の出力は対象1件ちょうど。count_distinct_races
+      は完全解消。distinct_race_count は新規式キーの初回登録。'
+- id: dmx12b-058
+  name: 口寄の化身
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 4000
+  races:
+  - ミステリー・トーテム
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分の、ミステリー・トーテム以外の種族１種類につき１枚、カードを引いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count:
+          distinct_race_count:
+            selector:
+              zone: bz
+              owner: you
+            exclude_races:
+            - ミステリー・トーテム
+  source:
+    official: dmx12b-058
+    review: pending
+    notes: '再変換ラウンド441。第406弾の再変換。提出形は partial の骨格（クリーチャー / 自然 / コスト6 / パワー4000 / 種族
+      ミステリー・トーテム、mana 1、keywords・abilities ともに無し）に第406弾の確立形 trigger 〔when {event:
+      move, to: bz, subject: self}、effect [may [draw {count: {distinct_race_count:
+      {selector: {zone: bz, owner: you}, exclude_races: [ミステリー・トーテム]}}}]]]〕1件を足し、unsupported
+      を外したもの。abilities はこの1件ちょうど、keywords は無いまま。補完あり: text のみ（partial の text は断片「種族１種類につき」のため、公式テキスト全文を入れた。登録後の全文一致も照合済み）。正本判定は通常型:
+      対象 id と alias 4件（dm14-010 / dmc42-015 / dmc57-015 / dmc61-010）を real / real_akashic
+      / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは T1173 の notes
+      内参照のみ）、identity 実測で canon_id は対象・全 alias とも dmx12b-058、aliases_for = alias 4件（alias
+      に rejects の独自行は無い。source.aliases は validate が自動付与）。reopen（distinct_race_count）の出力は対象1件ちょうど。distinct_race_count
+      は完全解消。distinct_race_count の構造化形 {selector, exclude_races} は新規の式形で本ラウンドが初回登録。'
+    aliases:
+    - dm14-010
+    - dmc42-015
+    - dmc57-015
+    - dmc61-010
+- id: dmex02-011
+  name: 超絶特Q ダンガンテイオー
+  types:
+  - creature
+  civs:
+  - zero
+  cost: 8
+  power: 8000
+  races:
+  - ジョーカーズ
+  mana: 1
+  keywords:
+  - double_breaker
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    自分のクリーチャーは、バトルゾーンに出たターン、プレイヤーを攻撃できる。
+
+    相手のクリーチャーは、バトルゾーンに出たターン、プレイヤーを攻撃できない。'
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        entered_this_turn: true
+    mod:
+      player_rush: true
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        entered_this_turn: true
+    mod:
+      deny:
+      - attack_player
+  source:
+    official: dmex02-011
+    review: pending
+    notes: '再変換ラウンド442。第407弾の再変換。提出形は partial の骨格（クリーチャー / ゼロ / コスト8 / パワー8000 / 種族
+      ジョーカーズ、mana 1、keywords [double_breaker]、abilities 無し）に第407弾の確立形 static 2件〔付与:
+      affects {zone: bz, owner: you, filter: {types: [creature], entered_this_turn:
+      true}}, mod {player_rush: true}／deny: affects {zone: bz, owner: opp, filter:
+      {types: [creature], entered_this_turn: true}}, mod {deny: [attack_player]}〕を足し、unsupported
+      を外したもの。abilities はこの2件ちょうど、keywords は [double_breaker] のまま。補完なし（partial の text
+      は公式テキスト全文と一致し、登録後の全文一致も照合済み）。正本判定は通常型: 対象 id と alias 1件（promoy16-008）を real
+      / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは
+      T1175 の notes 内参照のみ）、identity 実測で canon_id は対象・alias とも dmex02-011、aliases_for
+      = [promoy16-008]。reopen（summoning_attack_rule）の出力は2件で、dmex07-s01 は partial が素で他条項が未構築のため
+      unsupported を残した partial のまま差し戻し（ファミリーは完全解消しない）。alias promoy16-008 の独自行（gap
+      entered_turn_attack）は alias 畳み込みとして処理した: 同カードの別版で、骨格（ゼロ / コスト8 / パワー8000 / 種族
+      ジョーカーズ / mana 1 / keywords [double_breaker]）とイラストレーター（lack）が一致し、テキストは版差の文面差（「プレイヤーを攻撃できる」⇔「相手プレイヤーを攻撃できる」、「プレイヤーを攻撃できない」⇔「自分を攻撃できない」）のみで指す対象が同一＝意味が同一であることを実測確認したため、reopen（entered_turn_attack）を併用して行を解消し、登録エントリの
+      source.aliases に validate が自動付与する形で畳み込んだ。reopen（entered_turn_attack）の出力は2件で、別カード
+      dmbd11-d05 は unsupported を残した partial のまま差し戻し。'
+    aliases:
+    - promoy16-008
+- id: dmex11-005
+  name: その子供、凶暴につき
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 4000
+  races:
+  - ヒューマノイド
+  - チルドレン
+  mana: 1
+  text: '自分のコスト３以下のクリーチャーすべてに「スピードアタッカー」を与える。（「スピードアタッカー」を持つクリーチャーは召喚酔いしない）
+
+    相手の進化クリーチャーと相手の「スピードアタッカー」を持つクリーチャーはすべて、タップしてバトルゾーンに出る。'
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        cost_le: 3
+    mod:
+      grant:
+      - speed_attacker
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - evolution
+    mod:
+      grant:
+      - enters_tapped
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        keyword: speed_attacker
+    mod:
+      grant:
+      - enters_tapped
+  source:
+    official: dmex11-005
+    review: pending
+    notes: '再変換ラウンド443。第408弾の再変換。提出形は partial の骨格（クリーチャー / 火 / コスト4 / パワー4000 / 種族
+      ヒューマノイド / チルドレン、mana 1、keywords・abilities ともに無し）に第408弾の確立形 static 3件〔付与: affects
+      {zone: bz, owner: you, filter: {types: [creature], cost_le: 3}}, mod {grant:
+      [speed_attacker]}／タップ入り（進化）: affects {zone: bz, owner: opp, filter: {types:
+      [evolution]}}, mod {grant: [enters_tapped]}／タップ入り（スピードアタッカー）: affects {zone:
+      bz, owner: opp, filter: {types: [creature], keyword: speed_attacker}}, mod {grant:
+      [enters_tapped]}〕を足し、unsupported を外したもの。abilities はこの3件ちょうど、keywords は無いまま。補完あり:
+      text のみ（partial の text は断片「タップしてバトルゾーンに出る」のため、text には行の公式テキスト全文を入れた）。正本判定は通常型:
+      対象 id と alias 3件（dmr08s-004 / dmx24-009 / promoy11-066）を real / real_akashic
+      / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは T1176 の notes
+      内参照のみ）、identity 実測で canon_id は対象・全 alias とも dmex11-005、aliases_for = alias 3件。alias
+      に rejects の独自行は無い。reopen（enters_tapped_rule）の出力は対象1件ちょうど。登録後も既知の制限（付与されたスピードアタッカーは
+      base 照合のため第3件の keyword フィルタに掛からない）は残る。keyword フィルタを使う登録済み静的効果と共有するエンジン全体の規約で、解消は専用ステージ判断。'
+    aliases:
+    - dmr08s-004
+    - dmx24-009
+    - promoy11-066
+- id: dm26ex3-010
+  name: 永遠のリュウセイ・カイザー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 8
+  mana: 1
+  text: 'W・ブレイカー
+
+    自分のクリーチャーすべてに「スピードアタッカー」を与える。
+
+    相手のクリーチャーはタップして出る。
+
+    相手の、クリーチャーの能力または呪文によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに出してもよい。'
+  source:
+    official: dm26ex3-010
+    review: pending
+    notes: '再変換ラウンド444。第409弾の再変換。提出形は partial の骨格（クリーチャー / 火 / コスト8 / パワー8000 / 種族
+      レッド・コマンド・ドラゴン / ハンター、mana 1、keywords [double_breaker]）に第409弾の確立形 abilities 3件〔第1条項:
+      static {affects: {owner: you, filter: {types: [creature]}}, mod: {grant: [speed_attacker]}}（partial
+      構築済み）／第2条項: static {affects: {zone: bz, owner: opp, filter: {types: [creature]}},
+      mod: {grant: [enters_tapped]}}（登録済み dmc52-007・第340弾と完全一致）／第3条項: replace {zone:
+      hand, optional: true, when: {event: move, from: hand, to: graveyard, reason:
+      discard, subject: self, by: opp}, instead: [move {select: {ref: self, count:
+      1}, to: bz, reason: put}]}（同一文面の登録済み dm26ex3-dcr005 と完全一致）〕を足し、unsupported を外したもの。abilities
+      はこの3件ちょうど、keywords は [double_breaker] のまま。補完なし（partial の text は公式全文と一致）。正本判定は通常型:
+      対象 id と alias 11件（dm23bd4-015 / dm26sd1-j002f / dmbd05-003 / dmbd09-006 / dmd13-009
+      / dmd20-016 / dmex15-a029 / dmex17-cho19 / dmr02-s03 / dmx22b-094 / promoy15-051）を
+      real / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto
+      のヒットは T1177 の notes 内参照のみ）、identity 実測で canon_id は対象・全 alias とも dm26ex3-010、aliases_for
+      = alias 11件。alias に rejects の独自行は無い。reopen（enters_tapped_grant）の出力は対象1件ちょうど。split
+      の part[2] 定型所有（第1条項の static）は提出形と完全一致のため merge_split の dedupe で二重付着せず、登録後の abilities
+      は3件ちょうど。'
+    aliases:
+    - dm23bd4-015
+    - dm26sd1-j002f
+    - dmbd05-003
+    - dmbd09-006
+    - dmd13-009
+    - dmd20-016
+    - dmex15-a029
+    - dmex17-cho19
+    - dmr02-s03
+    - dmx22b-094
+    - promoy15-051
+  power: 8000
+  races:
+  - レッド・コマンド・ドラゴン
+  - ハンター
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - speed_attacker
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - enters_tapped
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+- id: dmr09-004
+  name: 剛鉄突破 アイアンローズ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 7
+  mana: 1
+  text: バトルゾーンにある相手のクリーチャーはすべて「ブロッカー」を得、可能であればブロックする。このクリーチャーのパワーは、バトルゾーンにある相手のクリーチャー１体につき+2000される。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
+  source:
+    official: dmr09-004
+    review: pending
+    notes: '再変換ラウンド445。第410弾の再変換。提出形は partial の骨格（クリーチャー / 光 / コスト7 / パワー6000 / 種族
+      アウトレイジMAX、mana 1、keywords [double_breaker]、abilities 無し）に第410弾の確立形 abilities
+      2件〔第1条項: static {affects: {zone: bz, owner: opp, filter: {types: [creature]}},
+      mod: {grant: [blocker], require: [block]}}（自己スコープの require [block] を相手全体への付与に一般化。keyword
+      フィルタを含まないため第398弾の base 照合の制限は及ばない）／第2条項: static {affects: self, mod: {power:
+      {amount: 2000, count: {zone: bz, owner: opp, filter: {types: [creature]}}}}}}（第405弾の
+      count 形）〕を足し、unsupported を外したもの。abilities はこの2件ちょうど、keywords は [double_breaker]
+      のまま。補完なし（partial の text は公式全文と一致）。正本判定は通常型: 対象 id を real / real_akashic / real_vocab
+      / real_zone / proto / converted と照合し登録なし（proto のヒットは T1178 の notes 内参照のみ）、identity
+      実測で canon_id は対象自身、aliases_for = []（alias 無し）。reopen（force_block）の出力は対象1件ちょうど。split
+      の part[2] 定型所有は空のためツール側ブロッカーなし。第410弾のエンジン修正（combat.py: ブロック宣言でタップするのは選ばれた1体だけ）が登録と同時に効く。'
+  power: 6000
+  races:
+  - アウトレイジMAX
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - blocker
+      require:
+      - block
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 2000
+        count:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+- id: dmx18-047
+  name: 有毒類罠顎目 ドクゲーター
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  mana: 1
+  text: '相手の呪文の効果またはクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに出してもよい。
+
+    このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のコスト４以下のカードを１枚選び、持ち主のマナゾーンに置く。'
+  source:
+    official: dmx18-047
+    review: pending
+    notes: '再変換ラウンド446。第411弾の再変換。提出形は partial の骨格（クリーチャー / 自然 / コスト5 / パワー4000 / 種族
+      ジュラシック・コマンド・ドラゴン、mana 1、keywords・abilities ともに無し）に第411弾の確立形 abilities 2件〔第1条項:
+      replace {zone: hand, optional: true, when: {event: move, from: hand, to: graveyard,
+      reason: discard, subject: self, by: opp}, instead: [move {select: {ref: self,
+      count: 1}, to: bz, reason: put}]}（登録済み dm26ex3-dcr005 と完全一致）／第2条項: trigger {when:
+      {event: move, to: bz, subject: self}, effect: [choose {select: {zone: bz, owner:
+      opp, filter: {cost_le: 4}, count: 1}, as: pick}, mana_put {select: {ref: pick}}]}（第389弾形のフィルタ違い。文面は「カード」のため
+      types は絞らない）〕を足し、unsupported を外したもの。abilities はこの2件ちょうど、keywords は無いまま。補完あり:
+      text のみ（partial の text は断片「捨てられる時」のため、行の公式テキスト全文＝第411弾の FULL_TEXT を入れた）。正本判定は通常型:
+      対象 id を real / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto
+      のヒットは T1179 の notes 内参照のみ）、identity 実測で canon_id は対象自身、aliases_for = []（alias
+      無し）。reopen（madness）の出力は2件で、ファミリーの残り1件 dmx26-028 は unsupported を残した partial のまま差し戻した（madness
+      は完全解消しない）。split は None で定型所有なし。'
+  power: 4000
+  races:
+  - ジュラシック・コマンド・ドラゴン
+  abilities:
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          cost_le: 4
+        count: 1
+      as: pick
+    - op: mana_put
+      select:
+        ref: pick
+- id: dmex19-028
+  name: 超宮兵 マノミ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  mana: 1
+  text: 'G・ゼロ：このターン、自分が呪文を３枚以上唱えていれば、このクリーチャーをコストを支払わずに召喚してもよい。
+
+    このクリーチャーが出た時、カードを２枚引く。'
+  source:
+    official: dmex19-028
+    review: pending
+    notes: '再変換ラウンド447。第412弾の再変換。提出形は partial の骨格（クリーチャー / 水 / コスト5 / パワー4000 / 種族
+      ムートピア、mana 1、keywords 無し）に第412弾の確立形 free_if {cmp: [{turn_count: {kind: cast,
+      owner: you}}, ">=", 3]}（カードフィールド。登録済み dmrp06-038〔>= 2〕/ dmpcd02-b18〔>= 1〕と同形で閾値のみ違い）を足し、abilities
+      は partial 構築済みの CIP 誘発1件のまま、unsupported を外したもの。abilities はこの1件ちょうど、keywords
+      は無いまま、free_if は保持される。補完なし（partial の text は行の公式テキスト全文と一致）。正本判定は通常型: 対象 id と alias
+      dmrp06-016 を real / real_akashic / real_vocab / real_zone / proto / converted
+      と照合し登録なし（proto のヒットは T1180 の notes 内参照のみ）、identity 実測で canon_id は対象自身、alias
+      側の canon も dmex19-028、aliases_for = [dmrp06-016]。reopen（turn_count_free）の出力は対象1件ちょうど（巻き込みなし）。split
+      の part[2] 定型所有は CIP 誘発1件のみで提出形と完全一致。turn_count_free は完全解消。'
+    aliases:
+    - dmrp06-016
+  free_if:
+    cmp:
+    - turn_count:
+        kind: cast
+        owner: you
+    - '>='
+    - 3
+  power: 4000
+  races:
+  - ムートピア
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 2
+- id: dmx03-036
+  name: ブラッディ・シンバル
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは攻撃することができない。
+
+    このクリーチャーはバトルに勝っても、バトルの後、破壊される。'
+  source:
+    official: dmx03-036
+    review: pending
+    notes: '再変換ラウンド448。第413弾の再変換。提出形は partial の骨格（クリーチャー / 闇 / コスト2 / パワー4000 / 種族
+      ガーゴイル、mana 1、keywords [blocker, cannot_attack] 構築済み）に第413弾の確立形 trigger {when:
+      {event: battle_win, subject: self}, effect: [destroy {select: {ref: self}}]}（登録済み
+      dm01-026 / dm01-056 / dm01-089 / dm06-027 / dm06-087 の5件と完全一致）を足し、unsupported
+      を外したもの。abilities はこの1件ちょうど、keywords はそのまま。補完なし（partial の text は行の公式テキスト全文と一致）。正本判定は通常型:
+      対象 id と alias dm14-091 / dmc42-071 を real / real_akashic / real_vocab / real_zone
+      / proto / converted と照合し登録なし（proto のヒットは T1181 の notes 内参照のみ、converted のヒットは登録済み
+      dm01-026 の notes 内の dm14-091 言及のみ）、identity 実測で canon_id は対象自身、alias 側の canon
+      も dmx03-036、aliases_for = [dm14-091, dmc42-071]。reopen（battle_result_destruction）の出力は対象1件ちょうど（巻き込みなし）。split
+      の part[2] 定型所有は空。battle_result_destruction は完全解消。'
+    aliases:
+    - dm14-091
+    - dmc42-071
+  power: 4000
+  races:
+  - ガーゴイル
+  keywords:
+  - blocker
+  - cannot_attack
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        ref: self
+- id: dm01-034
+  name: カオス・ストライク
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: 'バトルゾーンにある相手のクリーチャーを１体選ぶ。
+
+    このターン、選んだクリーチャーがタップされていなくても攻撃できる。'
+  source:
+    official: dm01-034
+    review: pending
+    notes: '再変換ラウンド449。第414弾の再変換。提出形は partial の骨格（呪文 / 火 / コスト2、mana 1）に第414弾の確立形
+      spell 2 op〔choose {select: {zone: bz, owner: opp, filter: {types: [creature]},
+      count: 1}, as: tgt} / modify {select: {zone: bz, owner: you, filter: {types:
+      [creature]}, count: all}, mod: {allow: [{action: attack_creature, other: {tapped:
+      false}, only: {var: tgt}}]}, duration: end_of_turn}〕（登録済み dmr09-102・第275弾と同型で、差は選択フィルタに
+      tapped: false が無いことだけ）を足し、unsupported を外したもの。spell はこの2 op ちょうど。補完なし（提出形の text
+      は行の公式テキスト＝改行ありの全文。partial の text は内容一致だが文間の改行が欠けるためそのまま使っていない）。正本判定は通常型: 対象
+      id を real / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto
+      のヒットは T1182 の notes 内参照のみ）、identity 実測で canon_id は対象自身、aliases_for = []（alias
+      無し）のため source.aliases は付かない。reopen（chosen_creature_can_be_attacked_while_untapped）の出力は対象1件ちょうど（巻き込みなし）。split
+      は None で定型所有なし。chosen_creature_can_be_attacked_while_untapped は完全解消。'
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+    as: tgt
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+        only:
+          var: tgt
+    duration: end_of_turn
+- id: dmd27-012
+  name: 燃えるメラッチ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  mana: 1
+  text: 自分の火の進化クリーチャーの召喚コストを最大２少なくする。ただしコストは０以下にならない。バトル中、このクリーチャーは破壊されない。
+  source:
+    official: dmd27-012
+    review: pending
+    notes: '再変換ラウンド450。第415弾の再変換。対象行は partial も reason も無い素行（keys は gaps / id / note
+      / source のみ）のため、提出形の骨格は公式データ行（data/cards/raw/by_product/d27.jsonl の dmd27-012
+      行: クリーチャー / 火 / コスト4 / パワー4000 / 種族 ファイアー・バード炎 / 革命軍、mana 1）から決定的に構築したもの。これに第415弾の確立形
+      static 2件〔(1) コスト軽減 {affects: {owner: you, zone: hand, filter: {types: [evolution],
+      civs: [fire]}}, mod: {cost: -2, cost_min: 1}}（登録済み dm17-022 の形に文明フィルタを足したもの。「コストは０以下にならない」の下限1読みは登録済み
+      dm24ex1-087 / dm24bd2-016 の同文面先例と一致）／(2) {affects: self, mod: {battle_indestructible:
+      true}}（第59弾の素形、登録済み dm25rp3-055 / dmr21-077 が同一文面をこの形で登録済み）〕を足したもの。abilities
+      はこの2件ちょうど、keywords は無いまま。補完なし（text は公式全文）。正本判定は通常型: 対象 id と alias 3件（dmr17-082
+      / promoy14-010 / promoy14-019）を real / real_akashic / real_vocab / real_zone
+      / proto / converted と照合し登録なし（proto のヒットは T1183 の notes 内参照のみ）、identity 実測で canon_id
+      は対象自身、alias 側の canon も dmd27-012、aliases_for = 3件（登録エントリの source.aliases は validate
+      が自動付与する見込み）。reopen（battle_indestructible）の出力は0件（対象行に reason が無いため正常。submit が登録成功時に
+      rejects から行を外す）。split は None で定型所有なし。battle_indestructible は完全解消。'
+    aliases:
+    - dmr17-082
+    - promoy14-010
+    - promoy14-019
+  power: 4000
+  races:
+  - ファイアー・バード炎
+  - 革命軍
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - evolution
+        civs:
+        - fire
+    mod:
+      cost: -2
+      cost_min: 1
+  - kind: static
+    affects: self
+    mod:
+      battle_indestructible: true
+- abilities:
+  - effect:
+    - body:
+      - in:
+          count: 1
+          filter:
+            cost_le: 6
+            race_has: ジョーカーズ
+            types:
+            - creature
+          owner: you
+          zone: mana
+        op: swap
+        out:
+          ref: self
+        out_to: mana
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - as: pick
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        other: true
+        owner: you
+        zone: bz
+    - duration: end_of_turn
+      mod:
+        breaks_add: 1
+        power: 4000
+      op: modify
+      select:
+        ref: pick
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 4
+  id: dmrp07-052
+  mana: 1
+  name: C.W.テラス
+  power: 4000
+  races:
+  - ジョーカーズ
+  source:
+    notes: '再変換ラウンド451。第416弾の再変換。対象行は partial も reason も無い素行（keys は gaps / id / note
+      / source のみ、source は round66）のため、提出形の骨格は公式データ行（data/cards/raw/by_product/rp07.jsonl
+      の dmrp07-052 行: クリーチャー / 自然 / コスト4 / パワー4000 / 種族 ジョーカーズ、mana 1）から決定的に構築したもの。これに第416弾の確立形
+      trigger 2件〔(1) Jチェンジ６ {when: {event: attack, subject: self}, effect: [may [swap
+      {out: {ref: self}, out_to: mana, in: {zone: mana, owner: you, filter: {types:
+      [creature], cost_le: 6, race_has: ジョーカーズ}, count: 1}}]]}（第24弾の確立形、同セットの登録済み
+      dmrp07-027 の登録形と完全一致）／(2) CIP {when: {event: move, to: bz, subject: self}, effect:
+      [choose {select: {zone: bz, owner: you, filter: {types: [creature]}, other:
+      true, count: 1}, as: pick}, modify {select: {ref: pick}, mod: {power: 4000,
+      breaks_add: 1}, duration: end_of_turn}]}（modify への power＋breaks_add 併記は登録済み
+      dmr19-047・第159弾の先例。breaks_add は第360弾で確立）〕を足したもの。abilities はこの2件ちょうど、keywords
+      は無いまま。補完なし（text は公式全文＝改行あり）。正本判定は通常型: 対象 id を real / real_akashic / real_vocab
+      / real_zone / proto / converted と照合し登録なし（proto のヒットは T1184 の notes 内参照のみ）、identity
+      実測で canon_id は対象自身、aliases_for = [] のため登録エントリに source.aliases は付かない見込み。alias
+      は無し。reopen（fixed_breaks_plus_one）の出力は0件（対象行に reason が無いため正常。submit が登録成功時に rejects
+      から行を外す）。split は None で定型所有なし。fixed_breaks_plus_one は完全解消。'
+    official: dmrp07-052
+    review: pending
+  text: 'Jチェンジ６（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト６以下のジョーカーズ１体を入れ替えてもよい）
+
+    このクリーチャーがバトルゾーンに出た時、そのターン、自分の他のクリーチャー１体のパワーは+4000され、シールドをさらに１つブレイクする。'
+  types:
+  - creature
+- id: dmr11-051
+  name: 護神のインガ イヌハッカ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 3
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。G・ゼロ - バトルゾーンに自分のゴッドがあれば、このクリーチャーをコストを支払わずに召喚してもよい。
+    ブロッカーこのクリーチャーは、相手プレイヤーを攻撃できない。このクリーチャーはバトルに勝っても、バトルの後、破壊される。
+  source:
+    official: dmr11-051
+    review: pending
+    notes: '再変換ラウンド452。第417弾の再変換。提出形は partial の骨格（クリーチャー / 光/闇 / コスト3 / パワー5500 /
+      種族 オラクル、mana 1）に第417弾の確立形〔free_if {exists: {zone: bz, owner: you, filter: {race_has:
+      ゴッド}}}（G・ゼロ。登録済み dm22rp2x-tf14 の条件形と同一）＋ keywords [blocker, cannot_attack_player]（cannot_attack_player
+      は同一文面の自己制限の標準形）＋ trigger {when: {event: battle_win, subject: self}, effect:
+      [destroy {select: {ref: self}}]}（第413弾の確立形、登録済み dm01-026 と完全一致）〕を足し、unsupported
+      を外したもの。abilities はこの1件ちょうど。第1条項「マナゾーンに置く時タップして置く」は多色ルール405.1でエンジン core が適用済み（第399弾）のため
+      text のみ。補完あり: text のみ（partial の text は断片のため行の公式テキスト全文を使用）。正本判定は通常型: 対象 id と
+      alias dmr11-051m を real / real_akashic / real_vocab / real_zone / proto / converted
+      と照合し登録なし（proto のヒットは T1186 の notes 内参照のみ）、identity 実測で canon_id は対象自身、alias
+      側の canon も dmr11-051、aliases_for = [dmr11-051m]。reopen（battle_win_destroy）の出力は対象1件ちょうど（巻き込みなし）。split
+      は None で定型所有なし。battle_win_destroy は完全解消。'
+    aliases:
+    - dmr11-051m
+  power: 5500
+  races:
+  - オラクル
+  keywords:
+  - blocker
+  - cannot_attack_player
+  free_if:
+    exists:
+      zone: bz
+      owner: you
+      filter:
+        race_has: ゴッド
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        ref: self
+- id: dm26sd1-u010
+  name: 怪盗妖精カサブランカ / 「信じていたのに裏切られるなんて！」
+  mana: 1
+  text: 'このクリーチャーが出た時、自分の山札の上から１枚をマナゾーンに置く。
+
+    自分のマナゾーンにあるカードは、すべての文明を持つ。
+
+    カードを自分の手札からマナゾーンに置いた時、そのカードをアンタップする。 ／ S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    コスト５以上のクリーチャーをすべて持ち主の手札に戻す。'
+  faces:
+  - name: 怪盗妖精カサブランカ
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 3
+    power: 2000
+    races:
+    - スノーフェアリー
+    text: 'このクリーチャーが出た時、自分の山札の上から１枚をマナゾーンに置く。
+
+      自分のマナゾーンにあるカードは、すべての文明を持つ。
+
+      カードを自分の手札からマナゾーンに置いた時、そのカードをアンタップする。'
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: mana
+        reason: put
+    - kind: static
+      affects:
+        zone: mana
+        owner: you
+      mod:
+        add_civs:
+        - light
+        - water
+        - darkness
+        - fire
+        - nature
+    - kind: trigger
+      when:
+        event: move
+        from: hand
+        to: mana
+        subject:
+          owner: you
+      effect:
+      - op: untap
+        select:
+          ref: event.subject
+  - name: 「信じていたのに裏切られるなんて！」
+    types:
+    - spell
+    civs:
+    - water
+    cost: 6
+    text: 'S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+      コスト５以上のクリーチャーをすべて持ち主の手札に戻す。'
+    keywords:
+    - s_trigger
+    spell:
+    - op: bounce
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          cost_ge: 5
+        count: all
+  source:
+    official: dm26sd1-u010
+    review: pending
+    notes: '再変換ラウンド453。第418弾の再変換。提出形は partial の骨格を使わず、faces 構造＋第418弾の確立形で組んだもの〔クリーチャー面（自然
+      / コスト3 / パワー2000 / 種族 スノーフェアリー）: trigger（move to bz, subject: self → move {select:
+      {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}）（第376弾・登録済み dmex14-083
+      等の形）＋ static {affects: {zone: mana, owner: you}, mod: {add_civs: [light, water,
+      darkness, fire, nature]}}（第376弾の確立形、登録済み dmex01-014 と同文・同形）＋ trigger {when:
+      {event: move, from: hand, to: mana, subject: {owner: you}}, effect: [untap {select:
+      {ref: event.subject}}]}（登録済み dm24bd5-033 の監視誘発から first_time と multicolor フィルタを外し、文面どおり
+      from: hand を付加した形）／呪文面（水 / コスト6）: keywords [s_trigger] ＋ spell [bounce {select:
+      {zone: bz, owner: any, filter: {types: [creature], cost_ge: 5}, count: all}}]〕。クリーチャー面の
+      abilities はこの3件ちょうど、呪文面の spell は1 op。補完あり: faces 構造＋text（partial は骨格のみで faces
+      無し・text は第2条項の断片のため、両面とも公式全文を使用し、最上位 text は両面を「 ／ 」で連結）。正本判定は通常型: 対象 id と alias
+      3件（dm24bd5-010 / dm25ex3-tf27 / dm25rp4-t09）を real / real_akashic / real_vocab
+      / real_zone / proto / converted と照合し登録なし、identity 実測で canon_id は対象自身、alias 側の
+      canon も dm26sd1-u010、aliases_for = 3件。alias に rejects の独自行なし。reopen（all_civilizations_mana）の出力は対象1件ちょうど（巻き込みなし）。split
+      は None で定型所有なし。all_civilizations_mana は完全解消。'
+    aliases:
+    - dm24bd5-010
+    - dm25ex3-tf27
+    - dm25rp4-t09
+- id: dmex14-054
+  name: 捧程者 アコギエレキ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - ムートピア
+  - 美孔麗王国
+  mana: 1
+  text: 'このターンに自分が召喚したクリーチャー１体または唱えた呪文１枚につき、このクリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。
+
+    スピードアタッカー（このクリーチャーは召喚酔いしない）'
+  keywords:
+  - speed_attacker
+  abilities:
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -2
+        count:
+          sum:
+          - turn_count:
+              kind: summon
+              owner: you
+          - turn_count:
+              kind: cast
+              owner: you
+      cost_min: 1
+  source:
+    official: dmex14-054
+    review: pending
+    notes: '再変換ラウンド454。第419弾の再変換。提出形は partial の骨格（クリーチャー / 火 / コスト5 / パワー5000 / 種族
+      ムートピア、美孔麗王国、mana 1、keywords [speed_attacker]）に第419弾の確立形 static 1件〔{kind: static,
+      zone: hand, affects: self, mod: {cost: {amount: -2, count: {sum: [{turn_count:
+      {kind: summon, owner: you}}, {turn_count: {kind: cast, owner: you}}]}, cost_min:
+      1}}}〕（登録済み dm24ex3-rp2003 / dm24ex3-rp2004・第177弾の同文型の kind を summon / cast に差し替えただけのドリフト）を足し、unsupported
+      を外したもの。abilities はこの static 1件ちょうど、keywords は [speed_attacker] のまま。補完なし（partial
+      の text は公式全文で、登録形も全文と一致）。正本判定は通常型: 対象 id を real / real_akashic / real_vocab
+      / real_zone / proto / converted と照合し登録なし（proto のヒットは T1190 の notes 内参照のみ）、identity
+      実測で canon_id は対象自身、alias 無し。reopen（turn_count_cost_reduction）の出力は対象1件ちょうど（巻き込みなし）。split
+      はキーワードのみ定型所有で part[2] は空＝登録ブロッカーなし。turn_count_cost_reduction は完全解消。'
+- id: dm22rp1-011
+  name: 予言者マンプクルト
+  types:
+  - creature
+  civs:
+  - light
+  cost: 1
+  power: 3500
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、自分のターンのはじめにアンタップしない。
+
+    自分のタマシードがなければ、このクリーチャーは相手プレイヤーを攻撃できない。
+
+    自分のタマシードが出た時、このクリーチャーをアンタップする。'
+  source:
+    official: dm22rp1-011
+    review: pending
+    notes: '再変換ラウンド455。第420弾の再変換。提出形は partial の骨格（クリーチャー / 光 / コスト1 / パワー3500 / 種族
+      ライトブリンガー、mana 1、keywords [blocker]）に第420弾の確立形 abilities 3件〔(1) static {affects:
+      self, mod: {deny: [untap_at_start]}}（第400弾・登録済み dmrp06-027 の登録形そのもの）／(2) static
+      {affects: self, if: {not: {exists: {zone: bz, owner: you, filter: {types: [tamaseed]}}}},
+      mod: {deny: [attack_player]}}（登録済み dmrp21-072 の同文条項と完全一致）／(3) trigger {when:
+      {event: move, to: bz, subject: {owner: you, filter: {types: [tamaseed]}}}, effect:
+      [untap {select: {ref: self}}]}（登録済み dm24rp4-031 の監視誘発の subject をタマシードに替えた形、文面に「てもよい」が無いため
+      may なし）〕を足し、unsupported を外したもの。abilities はこの3件ちょうど、keywords は [blocker] のまま。補完なし（partial
+      の text は公式全文で、登録形も全文と一致）。正本判定は通常型: 対象 id を real / real_akashic / real_vocab
+      / real_zone / proto / converted と照合し登録なし（proto のヒットは T1191 の notes 内参照のみ）、identity
+      実測で canon_id は対象自身、alias 無し。reopen（does_not_untap）の出力は2件で、ファミリーの残り1件 dm25ex2-031
+      は形が異なるため unsupported を残した partial のまま差し戻した（does_not_untap は完全解消しない）。split はキーワードのみ定型所有で
+      part[2] は空＝登録ブロッカーなし。'
+  keywords:
+  - blocker
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - untap_at_start
+  - kind: static
+    affects: self
+    if:
+      not:
+        exists:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - tamaseed
+    mod:
+      deny:
+      - attack_player
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - tamaseed
+    effect:
+    - op: untap
+      select:
+        ref: self
+- id: dmex04-025
+  name: ヤッタレ総長
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 3000
+  races:
+  - ジョーカーズ
+  mana: 1
+  text: '自分のコスト７以上のジョーカーズを召喚するコストを１少なくしてもよい。ただし、コストは０以下にならない。
+
+    バトルゾーンにあるカードを１枚、自分の山札の一番下に置いた時、カードを１枚引く。'
+  source:
+    official: dmex04-025
+    review: pending
+    notes: '再変換ラウンド456。第421弾の再変換。提出形は partial の骨格（クリーチャー / 火 / コスト3 / パワー3000 / 種族
+      ジョーカーズ、mana 1）に第421弾の確立形 abilities 2件〔(1) static {affects: {owner: you, zone:
+      hand, filter: {types: [creature], race_has: ジョーカーズ, cost_ge: 7}}, mod: {cost_may:
+      {amount: 1, min: 1}}}（partial 構築済み、cost_may は登録先例のある既存キー）／(2) trigger {when:
+      {event: move, from: bz, to: deck, position: bottom, subject: {owner: you}},
+      effect: [draw {count: 1}]}（第290弾の position 照合＋登録済み dmrp06-001 形Dから cause を外し
+      from: bz を足しドローを必須とした形、能動態の読みは第418弾の先例、公式 QA 32439 / 31661 で裏付け）〕を足し、unsupported
+      を外したもの。abilities はこの2件ちょうど。補完なし（partial の text は公式全文で、登録形も全文と一致）。正本判定は通常型: 対象
+      id と alias 3件（dmex02-041 / dmrp04s-050 / promoy16-087）を real / real_akashic
+      / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは T1192 の notes
+      内参照のみ）、identity 実測で canon_id は対象自身、alias 側の canon も dmex04-025、aliases_for =
+      3件。alias に rejects の独自行なし。reopen（move_to_deck_bottom_trigger）の出力は対象1件ちょうど（巻き込みなし）。split
+      は None で定型所有なし。move_to_deck_bottom_trigger は完全解消。'
+    aliases:
+    - dmex02-041
+    - dmrp04s-050
+    - promoy16-087
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        race_has: ジョーカーズ
+        cost_ge: 7
+    mod:
+      cost_may:
+        amount: 1
+        min: 1
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: deck
+      position: bottom
+      subject:
+        owner: you
+    effect:
+    - op: draw
+      count: 1
+- id: dmrp12-046
+  name: 凶鬼79号 ジュージュ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーがブロックした時、このターン、その相手クリーチャーのパワーを－9000する。（パワー０以下のクリーチャーは破壊される）
+
+    このターンの終わりに、このクリーチャーがタップしていたら、破壊する。'
+  power: 2000
+  races:
+  - マフィ・ギャング
+  keywords:
+  - s_trigger
+  - blocker
+  source:
+    official: dmrp12-046
+    review: pending
+    notes: '再変換ラウンド457。第422弾の再変換。提出形は partial の骨格（クリーチャー / 闇 / コスト6 / パワー2000 / 種族
+      マフィ・ギャング、mana 1、keywords [s_trigger, blocker]）に第422弾の確立形 abilities 2件〔(1) trigger
+      {when: {event: block, subject: self}, effect: [modify {select: {ref: event.attacker},
+      mod: {power: -9000}, duration: end_of_turn}]}（第401弾のブロック誘発＋第388弾の event 参照。対象は
+      event.opponent ではなく event.attacker＝block レコードの attacker キー、登録済み dmr16g-015 の先例）／(2)
+      trigger {when: {event: turn_end}, if: {exists: {ref: self, filter: {tapped:
+      true}}}, effect: [destroy {select: {ref: self}}]}（登録済み dmrp15-069 の登録形そのもの）〕を足し、unsupported
+      を外したもの。abilities はこの2件ちょうど、keywords は [s_trigger, blocker] のまま。登録形では第2条項の destroy
+      が move {to: graveyard, reason: destroy} に正規化されて格納される。補完なし（partial の text は公式全文、登録形も全文と一致）。正本判定は通常型:
+      対象 id を real / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto
+      のヒットは T1195 の notes 内参照のみ）、identity 実測で canon_id は対象自身、aliases_for = []（alias
+      無し）。reopen（block_event_target）の出力は対象1件ちょうど（巻き込みなし）。split はキーワードのみ定型所有で part[2]
+      は空。block_event_target は完全解消。'
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: event.attacker
+      mod:
+        power: -9000
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: turn_end
+    if:
+      exists:
+        ref: self
+        filter:
+          tapped: true
+    effect:
+    - op: destroy
+      select:
+        ref: self
+- id: dm10-013
+  name: 粛清者アイザク
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4000
+  races:
+  - ソルトルーパー
+  mana: 1
+  keywords:
+  - blocker
+  - cannot_attack_player
+  text: 'ブロッカー
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーがブロックする時、バトルゾーンにある自分のクリーチャーを１体選んでもよい。このクリーチャーのバトルの後、選んだクリーチャーをアンタップする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        as: pick
+      - op: delayed_trigger
+        when:
+          event: battle_end
+          subject: self
+        effect:
+        - op: untap
+          select:
+            ref: pick
+  source:
+    official: dm10-013
+    review: pending
+    notes: '再変換ラウンド458。第423弾の再変換。提出形は partial の骨格（クリーチャー / 光 / コスト4 / パワー4000 / 種族
+      ソルトルーパー、mana 1、keywords [blocker, cannot_attack_player]）に第423弾の確立形 ability 1件〔trigger
+      {when: {event: block, subject: self}, effect: [may [choose {select: {zone: bz,
+      owner: you, filter: {types: [creature]}, count: 1}, as: pick}, delayed_trigger
+      {when: {event: battle_end, subject: self}, effect: [untap {select: {ref: pick}}]}]]}〕（block
+      誘発は第401・422弾、choose の as 束縛は第414・422弾、battle_end は第211弾、delayed_trigger は 603.6
+      の確立 op で vars スナップショットにより pick が遅延効果に届く。勝っても負けても発生源がバトルで破壊されても battle_end は両参加者ぶん出るため勝敗を問わない文面と一致）を足し、unsupported
+      を外したもの。abilities はこの1件ちょうど、keywords は [blocker, cannot_attack_player] のまま。補完なし（partial
+      の text は公式全文、登録形も全文と一致）。正本判定は通常型: 対象 id を real / real_akashic / real_vocab /
+      real_zone / proto / converted と照合し登録なし（proto のヒットは T1199 の notes 内参照のみ）、identity
+      実測で canon_id は対象自身、aliases_for = []（alias 無し）。reopen（trigger_after_battle_win_or_lose）の出力は対象1件ちょうど（巻き込みなし）。split
+      はキーワードのみ定型所有で part[2] は空。trigger_after_battle_win_or_lose は完全解消。'
+- id: dmbd07-a-006
+  name: ガンバＧ/ガガン・ガン・ガガン
+  mana: 1
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーは、バトルゾーンに出たターンの間、相手プレイヤーを攻撃できる。 ／ ジョーカーズを１枚、自分の墓地からマナゾーンに置く。'
+  faces:
+  - name: ガンバＧ
+    types:
+    - creature
+    civs:
+    - zero
+    cost: 6
+    power: 6000
+    races:
+    - ジョーカーズ
+    text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+      このクリーチャーは、バトルゾーンに出たターンの間、相手プレイヤーを攻撃できる。'
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: static
+      affects: self
+      if:
+        exists:
+          ref: self
+          filter:
+            entered_this_turn: true
+      mod:
+        player_rush: true
+  - name: ガガン・ガン・ガガン
+    types:
+    - spell
+    civs:
+    - zero
+    cost: 2
+    text: ジョーカーズを１枚、自分の墓地からマナゾーンに置く。
+    spell:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          race_has: ジョーカーズ
+        count: 1
+      to: mana
+      reason: put
+  source:
+    official: dmbd07-a-006
+    review: pending
+    notes: '再変換ラウンド459。第424弾の再変換。提出形は partial の骨格（クリーチャー面のみ）を使わず、faces 構造＋第424弾の確立形で組んだもの〔クリーチャー面（ゼロ
+      / コスト6 / パワー6000 / 種族 ジョーカーズ）: keywords [double_breaker] ＋ static {affects:
+      self, if: {exists: {ref: self, filter: {entered_this_turn: true}}}, mod: {player_rush:
+      true}}（第261弾の player_rush の self 形。登録済み promoy17-sp4d01 と同一文面・同形。第392弾の「確立形が未確認」という見送りは登録先例の見落としだった）／呪文面（ゼロ
+      / コスト2）: spell [move {select: {zone: graveyard, owner: you, filter: {race_has:
+      ジョーカーズ}, count: 1}, to: mana, reason: put}]（登録済み dm23bd5-042 の呪文形。文面どおり必須1枚で
+      up_to 無し、種別指定が無いため types フィルタ無し）〕。クリーチャー面の abilities はこの1件ちょうど、呪文面の spell は1
+      op。補完あり: faces 構造＋text＋keywords（partial はクリーチャー面の骨格のみで faces・keywords 無し、text
+      は第2条項の断片のため、両面とも公式全文を使用し、最上位 text は両面を「 ／ 」で連結。面名は公式名を / で分けた ガンバＧ ／ ガガン・ガン・ガガン。呪文面の文明は公式データで空文字だが、同
+      product（bd07）のツインパクトで明示される場合はクリーチャー面と同一（dmbd07-b-010）のため両面とも zero とする）。正本判定は通常型:
+      対象 id と alias 3件（dmsd04-002 / promoy17-035 / promoy17-sp4d02）を real / real_akashic
+      / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは T1200 の notes
+      内参照のみ）、identity 実測で canon_id は対象自身、alias 側の canon も dmbd07-a-006、aliases_for
+      = 3件。alias に rejects の独自行なし。reopen（entry_turn_attack）の出力は対象1件ちょうど（巻き込みなし）。split
+      は None で定型所有なし。entry_turn_attack は完全解消。'
+    aliases:
+    - dmsd04-002
+    - promoy17-035
+    - promoy17-sp4d02
+- id: dmr08-009
+  name: 巨体の守護者ランチュン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    コスト６以下のクリーチャーとバトル中、このクリーチャーのパワーは+2000される。'
+  source:
+    official: dmr08-009
+    review: pending
+    notes: '再変換ラウンド460。第425弾の再変換。提出形は partial の骨格（クリーチャー / 光 / コスト3 / パワー4000 / 種族
+      ガーディアン、mana 1、keywords [blocker, cannot_attack_player]）に第425弾の確立形 ability 1件〔static
+      {affects: self, mod: {battle_power: {amount: 2000, opponent_filter: {cost_le:
+      6}}}}〕（第122弾の battle_power {amount, opponent_filter} のフィルタ差し替え版。第377弾 civs 版・第378弾
+      power_ge 版と同型のドリフト）を足し、unsupported を外したもの。abilities はこの static 1件ちょうど、keywords
+      は [blocker, cannot_attack_player] のまま。補完なし（partial の text は公式全文、登録形も全文と一致）。正本判定は通常型:
+      対象 id を real / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto
+      のヒットは T1201 の notes 内参照のみ）、identity 実測で canon_id は対象自身、aliases_for = []（alias
+      無し）。reopen（battle_power_filter）の出力は対象1件ちょうど（巻き込みなし）。split はキーワードのみ定型所有で part[2]
+      は空。battle_power_filter は完全解消。'
+  power: 4000
+  races:
+  - ガーディアン
+  keywords:
+  - blocker
+  - cannot_attack_player
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 2000
+        opponent_filter:
+          cost_le: 6
+- id: dmex08-291
+  name: 薩摩の超人
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 9
+  power: 13000
+  races:
+  - ジャイアント
+  - サムライ
+  mana: 1
+  text: 'T・ブレイカー
+
+    自分のジャイアントはすべて、可能ならブロックされる。
+
+    自分のターン中、自分のジャイアントがバトルに勝った時、相手のシールドを１つブレイクする。'
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        races:
+        - ジャイアント
+    mod:
+      must_be_blocked: true
+  - kind: trigger
+    when:
+      event: battle_win
+      subject:
+        owner: you
+        filter:
+          races:
+          - ジャイアント
+    if:
+      is_turn: you
+    effect:
+    - op: break
+      player: opp
+      count: 1
+  source:
+    official: dmex08-291
+    review: pending
+    notes: '再変換ラウンド461。第426弾の再変換。提出形は partial の骨格（クリーチャー / 自然 / コスト9 / パワー13000 /
+      種族 ジャイアント/サムライ、mana 1、keywords [triple_breaker]、text 公式全文）に abilities 2件を文面の条項順に並べたもの〔第1条項
+      static {affects: {zone: bz, owner: you, filter: {types: [creature], races: [ジャイアント]}},
+      mod: {must_be_blocked: true}}（第426弾の新規語彙・最小。発生源自身もジャイアントなので自分も対象に含まれる＝「すべて」）＋第2条項は
+      partial 構築済みの trigger {when: {event: battle_win, subject: {owner: you, filter:
+      {races: [ジャイアント]}}}, if: {is_turn: you}, effect: [break {player: opp, count:
+      1}]} をそのまま〕で、unsupported を外したもの。補完なし（partial の text は公式全文、登録形も全文と一致）。正本判定は通常型:
+      対象 id と別刷り dm31-s03 を real / real_akashic / real_vocab / real_zone / proto /
+      converted と照合し登録なし（proto のヒットは T1204 の notes 内参照のみ）、identity 実測で canon_id は対象自身、別刷りの
+      canon も対象、aliases_for = [dm31-s03]（別刷りは source.aliases にのみ収載）。reopen（must_be_blocked）の出力は対象1件ちょうど（巻き込みなし）。split
+      はキーワードのみ定型所有で part[2] は空。must_be_blocked は完全解消。'
+    aliases:
+    - dm31-s03
+  keywords:
+  - triple_breaker
+- id: dmd27-016
+  name: 轟速 ザ・ゼット
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 7000
+  races:
+  - ソニック・コマンド
+  - 侵略者
+  mana: 1
+  text: スピードアタッカー（このクリーチャーは召喚酔いしない）W・ブレイカー（このクリーチャーはシールドを２つブレイクする）自分のターンの終わりに、そのターンこのクリーチャーが攻撃していたら、破壊する。
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    if:
+      cmp:
+      - turn_count:
+          kind: attack_by
+          ref: self
+      - '>='
+      - 1
+    effect:
+    - op: destroy
+      select:
+        ref: self
+  source:
+    official: dmd27-016
+    review: pending
+    notes: '再変換ラウンド462。第427弾の再変換。提出形は partial の骨格（クリーチャー / 火 / コスト4 / パワー7000 / 種族
+      ソニック・コマンド/侵略者、mana 1、keywords [speed_attacker, double_breaker]、text 公式全文）に ability
+      1件〔trigger {when: {event: turn_end, player: you}, if: {cmp: [{turn_count: {kind:
+      attack_by, ref: self}}, ">=", 1]}, effect: [destroy {select: {ref: self}}]}（第427弾のドリフト。attack_by
+      は第159・161弾の確立式、turn_end + player: you は登録済み dm10-041 の確立形）〕を足し、unsupported を外したもの。補完なし（partial
+      の text は公式全文、登録形も全文と一致）。正本判定は通常型: 対象 id と別刷り promoy15-052 を real / real_akashic
+      / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは T1205 の notes
+      内参照のみ）、identity 実測で canon_id は対象自身、別刷りの canon も対象、aliases_for = [promoy15-052]（別刷りは
+      source.aliases にのみ収載）。reopen（turn_history_attacked）の出力は対象1件ちょうど（巻き込みなし）。split
+      はキーワードのみ定型所有で part[2] は空。turn_history_attacked は完全解消。'
+    aliases:
+    - promoy15-052
+  keywords:
+  - speed_attacker
+  - double_breaker
+- id: dm09-030
+  name: ジョー・リザード
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 3000
+  races:
+  - デューンゲッコー
+  mana: 1
+  text: 'このクリーチャーは、クリーチャーを攻撃するときブロックされない。
+
+    パワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+  - kind: static
+    affects: self
+    mod:
+      unblockable_vs_creatures: true
+  source:
+    official: dm09-030
+    review: pending
+    notes: '再変換ラウンド463。第428弾の再変換。提出形は partial の骨格（クリーチャー / 火 / コスト6 / パワー3000 / 種族
+      デューンゲッコー、mana 1、text 公式全文）に abilities 2件〔static {affects: self, mod: {unblockable_vs_creatures:
+      true}}（第428弾の新規語彙・最小。第426弾 must_be_blocked と同型）＋ static {affects: self, mod:
+      {power_when: {amount: 3000, when: attacking}}}（確立形。split の定型所有形そのもの）〕を文面の条項順に並べ、unsupported
+      を外したもの。partial 内の attack 誘発→modify 近似形は不採用（攻撃終了後もターン終了まで +3000 が残る点で文面とずれる）。補完なし（partial
+      の text は公式全文、登録形も全文と一致）。正本判定は通常型: 対象 id を real / real_akashic / real_vocab /
+      real_zone / proto / converted と照合し登録なし（proto のヒットは T1206 の notes 内参照のみ）、identity
+      実測で canon_id は対象自身、aliases_for = []（alias 無し）。reopen（unblockable_only_when_attacking_creatures）の出力は対象2件ちょうど（巻き込みなし）。split
+      の定型所有は power_when static のみで、提出形と完全一致させてあるため merge_split の dedupe で二重付着しない。unblockable_only_when_attacking_creatures
+      は完全解消。'
+- id: dm09-050
+  name: 鳥神兵クウザ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 1000
+  races:
+  - アーマロイド
+  mana: 1
+  text: 'このクリーチャーは、クリーチャーを攻撃するときブロックされない。
+
+    パワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+  - kind: static
+    affects: self
+    mod:
+      unblockable_vs_creatures: true
+  source:
+    official: dm09-050
+    review: pending
+    notes: '再変換ラウンド463。第428弾の再変換。提出形は partial の骨格（クリーチャー / 火 / コスト3 / パワー1000 / 種族
+      アーマロイド、mana 1、text 公式全文）に abilities 2件〔static {affects: self, mod: {unblockable_vs_creatures:
+      true}}（第428弾の新規語彙・最小。第426弾 must_be_blocked と同型）＋ static {affects: self, mod:
+      {power_when: {amount: 3000, when: attacking}}}（確立形。split の定型所有形そのもの）〕を文面の条項順に並べ、unsupported
+      を外したもの。partial 内の attack 誘発→modify 近似形は不採用（攻撃終了後もターン終了まで +3000 が残る点で文面とずれる）。補完なし（partial
+      の text は公式全文、登録形も全文と一致）。正本判定は通常型: 対象 id を real / real_akashic / real_vocab /
+      real_zone / proto / converted と照合し登録なし（proto のヒットは T1207 の notes 内参照のみ）、identity
+      実測で canon_id は対象自身、aliases_for = []（alias 無し）。reopen（unblockable_only_when_attacking_creatures）の出力は対象2件ちょうど（巻き込みなし）。split
+      の定型所有は power_when static のみで、提出形と完全一致させてあるため merge_split の dedupe で二重付着しない。unblockable_only_when_attacking_creatures
+      は完全解消。'
+- id: dmx22b-038
+  name: 天災超邪 クロスファイア 2nd
+  types:
+  - creature
+  civs:
+  - water
+  - fire
+  cost: 7
+  power: 7000
+  races:
+  - アウトレイジMAX
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。G・ゼロ―このターン、カードを６枚以上引いていて、自分の 《天災超邪 クロスファイア ２nd》がバトルゾーンになければ、このクリーチャーをコストを支払わずに召喚してもよい。スピードアタッカーW・ブレイカー
+  keywords:
+  - speed_attacker
+  - double_breaker
+  free_if:
+    all:
+    - cmp:
+      - turn_count:
+          kind: draw
+          owner: you
+      - '>='
+      - 6
+    - not:
+        exists:
+          zone: bz
+          owner: you
+          filter:
+            name: 天災超邪 クロスファイア 2nd
+  source:
+    official: dmx22b-038
+    review: pending
+    notes: '再変換ラウンド464。第429弾の再変換。提出形は partial の骨格（クリーチャー / 水・火 / コスト7 / パワー7000 /
+      種族 アウトレイジMAX、mana 1）に keywords [speed_attacker, double_breaker] と free_if {all:
+      [{cmp: [{turn_count: {kind: draw, owner: you}}, ">=", 6]}, {not: {exists: {zone:
+      bz, owner: you, filter: {name: 天災超邪 クロスファイア 2nd}}}}]}（第429弾のドリフト。第412弾の free_if
+      turn_count cmp と登録済み dmex08-226 / dm25ex3-rp4tr6 の同名不在条件の合成）を足し、unsupported
+      を外したもの。補完あり: text（公式全文。partial の text は断片）＋keywords＋free_if。abilities は無し。正本判定は通常型:
+      対象 id と別刷り dmr11-017 / promoy12-063 を real / real_akashic / real_vocab / real_zone
+      / proto / converted と照合し登録なし（proto のヒットは T1208 の notes 内参照のみ）、identity 実測で canon_id
+      は対象自身、別刷りの canon も対象、aliases_for = [dmr11-017, promoy12-063]（別刷りは source.aliases
+      にのみ収載）。reopen（drew_this_turn_condition）の出力は対象1件ちょうど（巻き込みなし）。split は None で定型所有なし。drew_this_turn_condition
+      は完全解消。'
+    aliases:
+    - dmr11-017
+    - promoy12-063
+- id: dmr09-v02
+  name: 武闘将軍 カツキング
+  types:
+  - creature
+  - exile_creature
+  civs:
+  - fire
+  cost: 8
+  power: 11000
+  races:
+  - アウトレイジMAX
+  mana: 1
+  keywords:
+  - speed_attacker
+  - double_breaker
+  - infinite_power_attacker
+  text: スピードアタッカーW・ブレイカーこのクリーチャーをバトルゾーンに出した時、そのターン、このクリーチャーはタップされていないクリーチャーを攻撃できる。∞
+    (ルビ：インフィニティ）パワーアタッカー（攻撃中、このクリーチャーのパワーは無限大になる）このクリーチャーがバトルに勝った時、シールドを１枚ブレイクする。ドロン・ゴー：このクリーチャーが破壊された時、名前に《武闘》とあるエグザイル・クリーチャーを１体、自分の手札からバトルゾーンに出してもよい。自分の他の、名前に《武闘》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: break
+      count: 1
+      player: opp
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          filter:
+            name_has: 武闘
+            types:
+            - exile_creature
+          count: 1
+        to: bz
+        reason: put
+  - kind: static
+    affects:
+      zone: hand
+      owner: you
+      filter:
+        name_has: 武闘
+        types:
+        - exile_creature
+    if:
+      not:
+        exists:
+          zone:
+          - hand
+          - bz
+          owner: you
+          filter:
+            name_has: チーム・エグザイル
+    mod:
+      deny:
+      - enter_bz
+  - kind: static
+    affects:
+      zone: graveyard
+      owner: you
+      filter:
+        name_has: 武闘
+        types:
+        - exile_creature
+    if:
+      not:
+        exists:
+          zone:
+          - hand
+          - bz
+          owner: you
+          filter:
+            name_has: チーム・エグザイル
+    mod:
+      deny:
+      - enter_bz
+  - kind: static
+    affects:
+      zone: mana
+      owner: you
+      filter:
+        name_has: 武闘
+        types:
+        - exile_creature
+    if:
+      not:
+        exists:
+          zone:
+          - hand
+          - bz
+          owner: you
+          filter:
+            name_has: チーム・エグザイル
+    mod:
+      deny:
+      - enter_bz
+  - kind: static
+    affects:
+      zone: deck
+      owner: you
+      filter:
+        name_has: 武闘
+        types:
+        - exile_creature
+    if:
+      not:
+        exists:
+          zone:
+          - hand
+          - bz
+          owner: you
+          filter:
+            name_has: チーム・エグザイル
+    mod:
+      deny:
+      - enter_bz
+  - kind: static
+    affects:
+      zone: shield
+      owner: you
+      filter:
+        name_has: 武闘
+        types:
+        - exile_creature
+    if:
+      not:
+        exists:
+          zone:
+          - hand
+          - bz
+          owner: you
+          filter:
+            name_has: チーム・エグザイル
+    mod:
+      deny:
+      - enter_bz
+  source:
+    official: dmr09-v02
+    review: pending
+    notes: '再変換ラウンド465。第430弾の再変換。提出形は partial の骨格〔クリーチャー / 火 / コスト8 / パワー11000 / 種族
+      アウトレイジMAX、mana 1、text 公式全文〕に abilities 8件〔CIP 誘発（modify {allow: [attack_creature,
+      other: {tapped: false}]}, duration: end_of_turn）／battle_win 誘発（break {count:
+      1, player: opp}）／ドロン・ゴー誘発（may [move {select: {zone: hand, owner: you, filter:
+      {name_has: 武闘, types: [exile_creature]}, count: 1}, to: bz, reason: put}]）／deny
+      静的効果5件（hand / graveyard / mana / deck / shield、同 filter＋if {not: {exists: {zone:
+      [hand, bz], owner: you, filter: {name_has: チーム・エグザイル}}}}、mod {deny: [enter_bz]}）〕を並べ、unsupported
+      を外したもの。補完・修正あり: types への exile_creature 追加＋keywords への infinite_power_attacker
+      追加（unsupported 解消分はこれのみ）＋ドロン・ゴーと deny 5件の filter を partial の races [アウトレイジMAX]
+      代理から登録先例 dmd11-001 / dmd11-005 の {name_has: 武闘, types: [exile_creature]} へ修正（代理は同値でないことを第430弾で実測:
+      公式コーパスで アウトレイジMAX 種族 280件中エグザイルは 84件のみで、《武闘》名の非エグザイルが代理に一致する）＋deny 5件にチーム・エグザイル無視の
+      if を追加（登録先例2件とも保持）。text は補完なし＝公式全文。正本判定は通常型: 対象 id を real / real_akashic / real_vocab
+      / real_zone / proto / converted と照合し登録なし（proto のヒットは T1209 の notes 内参照のみ）、identity
+      実測で canon_id は対象自身、aliases_for = []（alias 無し）。reopen（infinity_power_attacker）の出力は対象1件ちょうど（巻き込みなし）。split
+      はキーワードのみ定型所有で part[2] は空。infinity_power_attacker は完全解消。'
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: battle_end
+      subject: self
+  civs:
+  - darkness
+  cost: 2
+  id: dmrp14-072
+  keywords:
+  - blocker
+  - cannot_attack
+  mana: 1
+  name: 血誓怪人ザミザニン
+  power: 5000
+  races:
+  - デビルマスク
+  source:
+    notes: '再変換ラウンド466。第431弾の再変換。提出形は公式データ行（by_product/rp14.jsonl）から決定的に構築した骨格〔クリーチャー
+      / 闇 / コスト2 / パワー5000 / 種族 デビルマスク、mana 1、keywords [blocker, cannot_attack]、text
+      公式全文〕に ability 1件〔trigger {when: {event: battle_end, subject: self}, effect:
+      [destroy {select: {ref: self}}]}〕（第211弾の battle_end 形。登録済み dmpcd03-b11 が同一の条項構造をこの形で保持する）を足したもの。補完なし（対象行は
+      partial も reason も無い素行で、骨格は公式データ行から構築、text は公式全文）。正本判定は通常型: 対象 id を real / real_akashic
+      / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは T1212 の notes
+      内参照のみ）、identity 実測で canon_id は対象自身、aliases_for = []（alias 無し）。reopen（after_battle_trigger）の出力は0件（対象行に
+      reason フィールドが無いため、ラウンド428・450・451の実測どおり）。submit が登録成功時に行を除去。もう1件の dmrp09-074（勝者参照が要る）は
+      rejects に残り、after_battle_trigger は完全解消にならない。split はキーワード2件（blocker / cannot_attack）のみ定型所有で
+      part[2] は空。'
+    official: dmrp14-072
+    review: pending
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは攻撃できない。
+
+    このクリーチャーがバトルする時、バトルの後、破壊する。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: return
+      select:
+        count: 1
+        owner: opp
+        zone: shield
+      to: hand
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: move
+      from: mana
+      subject:
+        owner: opp
+  civs:
+  - fire
+  cost: 5
+  id: dmr05-032
+  mana: 1
+  name: メガンス・ワイバーン
+  power: 5000
+  races:
+  - アーマード・ワイバーン
+  - アンノイズ
+  source:
+    notes: '再変換ラウンド467。第432弾の再変換。提出形は partial の骨格〔クリーチャー / 火 / コスト5 / パワー5000 / 種族
+      アーマード・ワイバーン/アンノイズ、mana 1〕に ability 1件〔trigger {when: {event: move, from: mana,
+      subject: {owner: opp}}, if: {is_turn: opp}, effect: [move {select: {zone: shield,
+      owner: opp, count: 1}, to: hand, reason: return}]}〕（from: mana の監視誘発は登録済み dm28-014
+      / dm17-030、if {is_turn: opp} は登録済み dm23-027 / dm21-006、シールド→手札の move は登録済み dmex13-073
+      の確立形。選択主体は既定のコントローラー）を足したもの。補完あり: text（公式全文。partial の text は断片）＋abilities。正本判定は通常型:
+      対象 id を real / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto
+      のヒットは T1213 の notes 内参照のみ）、identity 実測で canon_id は対象自身、aliases_for = []（alias
+      無し）。reopen（mana_leave_trigger）の出力は対象1件ちょうど。split は None で定型所有なし。'
+    official: dmr05-032
+    review: pending
+  text: 相手のターン中、相手のマナゾーンからカードが離れる時、相手のシールドをひとつ選び、持ち主の手札に加える。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        chooser: opp
+        count: 1
+        owner: opp
+        zone: mana
+      to: deck
+    kind: trigger
+    when:
+      event: move
+      from:
+      - deck
+      - graveyard
+      subject:
+        owner: opp
+      to: mana
+  civs:
+  - fire
+  cost: 3
+  id: dm39-015
+  mana: 1
+  name: 穿神兵ジェットドリル
+  power: 2000
+  races:
+  - アーマロイド
+  source:
+    notes: '再変換ラウンド468。第433弾の再変換。提出形は partial の骨格〔クリーチャー / 火 / コスト3 / パワー2000 / 種族
+      アーマロイド、mana 1〕に ability 1件〔trigger {when: {event: move, to: mana, from: [deck,
+      graveyard], subject: {owner: opp}}, effect: [move {select: {zone: mana, owner:
+      opp, count: 1, chooser: opp}, to: deck, reason: put, position: bottom}]}〕（to:
+      mana の監視誘発は第397弾の確立形、from のリスト指定は defs の when 検証とエンジン _match_when の両側で対応済み、手札からのマナチャージは
+      from: hand のため文面どおり対象外、chooser: opp は selector の既存キー、山札の一番下への move は登録済みニンジャ・ストライク形の確立形）を足したもの。補完あり:
+      text（公式全文。partial の text は断片）＋abilities。正本判定は通常型: 対象 id を real / real_akashic
+      / real_vocab / real_zone / proto / converted と照合し登録なし（proto のヒットは T1217 の notes
+      内参照のみ）、identity 実測で canon_id は対象自身、aliases_for = []（alias 無し）。reopen（opponent_mana_trigger）の出力は対象1件ちょうど。split
+      は None で定型所有なし。'
+    official: dm39-015
+    review: pending
+  text: 相手の山札または墓地から、カードがマナゾーンに置かれた時、相手は自身のマナゾーンからカードを１枚選んで山札の一番下に置く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        breaks: 2
+        power: 5000
+      op: modify
+      select:
+        ref: self
+    if:
+      exists:
+        filter:
+          keyword: double_breaker
+          types:
+          - creature
+        owner: any
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - duration: end_of_turn
+      mod:
+        breaks: 3
+        power: 11000
+      op: modify
+      select:
+        ref: self
+    if:
+      exists:
+        filter:
+          keyword: triple_breaker
+          types:
+          - creature
+        owner: any
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - water
+  cost: 4
+  id: dmr07-010
+  mana: 1
+  name: マネコン
+  power: 1000
+  races:
+  - サイバーロード
+  - アンノイズ
+  source:
+    notes: '再変換ラウンド469。第434弾の再変換。提出形は partial の骨格〔クリーチャー / 水 / コスト4 / パワー1000 / 種族
+      サイバーロード/アンノイズ、mana 1〕に abilities 2件〔trigger {when: {event: attack, subject:
+      self}, if: {exists: {zone: bz, owner: any, filter: {types: [creature], keyword:
+      double_breaker}}}, effect: [modify {select: {ref: self}, mod: {power: 5000,
+      breaks: 2}, duration: end_of_turn}]} と triple_breaker 版〔modify {power: 11000,
+      breaks: 3}〕〕（exists＋keyword フィルタは登録済み dmd05-015 / dmrp08-002 の確立形。selector の
+      keyword 照合は付与分を含む現在特性で見るため第398弾の affects base 照合制限は及ばない。modify の power と breaks
+      の併記は登録済み dm39-033 / dmsp01-012 / promoy5-037 の確立形）を足したもの。補完あり: text（公式全文。partial
+      の text は断片）＋abilities。正本判定は通常型: 対象 id を real / real_akashic / real_vocab / real_zone
+      / proto / converted と照合し登録なし（proto のヒットは T1223 の notes 内参照のみ）、identity 実測で canon_id
+      は対象自身、aliases_for = []（alias 無し）。reopen（keyword_exists_condition）の出力は対象1件ちょうど。split
+      は None で定型所有なし。'
+    official: dmr07-010
+    review: pending
+  text: 'このクリーチャーが攻撃する時、バトルゾーンに「W・ブレイカー」を持つクリーチャーがあれば、そのターン、このクリーチャーのパワーは+5000され、「W・ブレイカー」を得る。
+
+    このクリーチャーが攻撃する時、バトルゾーンに「T・ブレイカー」を持つクリーチャーがあれば、そのターン、このクリーチャーのパワーは+11000され、「T・ブレイカー」を得る。'
+  types:
+  - creature
+- abilities:
+  - kind: static
+    mana_boost:
+      values:
+      - 2
+      - 3
+  - effect:
+    - op: move
+      reason: put
+      select:
+        ref: subject
+      to: graveyard
+    kind: trigger
+    when:
+      event: tap
+      subject:
+        owner: you
+        zone: mana
+  civs:
+  - nature
+  cost: 8
+  id: dmx08-010
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 大喰の超人
+  power: 8000
+  races:
+  - ジャイアント
+  - ハンター
+  source:
+    notes: '再変換ラウンド470。第436弾の再変換。提出形は partial そのまま（骨格〔クリーチャー / 自然 / コスト8 / パワー8000
+      / 種族 ジャイアント/ハンター、mana 1〕＋abilities 2件〔static mana_boost {values: [2, 3]}（第212弾・ラウンド248の確立形）と
+      trigger {when: {event: tap, subject: {owner: you, zone: mana}}, effect: [move
+      {select: {ref: subject}, to: graveyard, reason: put}]}〕）から unsupported を外したもの。補完なし（text
+      は partial の時点で公式全文、abilities 完備）。第436弾で支払い・コストのマナタップ6か所をイベント化し、_match_when に
+      tap/untap の subject ゾーン既定規則を追加した（新規語彙＝エンジン変更、defs・スキーマ変更なし）。正本判定は通常型: 対象 id
+      を real / real_akashic / real_vocab / real_zone / proto / converted と照合し登録なし（proto
+      のヒットは T1226 の notes 内参照のみ）、identity 実測で canon_id は対象自身、aliases_for = []（alias
+      無し）。reopen（mana_tap_trigger）の出力は対象1件ちょうど。split の定型所有はキーワード double_breaker のみで
+      partial の keywords と一致。'
+    official: dmx08-010
+    review: pending
+  text: '自分のマナゾーンのカードをタップする時、そのうちの好きな枚数のカードの、マナの数字を２または３にしてもよい。
+
+    自分のマナゾーンのカードをタップした時、そのカードを自分の墓地に置く。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature

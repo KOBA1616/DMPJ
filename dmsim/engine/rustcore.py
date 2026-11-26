@@ -662,6 +662,10 @@ def run_batch_model(rules, states, model, vocab_ids, seed: int = 1) -> list[dict
     raw = dmcore.run_batch_model(
         _bundle_json(rules), states_json, json.dumps(weights),
         json.dumps(list(vocab_ids)), seed)
+def _decode_batch_bytes(raw) -> list[dict]:
+    """run_batch_model / run_batch2 共通の戻りデコード。
+    [u32 メタJSON長][メタJSON][軌跡バイナリ] の軌跡を numpy 配列に復元する。"""
+    import numpy as np
     mlen = int.from_bytes(raw[:4], "little")
     results = json.loads(raw[4:4 + mlen])
     buf = raw[4 + mlen:]
@@ -698,6 +702,115 @@ def run_batch_model(rules, states, model, vocab_ids, seed: int = 1) -> list[dict
             })
         r["traj"] = traj
     return results
+
+
+def run_batch_model(rules, states, model, vocab_ids, seed: int = 1) -> list[dict]:
+    """Phase 7: モデル方策を Rust に埋め込んで複数局を一括実行し、軌跡まで返す。
+    model は dmsim.ai.model.Model（プーリング版）。戻りは局ごとの
+    {winner, turn, decisions, traj} または {error, traj}。traj の各要素は
+    {st, op, choice, player} で、st/op は numpy 配列に復元済み。
+    軌跡は Rust からバイナリで受け取る（JSON だと文字列化が律速になる）。"""
+    if dmcore is None:
+        raise RuntimeError("dmcore が無い")
+    weights = {k: v.tolist() for k, v in model.p.items()}
+    states_json = json.dumps([s.to_json() for s in states])
+    raw = dmcore.run_batch_model(
+        _bundle_json(rules), states_json, json.dumps(weights),
+        json.dumps(list(vocab_ids)), seed)
+    return _decode_batch_bytes(raw)
+
+
+# ---- Phase 25: 局面開始・座席別方策・観測ダイジェスト ----
+
+def _state_json(x) -> str:
+    """GameState / Python Engine / dmcore State / JSON 文字列を状態 JSON に揃える。"""
+    if isinstance(x, str):
+        return x
+    return getattr(x, "s", x).to_json()
+
+
+def state_from_scenario(rules, spec: dict, **kw) -> str:
+    """dmsim.engine.scenario.build で作ったシナリオ局面を、バッチ実行の
+    開始状態 JSON（GameState.to_json と同じ形）に変換する。"""
+    from .scenario import build
+    return build(rules, spec, **kw).s.to_json()
+
+
+def run_batch2(rules, states, seats, vocab_ids=(), seed: int = 1,
+               observe: bool = False) -> list[dict]:
+    """Phase 25: 座席ごとの方策で複数局を一括実行する。
+
+    states: 開始状態の並び。各要素は GameState / Python Engine / dmcore State /
+    状態 JSON 文字列のどれでもよい（新規対戦でもシナリオ局面でもよい）。
+    seats: 局ごとの [座席0, 座席1]。各座席は "first" | "random" | モデル
+    （.p に numpy パラメータ dict を持つオブジェクト。numpy 版 Model でも
+    torch 版 TorchModel でもよい）。モデル座席の決定だけ軌跡に記録される。
+    observe=True なら、各決定への回答直後の状態ダイジェストを obs に付ける。
+    obs[step][player][zone] = そのゾーンにあるカードの defn 添字
+    （vocab_ids の 0 始まり、未知は -1）の列。zone の並びは rules.zones のキー順。
+    戻りは局ごとの {winner, turn, decisions, traj[, obs]} または {error, traj}。
+    """
+    if dmcore is None:
+        raise RuntimeError("dmcore が無い")
+    if observe and not vocab_ids:
+        raise ValueError("observe=True には vocab_ids が必要")
+    models: list = []
+    index: dict[int, int] = {}
+    seats_json = []
+    for game in seats:
+        if len(game) != 2:
+            raise ValueError("seats は局ごとに2座席分が必要")
+        row = []
+        for spec in game:
+            if isinstance(spec, str):
+                if spec not in ("first", "random"):
+                    raise ValueError(f"未知の座席指定: {spec}")
+                row.append({"kind": spec})
+            else:
+                k = id(spec)
+                if k not in index:
+                    index[k] = len(models)
+                    models.append(spec)
+                row.append({"kind": "model", "model": index[k]})
+        seats_json.append(row)
+    models_json = [json.dumps({k: v.tolist() for k, v in m.p.items()})
+                   for m in models]
+    raw = dmcore.run_batch2(
+        _bundle_json(rules),
+        json.dumps([_state_json(s) for s in states]),
+        json.dumps(seats_json), json.dumps(models_json),
+        json.dumps(list(vocab_ids)), json.dumps(list(rules.zones)),
+        seed, observe)
+    return _decode_batch_bytes(raw)
+
+
+def condition_counts_from_digest(entry, rules, vocab_ids, player: int,
+                                 conditions) -> list[int]:
+    """観測ダイジェストの1ステップ分から、入口条件ごとの充足数を数える。
+    conditions は tools/loop_stages.py の MINIMAL と同じ形
+    （{"zones": [...], "zone": z, "match": {"name"|"types"|"civs": ...}}）。
+    loop_stages.condition_counts（実盤面版）と一致することがテストで担保される。"""
+    zone_names = list(rules.zones)
+    out = []
+    for cond in conditions:
+        zones = cond["zones"] if cond["zones"] else [cond["zone"]]
+        match = cond["match"]
+        cnt = 0
+        for z in zones:
+            for di in entry[player][zone_names.index(z)]:
+                if di < 0:
+                    continue
+                defn = vocab_ids[di]
+                cdef = rules.cards[defn]
+                if "name" in match and defn != match["name"]:
+                    continue
+                if "types" in match and not set(match["types"]) & set(cdef.types):
+                    continue
+                if "civs" in match and not set(match["civs"]) & set(cdef.civs):
+                    continue
+                cnt += 1
+        out.append(cnt)
+    return out
 
 
 def supports(rules, state) -> bool:

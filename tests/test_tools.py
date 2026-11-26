@@ -331,124 +331,6 @@ def test_status_numbers_are_current():
     assert "テスト:" in gen_status.build()
 
 
-def test_opencode_allowlist_and_cost_guard(monkeypatch):
-    """OpenCode は許可リストの無料モデルだけ通し、費用の兆候・課金系エラーでは止まる。キーは出力に出さない。"""
-    import convert_cards as cc
-    import pytest
-    for bad in ("glm-5.3", "claude-opus-5-5", "glm-5.3-flash", "x-free"):
-        with pytest.raises(cc.Fatal):
-            cc.OpenCodeLLM(bad, key="k")
-    monkeypatch.delenv("OPENCODE_API_KEY", raising=False)
-    with pytest.raises(cc.Fatal):
-        cc.OpenCodeLLM()
-    llm = cc.OpenCodeLLM(key="SECRET", min_interval=0)
-    ok = {"choices": [{"message": {"content": "hi"}}], "usage": {"prompt_tokens": 3, "completion_tokens": 2}}
-    monkeypatch.setattr(llm, "_post", lambda payload: (calls.append(payload), ok)[1])
-    calls = []
-    usage = {"input": 0, "cache_read": 0, "cache_write": 0, "output": 0}
-    assert llm.complete("S", [{"role": "user", "content": "u"}], "high", usage) == "hi"
-    assert calls[0]["model"] == "glm-5.3-flash-free" and usage["input"] == 3
-    monkeypatch.setattr(llm, "_post", lambda payload: {**ok, "usage": {"cost": 0.01}})
-    with pytest.raises(cc.Fatal):
-        llm.complete("S", [], "high", None)
-
-
-@pytest.mark.slow
-def test_auto_convert_limit_status_and_retry_only_on_vocab_change(tmp_path, monkeypatch):
-    """定期変換: 件数上限・短い順・状態ファイル。語彙が変わらない限り rejects は再試行しない。"""
-    import json
-
-    import auto_convert as ac
-    raw = tmp_path / "raw"
-    raw.mkdir()
-    ids = ["ta_a", "ta_b", "ta_c"]
-    (raw / "o.jsonl").write_text("".join(json.dumps({"id": i, "text": "x" * n}) + "\n"
-                                         for i, n in zip(ids, (3, 1, 2))), encoding="utf-8")
-    good = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nkeywords: [blocker]\n```"
-    seen = []
-
-    class LLM:
-        def complete(self, sysp, messages, effort, usage):
-            i = messages[0]["content"].split('"id": "')[1].split('"')[0]
-            seen.append(i)
-            return good.format(i=i)
-
-    monkeypatch.setattr(ac, "RAW", raw)
-    monkeypatch.setattr(ac, "STATUS", raw / "convert_status.json")
-    monkeypatch.setattr(ac.cc, "make_llm", lambda *a: LLM())
-    monkeypatch.setattr(ac, "DATA", tmp_path)
-    monkeypatch.setattr(ac, "vocab_hash", lambda: "h1")
-    ac.main(["--limit", "2", "--interval", "0", "--health-timeout", "0", "--order", "short"])
-    assert seen == ["ta_b", "ta_c"]                      # 短い順に上限まで
-    st = json.loads((raw / "convert_status.json").read_text(encoding="utf-8"))
-    assert (st["converted"], st["pending"], st["vocab_hash"]) == (2, 1, "h1")
-    ac.main(["--limit", "2", "--interval", "0", "--health-timeout", "0", "--order", "short"])
-    assert seen[2:] == ["ta_a"]
-
-
-@pytest.mark.slow
-def test_auto_convert_default_order_is_card_id(tmp_path, monkeypatch):
-    """既定はカードID順（弾ごとにまとまる）。短い順は --order short。"""
-    import json
-
-    import auto_convert as ac
-    raw = tmp_path / "raw"
-    raw.mkdir()
-    (raw / "o.jsonl").write_text("".join(json.dumps({"id": i, "text": "x" * n}) + "\n"
-                                         for i, n in (("tz02-001", 1), ("tz01-002", 9), ("tz01-001", 5))), encoding="utf-8")
-    seen = []
-
-    class LLM:
-        def complete(self, sysp, messages, effort, usage):
-            seen.append(messages[0]["content"].split('"id": "')[1].split('"')[0])
-            raise RuntimeError("stop")
-
-    monkeypatch.setattr(ac, "RAW", raw)
-    monkeypatch.setattr(ac, "STATUS", raw / "convert_status.json")
-    monkeypatch.setattr(ac.cc, "make_llm", lambda *a: LLM())
-    monkeypatch.setattr(ac, "DATA", tmp_path)
-    monkeypatch.setattr(ac, "vocab_hash", lambda: "h1")
-    ac.main(["--limit", "3", "--batch", "3", "--max-bad-batches", "1", "--interval", "0", "--health-timeout", "0"])
-    assert seen[:2] == ["tz01-001", "tz01-002"]          # streak 2 で打ち切るまでの先頭がID順
-
-
-def test_opencode_cli_switches_model_on_timeout(monkeypatch):
-    """タイムアウトしたら別の無料モデルで再試行し、成功したモデルを使い続ける。全部だめなら CallTimeout。"""
-    from llm_offload import providers as pv
-    llm = pv.OpenCodeCLI("glm-5.3-flash-free", 0, fallbacks=2)
-    assert llm.model not in llm.alternates and len(llm.alternates) == 2
-    assert all(m in pv.OPENCODE_FREE_MODELS and m.endswith("-free") for m in llm.alternates)
-    calls = []
-
-    def one(model, sysp, messages, usage):
-        calls.append(model)
-        if model == "glm-5.3-flash-free":
-            raise pv.CallTimeout("t")
-        return "ok"
-
-    monkeypatch.setattr(llm, "_complete_one", one)
-    assert llm.complete("", [], "low", None) == "ok"
-    assert calls == ["glm-5.3-flash-free", llm.model] and llm.model != "glm-5.3-flash-free"
-    calls.clear()
-    assert llm.complete("", [], "low", None) == "ok" and calls == [llm.model]   # 以後は切り替え先から始める
-
-    def unavailable(model, *a):
-        if model == llm.model:
-            raise RuntimeError("opencode error: Model is unavailable")
-        return "ok2"
-
-    monkeypatch.setattr(llm, "_complete_one", unavailable)
-    assert llm.complete("", [], "low", None) == "ok2"      # タイムアウト以外のモデル側エラーでも切り替える
-
-    def hang(model, *a):
-        raise pv.CallTimeout("t")
-
-    monkeypatch.setattr(llm, "_complete_one", hang)
-    import pytest
-    with pytest.raises(pv.CallTimeout):
-        llm.complete("", [], "low", None)
-
-
 def test_system_prompt_picks_similar_examples():
     """例は原文が近い n 枚だけ。全部入れる版より大幅に短く、近いカードが先頭に来る。"""
     import convert_cards as cc
@@ -469,238 +351,6 @@ def test_prompt_rules_text_strips_only_comments():
     for n in ("zones.yaml", "keywords.yaml", "op_macros.yaml", "permissions.yaml", "turn.yaml"):
         assert yaml.safe_load(cc._prompt_rules_text(n)) == yaml.safe_load(cc._rules_text(n)), n
         assert len(cc._prompt_rules_text(n)) < len(cc._rules_text(n)), n
-
-
-def test_openrouter_uses_only_verified_free_models(monkeypatch):
-    """OpenRouter は公式の一覧で ':free' かつ入出力単価0のものだけ使う。費用つきの応答は停止。全滅したら OpenCode 側の外部切替に使える。"""
-    from llm_offload import providers as pv
-    import pytest
-    with pytest.raises(pv.Fatal):
-        pv.OpenRouterLLM(key="")
-    lm = pv.OpenRouterLLM(0, key="k" * 20)
-    models = {"data": [
-        {"id": "a/paid:free", "pricing": {"prompt": "0.000001", "completion": "0"}, "context_length": 9},   # 単価が0でない→除外
-        {"id": "b/model", "pricing": {"prompt": "0", "completion": "0"}, "context_length": 9},               # :free でない→除外
-        {"id": "x/small:free", "pricing": {"prompt": "0", "completion": "0"}, "context_length": 10},
-        {"id": "deepseek/d:free", "pricing": {"prompt": "0", "completion": "0"}, "context_length": 5},
-    ]}
-    calls = []
-
-    def req(path, payload=None, auth=True):
-        if path == "/models":
-            assert not auth
-            return models
-        calls.append(payload["model"])
-        if payload["model"] == "deepseek/d:free":
-            raise RuntimeError("HTTP 500")
-        return {"model": payload["model"], "choices": [{"message": {"content": "ok"}}], "usage": {"prompt_tokens": 1, "completion_tokens": 2}}
-
-    monkeypatch.setattr(lm, "_request", req)
-    assert lm.free_models() == ["deepseek/d:free", "x/small:free"]       # 好みの順 → 文脈長の順
-    assert lm.complete("", [], "low", None) == "ok" and calls == ["deepseek/d:free", "x/small:free"] and lm.model == "x/small:free"
-    monkeypatch.setattr(lm, "_request", lambda path, payload=None, auth=True: models if path == "/models" else
-                        {"model": payload["model"], "choices": [{"message": {"content": "x"}}], "usage": {"cost": 0.5}})
-    with pytest.raises(pv.Fatal):
-        lm.complete("", [], "low", None)
-    cli = pv.OpenCodeCLI("glm-5.3-flash-free", 0)
-    cli.external = lm
-    monkeypatch.setattr(cli, "_complete_one", lambda *a: (_ for _ in ()).throw(pv.CallTimeout("t")))
-    monkeypatch.setattr(lm, "_request", req)
-    assert cli.complete("", [], "low", None) == "ok"           # OpenCode 全滅 → OpenRouter
-    n = []
-    monkeypatch.setattr(cli, "_complete_one", lambda *a: n.append(1) or "oc")
-    assert cli.complete("", [], "low", None) == "ok" and not n   # 直後は OpenCode を待たず別サービスを直接使う
-    cli._ext_until = 0
-    cli.bad = {}
-    assert cli.complete("", [], "low", None) == "oc" and n      # 冷却が終われば OpenCode に戻る
-
-
-def test_gemini_uses_fixed_free_flash_models(monkeypatch):
-    from llm_offload import providers as pv
-    import pytest
-    with pytest.raises(pv.Fatal):
-        pv.GeminiLLM(0, key=None) if not __import__("os").environ.get("GEMINI_API_KEY") else (_ for _ in ()).throw(pv.Fatal("x"))
-    g = pv.GeminiLLM(0, key="k" * 20)
-    assert g.base == pv.GEMINI_URL and g.free_models() == list(pv.GEMINI_FREE_MODELS)
-    assert not any("pro" in m or "argon" in m for m in g.free_models())
-    calls = []
-
-    def req(path, payload=None, auth=True):
-        calls.append(payload["model"])
-        if len(calls) == 1:
-            raise RuntimeError("HTTP 429")
-        return {"model": "models/" + payload["model"], "choices": [{"message": {"content": "ok"}}]}
-
-    monkeypatch.setattr(g, "_request", req)
-    assert g.complete("", [], "low", None) == "ok" and calls == list(pv.GEMINI_FREE_MODELS)[:2]
-
-
-def test_external_403_model_specific_is_skipped_not_fatal(monkeypatch):
-    """特定モデルだけの 403（agentic harness 限定など）は次のモデルへ。キーの問題・課金は停止。"""
-    import io
-    import urllib.error
-    import urllib.request
-
-    from llm_offload import providers as pv
-    import pytest
-    lm = pv.OpenRouterLLM(0, key="k" * 20)
-
-    def fake(body, code=403):
-        def op(req, timeout=None):
-            raise urllib.error.HTTPError("u", code, "x", {}, io.BytesIO(body.encode()))
-        return op
-
-    monkeypatch.setattr(urllib.request, "urlopen", fake('{"error":{"message":"x:free is only available on agentic harnesses"}}'))
-    with pytest.raises(RuntimeError) as e:
-        lm._request("/chat/completions", {"a": 1})
-    assert not isinstance(e.value, pv.Fatal)
-    monkeypatch.setattr(urllib.request, "urlopen", fake('{"error":{"message":"Invalid API key"}}'))
-    with pytest.raises(pv.Fatal):
-        lm._request("/chat/completions", {"a": 1})
-    monkeypatch.setattr(urllib.request, "urlopen", fake("no", 401))
-    with pytest.raises(pv.Fatal):
-        lm._request("/chat/completions", {"a": 1})
-
-
-def test_local_worker_keeps_job_pending_on_model_outage(tmp_path, monkeypatch):
-    import subprocess
-
-    import local_worker as lw
-    bare, clone = tmp_path / "remote.git", tmp_path / "clone"
-    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
-    subprocess.run(["git", "clone", "-q", str(bare), str(clone)], check=True, capture_output=True)
-    for k, v in (("user.name", "t"), ("user.email", "t@t")):
-        subprocess.run(["git", "config", k, v], cwd=clone, check=True)
-    g = lw.Git(clone, tmp_path / "work")
-    jid = lw.enqueue(g, {"type": "convert", "limit": 5})
-
-    def boom(job, git, m):
-        raise lw.ModelOutage("停止中")
-
-    monkeypatch.setattr(lw, "run_convert", boom)
-    out = lw.process(g)
-    assert len(out) == 1 and out[0].startswith(f"{jid}:pending")
-    chk = tmp_path / "chk"
-    subprocess.run(["git", "clone", "-q", "-b", "llm-jobs", str(bare), str(chk)], check=True, capture_output=True)
-    assert (chk / "jobs" / "pending" / f"{jid}.yaml").exists() and not (chk / "jobs" / "done" / f"{jid}.yaml").exists()
-
-
-def test_make_llm_attaches_all_external_chains(monkeypatch):
-    """キーの有無にかかわらず make_llm が動く（Gemini・OpenRouter・LLM7 の組み立て）。"""
-    import convert_cards as cc
-    import llm_offload as lo
-    for mk in (lo.make_llm, lambda p, m, i: cc.make_llm(p, m, i)):
-        monkeypatch.setenv("GEMINI_API_KEY", "g" * 20)
-        monkeypatch.setenv("OPENROUTER_API_KEY", "o" * 20)
-        monkeypatch.delenv("DMPJ_NO_LLM7", raising=False)
-        llm = mk("opencode-cli", None, 0)
-        assert [x.name for x in llm.external.llms] == ["gemini", "openrouter", "llm7"]
-        monkeypatch.delenv("GEMINI_API_KEY")
-        monkeypatch.delenv("OPENROUTER_API_KEY")
-        monkeypatch.setenv("DMPJ_NO_LLM7", "1")
-        assert mk("opencode-cli", None, 0).external.llms == []
-
-
-def test_llm7_uses_fixed_allowlist_and_anonymous_key():
-    from llm_offload import providers as pv
-    l = pv.LLM7LLM(0)
-    assert l.key == "unused" and l.base == pv.LLM7_URL and l.free_models() == list(pv.LLM7_FREE_MODELS)
-    c = pv.Chain(None, l)
-    assert c.llms == [l]
-
-
-def test_opencode_cli_detects_free_limit(monkeypatch):
-    """無料枠の上限は他の OpenCode モデルを試さず止める（外部があればそちらへ）。"""
-    from llm_offload import providers as pv
-    import pytest
-    cli = pv.OpenCodeCLI("glm-5.3-flash-free", 0)
-    calls = []
-
-    def lim(model, *a):
-        calls.append(model)
-        raise pv.FreeLimit("上限")
-
-    monkeypatch.setattr(cli, "_complete_one", lim)
-    with pytest.raises(pv.FreeLimit):
-        cli.complete("", [], "low", None)
-    assert calls == ["glm-5.3-flash-free"]
-    assert pv.FREE_LIMIT_RE.search('{"name":"FreeUsageLimitError","message":"Free usage limit reached. Subscribe"}')
-    cli.external = type("X", (), {"complete": lambda self, *a: "ext"})()
-    assert cli.complete("", [], "low", None) == "ext"
-
-
-def test_opencode_cli_remembers_model_across_runs(tmp_path, monkeypatch):
-    """5枚ごとにプロセスを起動し直しても、前回使えたモデルから始め、だめだったモデルは一定時間飛ばす。"""
-    from llm_offload import providers as pv
-    st = tmp_path / "state.json"
-    monkeypatch.setenv("DMPJ_MODEL_STATE", str(st))
-    a = pv.OpenCodeCLI("glm-5.3-flash-free", 0, fallbacks=2)
-    assert not a.recently_ok()
-    calls = []
-
-    def one(model, *x):
-        calls.append(model)
-        if model == "glm-5.3-flash-free":
-            raise pv.CallTimeout("t")
-        return "ok"
-
-    monkeypatch.setattr(a, "_complete_one", one)
-    assert a.complete("", [], "low", None) == "ok" and len(calls) == 2
-    good = a.model
-    b = pv.OpenCodeCLI("glm-5.3-flash-free", 0, fallbacks=2)      # 別プロセスの想定
-    assert b.model == good and "glm-5.3-flash-free" in b.bad and b.recently_ok()
-    calls.clear()
-    monkeypatch.setattr(b, "_complete_one", one)
-    assert b.complete("", [], "low", None) == "ok" and calls == [good]      # 試し直さない
-    calls.clear()
-
-    def fail_good(model, *x):
-        calls.append(model)
-        if model == good:
-            raise pv.CallTimeout("t")
-        return "ok"
-
-    monkeypatch.setattr(b, "_complete_one", fail_good)
-    assert b.complete("", [], "low", None) == "ok" and "glm-5.3-flash-free" not in calls     # 冷却中の glm は飛ばす
-
-
-def test_local_worker_merges_conflicting_convert_results(tmp_path):
-    """別の実行が同じ converted.yaml / rejects.jsonl を先に push していても、ID ごとに合流して push できる。"""
-    import subprocess
-
-    import local_worker as lw
-    import yaml as _y
-    bare = tmp_path / "remote.git"
-    subprocess.run(["git", "init", "-q", "--bare", "-b", "cards-data", str(bare)], check=True)
-
-    def clone(n):
-        d = tmp_path / n
-        subprocess.run(["git", "clone", "-q", str(bare), str(d)], check=True, capture_output=True)
-        for k, v in (("user.name", "t"), ("user.email", "t@t")):
-            subprocess.run(["git", "config", k, v], cwd=d, check=True)
-        return d
-
-    def write(d, cards, rejects, commit=True):
-        (d / "data/cards/raw").mkdir(parents=True, exist_ok=True)
-        (d / "data/cards/converted.yaml").write_text(_y.safe_dump({"cards": [{"id": i} for i in cards]}), encoding="utf-8")
-        (d / "data/cards/raw/rejects.jsonl").write_text("".join('{"id": "%s"}\n' % i for i in rejects), encoding="utf-8")
-        subprocess.run(["git", "add", "-f", "data"], cwd=d, check=True)
-        if commit:
-            subprocess.run(["git", "commit", "-qm", "x"], cwd=d, check=True)
-
-    base = clone("base")
-    write(base, ["a"], ["r1"])
-    subprocess.run(["git", "push", "-q", "origin", "HEAD:cards-data"], cwd=base, check=True)
-    mine, other = clone("mine"), clone("other")
-    write(other, ["a", "b"], ["r1", "r2"])               # 他の実行が先に push
-    subprocess.run(["git", "push", "-q", "origin", "HEAD:cards-data"], cwd=other, check=True)
-    write(mine, ["a", "c"], ["r1", "b"], commit=False)   # 自分も同じファイルを更新（b は自分では不合格）
-    g = lw.Git(mine, tmp_path / "work")
-    g.commit_push(mine, "cards-data", "m", add=False, on_conflict=lambda: g.merge_convert_results(mine, "cards-data", "m"))
-    chk = clone("chk")
-    cards = sorted(c["id"] for c in _y.safe_load((chk / "data/cards/converted.yaml").read_text(encoding="utf-8"))["cards"])
-    rejs = sorted(l for l in (chk / "data/cards/raw/rejects.jsonl").read_text(encoding="utf-8").split("\n") if l)
-    assert cards == ["a", "b", "c"] and rejs == ['{"id": "r1"}', '{"id": "r2"}']      # 変換済みが優先、不合格は和集合
 
 
 def test_rule_convert_keyword_only_and_vanilla(tmp_path):
@@ -775,7 +425,7 @@ def test_convert_timeout_breaker(tmp_path):
     """タイムアウトは次のカードが成功して初めて reason: timeout で確定。連続2回は障害として打ち切り、記録しない。"""
     import convert_cards
     from dmsim.cards.defs import load_tables
-    from llm_offload.providers import CallTimeout
+    from convert_cards import CallTimeout
     good = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\n```"
 
     def run(ids, hang):
@@ -816,288 +466,6 @@ def test_user_prompt_omits_flavor_and_non_rule_fields():
     assert "ブロッカー" in p and '"t"' in p
     for bad in ("flavor", "わかるか", "illustrator", "rarity", "missing", "f2"):
         assert bad not in p
-
-
-def test_llm_offload_guards(tmp_path):
-    """無料モデル共通層: 秘密を伏せる・切り詰める・キャッシュ・日次上限・失敗は Escalate・課金系は Fatal。"""
-    import llm_offload as lo
-    import pytest
-    assert "SECRET123456789" not in lo.scrub("api_key=SECRET123456789 and sk-abcdefghijklmnop1234")
-    assert len(lo.clip("x" * 1000, 100)) < 200
-
-    class LLM:
-        model = "glm-5.3-flash-free"
-        n = 0
-
-        def complete(self, sysp, messages, effort, usage):
-            self.n += 1
-            return "要約"
-    llm = LLM()
-    r = lo.ask("summarize", "text", llm=llm, cache=tmp_path)
-    assert r.text == "要約" and not r.cached
-    assert lo.ask("summarize", "text", llm=llm, cache=tmp_path).cached and llm.n == 1
-    with pytest.raises(lo.Escalate):
-        lo.ask("summarize", "other", llm=llm, cache=tmp_path, daily_limit=1)
-
-    class Bad:
-        model = "m"
-
-        def complete(self, *a):
-            raise RuntimeError("HTTP 429")
-    with pytest.raises(lo.Escalate):
-        lo.ask("summarize", "t2", llm=Bad(), cache=tmp_path)
-
-    class Paid:
-        model = "m"
-
-        def complete(self, *a):
-            raise lo.Fatal("billing")
-    with pytest.raises(lo.Fatal):
-        lo.ask("summarize", "t3", llm=Paid(), cache=tmp_path)
-    for p in ("anthropic", "openai"):
-        with pytest.raises(lo.Fatal):
-            lo.make_llm(p)
-
-
-def test_llm_offload_rule_based_helpers(tmp_path):
-    import llm_offload as lo
-    d = lo.digest_pytest("....\nFAILED tests/a.py::t - assert 1\nE   assert 1 == 2\n" + "ok\n" * 100 + "1 failed, 5 passed")
-    assert "FAILED tests/a.py::t" in d and "1 failed" in d and d.count("ok") <= 15
-    assert lo.affected_tests(["dmsim/engine/core.py"]) is None
-    assert "tests/test_dedupe_cards.py" in lo.affected_tests(["tools/dedupe_cards.py"])
-
-
-def test_local_worker_ask_roundtrip(tmp_path):
-    """ジョブ投入→ワーカー処理→結果が llm-jobs ブランチに戻る（ローカルの bare リポジトリで検証）。"""
-    import subprocess
-
-    import local_worker as lw
-    import yaml as _yaml
-    bare, clone = tmp_path / "remote.git", tmp_path / "clone"
-    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
-    subprocess.run(["git", "clone", "-q", str(bare), str(clone)], check=True, capture_output=True)
-    for k, v in (("user.name", "t"), ("user.email", "t@t")):
-        subprocess.run(["git", "config", k, v], cwd=clone, check=True)
-    g = lw.Git(clone, tmp_path / "work")
-    jid = lw.enqueue(g, {"type": "ask", "task": "summarize", "input": "api_key=SECRET123456789 本文"})
-
-    class LLM:
-        model = "glm-5.3-flash-free"
-        seen = ""
-
-        def complete(self, sysp, messages, effort, usage):
-            LLM.seen = messages[0]["content"]
-            return "要約結果"
-    out = lw.process(g, lambda m: LLM(), health=lambda: "TimeoutError: hang")
-    assert len(out) == 1 and "使えない" in out[0] and "pending のまま" in out[0]     # モデル停止中はジョブに触れない
-    assert lw.process(g, lambda m: LLM(), health=lambda: None) == [f"{jid}:ok"]
-    assert "SECRET123456789" not in LLM.seen
-    chk = tmp_path / "chk"
-    subprocess.run(["git", "clone", "-q", "-b", "llm-jobs", str(bare), str(chk)], check=True, capture_output=True)
-    res = _yaml.safe_load((chk / "jobs" / "done" / f"{jid}.yaml").read_text(encoding="utf-8"))
-    assert res["status"] == "ok" and res["text"] == "要約結果"
-    assert not (chk / "jobs" / "pending" / f"{jid}.yaml").exists()
-    assert lw.process(g, lambda m: LLM()) == []
-
-
-def _worker_remote(tmp_path, n=2):
-    import subprocess
-
-    import local_worker as lw
-    bare = tmp_path / "remote.git"
-    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
-    gits = []
-    for i in range(n):
-        clone = tmp_path / f"clone{i}"
-        subprocess.run(["git", "clone", "-q", str(bare), str(clone)], check=True, capture_output=True)
-        for k, v in (("user.name", "t"), ("user.email", "t@t")):
-            subprocess.run(["git", "config", k, v], cwd=clone, check=True)
-        gits.append(lw.Git(clone, tmp_path / f"work{i}"))
-    return gits
-
-
-class _EchoLLM:
-    model = "glm-5.3-flash-free"
-    calls = 0
-
-    def complete(self, sysp, messages, effort, usage):
-        _EchoLLM.calls += 1
-        return "ok"
-
-
-def test_local_worker_two_workers_do_not_take_the_same_job(tmp_path):
-    """2台が同じ pending を見ていても、先に claim した1台だけが処理する。"""
-    import local_worker as lw
-    a, b = _worker_remote(tmp_path)
-    jid = lw.enqueue(a, {"type": "ask", "task": "summarize", "input": "本文"})
-    b.worktree("jobs", lw.JOBS_BRANCH, create=True)          # b も pending を見た状態にしておく
-    _EchoLLM.calls = 0
-    assert lw.process(a, lambda m: _EchoLLM(), worker="A") == [f"{jid}:ok"]
-    out = lw.process(b, lambda m: _EchoLLM(), worker="B")
-    assert out == [] and _EchoLLM.calls == 1                  # b は何も拾わない（a が済ませた）
-
-
-def test_local_worker_target_and_stale_running(tmp_path):
-    """target が違うワーカーは拾わない。止まった running は pending に戻る。"""
-
-    import local_worker as lw
-    import yaml as _yaml
-    (a,) = _worker_remote(tmp_path, 1)
-    jid = lw.enqueue(a, {"type": "ask", "task": "summarize", "input": "本文", "target": "cloud"})
-    _EchoLLM.calls = 0
-    assert lw.process(a, lambda m: _EchoLLM(), target="local") == [] and _EchoLLM.calls == 0
-    jd = a.worktree("jobs", lw.JOBS_BRANCH, create=True)
-    pj = jd / "jobs" / "pending" / f"{jid}.yaml"
-    job = _yaml.safe_load(pj.read_text(encoding="utf-8"))
-    pj.unlink()
-    (jd / "jobs" / "running").mkdir(parents=True, exist_ok=True)
-    (jd / "jobs" / "running" / f"{jid}.yaml").write_text(
-        _yaml.safe_dump({**job, "worker": "X", "claimed": "2020-01-01T00:00:00+00:00"}), encoding="utf-8")
-    a.commit_push(jd, lw.JOBS_BRANCH, "stale")
-    assert lw.process(a, lambda m: _EchoLLM(), target="cloud") == [f"{jid}:ok"]      # 戻されて cloud ワーカーが処理した
-    assert not (jd / "jobs" / "running" / f"{jid}.yaml").exists()
-
-
-def test_auto_convert_newest_order(tmp_path, monkeypatch):
-    import json as _json
-
-    import auto_convert as ac
-    cat = tmp_path / "cards" / "catalog"
-    cat.mkdir(parents=True)
-    (cat / "sets.json").write_text(_json.dumps({"products": {"26ex4": {}, "1": {}}}), encoding="utf-8")
-    monkeypatch.setattr(ac, "DATA", tmp_path)
-    rows = [{"id": "dm01-001", "product": "1"}, {"id": "dm26ex4-002", "product": "26ex4"},
-            {"id": "dm26ex4-001", "product": "26ex4"}, {"id": "x", "product": "unknown"}]
-    assert [r["id"] for r in sorted(rows, key=ac.newest_key())] == ["dm26ex4-001", "dm26ex4-002", "dm01-001", "x"]
-
-
-@pytest.mark.slow
-def test_local_worker_routine_allowlist(tmp_path):
-    """routine は決まった名前だけ。未知の名前・不正な base は実行せずエラーにする。"""
-    import local_worker as lw
-    g = lw.Git(tmp_path, tmp_path / "w")
-    assert lw.run_routine({"name": "rm -rf /"}, g, None, tmp_path, 1)["status"] == "error"
-    assert lw.run_routine({"name": "review", "base": "--output=x"}, g, None, tmp_path, 1)["status"] == "error"
-    assert lw.run_routine({"name": "status"}, g, None, tmp_path, 1)["status"] == "ok"
-
-
-def test_local_worker_survives_job_failure(tmp_path, monkeypatch):
-    """1件のジョブが例外で落ちても、error を done に残して次へ進む（毎回の再実行で無料枠を使わない）。scrub は None を許す。"""
-    import subprocess
-
-    import llm_offload as lo
-    import local_worker as lw
-    import yaml as _yaml
-    assert lo.scrub(None) == ""
-    bare, clone = tmp_path / "remote.git", tmp_path / "clone"
-    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
-    subprocess.run(["git", "clone", "-q", str(bare), str(clone)], check=True, capture_output=True)
-    for k, v in (("user.name", "t"), ("user.email", "t@t")):
-        subprocess.run(["git", "config", k, v], cwd=clone, check=True)
-    g = lw.Git(clone, tmp_path / "work")
-    bad = lw.enqueue(g, {"type": "routine", "name": "status"})
-    good = lw.enqueue(g, {"type": "ask", "task": "summarize", "input": "x"})
-
-    def boom(*a, **k):
-        raise AttributeError("'NoneType' object has no attribute 'replace'")
-    monkeypatch.setattr(lw, "run_routine", boom)
-
-    class LLM:
-        model = "glm-5.3-flash-free"
-
-        def complete(self, *a):
-            return "ok"
-    assert sorted(lw.process(g, lambda m: LLM())) == sorted([f"{bad}:error", f"{good}:ok"])   # 同じ秒のIDは順序が不定
-    assert lw.process(g, lambda m: LLM()) == []          # 失敗したジョブは再実行されない
-    chk = tmp_path / "chk"
-    subprocess.run(["git", "clone", "-q", "-b", "llm-jobs", str(bare), str(chk)], check=True, capture_output=True)
-    res = _yaml.safe_load((chk / "jobs" / "done" / f"{bad}.yaml").read_text(encoding="utf-8"))
-    assert res["status"] == "error" and "AttributeError" in res["error"]
-
-
-def test_local_worker_summary_and_pr_comment_fallback(monkeypatch):
-    import local_worker as lw
-    s = lw.summary_line({"status": "ok", "text": "\n- 要点1\n- 要点2"})
-    assert s == "[ok] 要点1" and len(lw.summary_line({"status": "error", "error": "x" * 500})) <= 160
-    monkeypatch.setattr(lw.shutil, "which", lambda n: None)
-    assert lw.post_pr_comment(31, "j", {"status": "ok"}).startswith("skipped")
-    monkeypatch.setattr(lw.shutil, "which", lambda n: "gh")
-    assert lw.post_pr_comment("1; rm -rf", "j", {"status": "ok"}).startswith("skipped")
-
-
-def test_local_worker_gh_env_drops_stale_tokens_and_empty_review(monkeypatch, tmp_path):
-    import local_worker as lw
-    monkeypatch.setenv("GITHUB_TOKEN", "bad")
-    monkeypatch.setenv("GH_TOKEN", "bad")
-    assert "GITHUB_TOKEN" not in lw.gh_env() and "GH_TOKEN" not in lw.gh_env()
-    monkeypatch.setattr(lw.subprocess, "run", lambda *a, **k: type("R", (), {"stdout": "", "stderr": "", "returncode": 0})())
-    r = lw.run_routine({"name": "review"}, lw.Git(tmp_path, tmp_path / "w"), None, tmp_path, 1)
-    assert r["status"] == "ok" and "差分なし" in r["text"]
-
-
-def test_local_worker_lock_reclaims_dead_owner(tmp_path):
-    """ロックには PID が入り、持ち主が死んでいれば回収。生きていれば入れない。PIDなしの旧ロックは待つ。"""
-    import os
-
-    import local_worker as lw
-    import pytest
-    p = tmp_path / "lock"
-    with lw.Lock(p):
-        assert int(p.read_text()) == os.getpid()
-        with pytest.raises(SystemExit):
-            lw.Lock(p).__enter__()          # 自分(生きている)が持っている
-    assert not p.exists()
-    p.write_text("99999999")                # 存在しないPID
-    with lw.Lock(p):
-        assert int(p.read_text()) == os.getpid()
-    p.write_text("")                        # 旧版のロック（PIDなし）
-    with pytest.raises(SystemExit):
-        lw.Lock(p).__enter__()
-    p.unlink()
-
-
-def test_local_worker_self_update(tmp_path):
-    """main への fast-forward だけを自動で行う。汚れ・別ブランチ・ff 不可・ネットワーク不通では何もしない。"""
-    import subprocess
-
-    import local_worker as lw
-
-    def sh(*a, cwd):
-        subprocess.run(["git", *a], cwd=cwd, check=True, capture_output=True)
-    bare, a, b = tmp_path / "r.git", tmp_path / "a", tmp_path / "b"
-    sh("init", "-q", "--bare", "-b", "main", str(bare), cwd=tmp_path)
-    for d in (a, b):
-        sh("clone", "-q", str(bare), str(d), cwd=tmp_path)
-        sh("config", "user.name", "t", cwd=d)
-        sh("config", "user.email", "t@t", cwd=d)
-    (a / "f.txt").write_text("1")
-    sh("add", "-A", cwd=a)
-    sh("commit", "-qm", "c1", cwd=a)
-    sh("push", "-q", "origin", "HEAD:main", cwd=a)
-    sh("pull", "-q", "origin", "main", cwd=b)
-    assert lw.self_update(b) == "最新"
-    (a / "tools").mkdir()
-    (a / "tools" / "local_worker.py").write_text("x")
-    sh("add", "-A", cwd=a)
-    sh("commit", "-qm", "c2", cwd=a)
-    sh("push", "-q", "origin", "HEAD:main", cwd=a)
-    (b / "f.txt").write_text("dirty")
-    assert "未コミット" in lw.self_update(b)
-    sh("checkout", "-q", "--", "f.txt", cwd=b)
-    sh("checkout", "-q", "-b", "other", cwd=b)
-    assert "main でない" in lw.self_update(b)
-    sh("checkout", "-q", "main", cwd=b)
-    msg = lw.self_update(b)
-    assert msg.startswith("更新した") and "ワーカー自身が変わった" in msg and (b / "tools" / "local_worker.py").exists()
-    (b / "g.txt").write_text("local")
-    sh("add", "-A", cwd=b)
-    sh("commit", "-qm", "local", cwd=b)
-    (a / "h.txt").write_text("h")
-    sh("add", "-A", cwd=a)
-    sh("commit", "-qm", "c3", cwd=a)
-    sh("push", "-q", "origin", "HEAD:main", cwd=a)
-    assert "fast-forward できない" in lw.self_update(b)
-    assert lw.self_update(tmp_path / "nonexistent").startswith("更新しない")
 
 
 def test_rule_convert_named_effects_with_notes():
@@ -1164,3 +532,61 @@ def test_run_rules_registers_rule_convertible_cards_without_model(tmp_path):
     ids = [c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]]
     assert ids == ["r1", "r2", "r4"] and st["ok"] == 3
     assert cc.run_rules(rows, load_tables(), out, rej)["ok"] == 0
+
+
+_META_COND = {"cmp": [{"count": {"zone": "mana", "owner": "you"}}, ">=", 7]}
+_META_REPLACE = {"kind": "replace",
+                 "when": {"event": "move", "from": "bz", "to": "graveyard", "reason": "destroy", "subject": "self"},
+                 "instead": [{"op": "move", "select": {"ref": "self"}, "to": "hand", "reason": "return"}]}
+
+
+def test_split_metamorph_carries_condition_to_pattern_ability():
+    """メタモーフ（クリーチャー形）: ヘッダの条件は、定型が所有する「次の能力」に if として付く。
+    ヘッダは rest に残らず、merge では条件つき置換が1件だけになる（第375弾の登録ブロッカーの解消）。"""
+    import convert_cards as cc
+    import rule_convert as rc
+    row = {"id": "m1", "card_type": "クリーチャー",
+           "text": "このクリーチャーは、ブロックされない。\n"
+                   "メタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る)\n"
+                   "このクリーチャーが破壊される時、墓地に置くかわりに自分の手札に戻す。"}
+    part = rc.split(row)
+    assert part is not None
+    assert part[0] == ["unblockable"]
+    assert part[1] == ""                       # ヘッダは条件ごと定型が所有するので rest に残らない
+    assert part[2] == [{**_META_REPLACE, "if": _META_COND}]
+    # 回答が条件つき置換を返しても二重に付かない（完全一致で dedupe される）
+    ans = {"id": "m1", "keywords": ["unblockable"], "abilities": [{**_META_REPLACE, "if": _META_COND}]}
+    assert cc.merge_split(ans, row, part)["abilities"] == [{**_META_REPLACE, "if": _META_COND}]
+    # 回答が置換を返さなくても、条件つきの形が付く（無条件形にはならない）
+    ans2 = {"id": "m1", "keywords": ["unblockable"], "abilities": []}
+    assert cc.merge_split(ans2, row, part)["abilities"] == [{**_META_REPLACE, "if": _META_COND}]
+
+
+def test_split_metamorph_trigger_variant():
+    """メタモーフの次の能力が誘発の定型でも条件が付く（dm14-073 型）。"""
+    import rule_convert as rc
+    row = {"id": "m2", "card_type": "クリーチャー",
+           "text": "メタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る)\n"
+                   "このクリーチャーをバトルゾーンに出した時、カードを１枚引いてもよい。"}
+    part = rc.split(row)
+    assert part is not None and part[1] == ""
+    assert part[2] == [{"kind": "trigger", "when": {"event": "move", "to": "bz", "subject": "self"},
+                        "effect": [{"op": "may", "body": [{"op": "draw", "count": 1}]}], "if": _META_COND}]
+
+
+def test_split_metamorph_spell_form_and_unowned_ability_untouched():
+    """呪文形のメタモーフと、次の能力が定型でない場合は従来どおり（ヘッダは rest に残り、条件は付けない）。"""
+    import rule_convert as rc
+    spell = {"id": "m3", "card_type": "呪文",
+             "text": "S・トリガー\n相手のパワー2000以下のクリーチャーを１体破壊する。\n"
+                     "メタモーフ(自分のマナゾーンに７枚以上カードがあれば、この呪文は次の能力を得る)\n"
+                     "パワー2000以下のクリーチャーのかわりに、相手のパワー6000以下のクリーチャーを１体破壊する。"}
+    part = rc.split(spell)
+    assert part is not None and "メタモーフ" in part[1]
+    assert all("if" not in a for a in part[2])
+    unowned = {"id": "m4", "card_type": "クリーチャー",
+               "text": "ブロッカー\nメタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る)\n"
+                       "このクリーチャーのパワーは+2000される。"}
+    part = rc.split(unowned)
+    assert part is not None and "メタモーフ" in part[1]     # 定型が所有しない能力には条件を付けず、ヘッダはモデルへ残す
+    assert all("if" not in a for a in part[2])

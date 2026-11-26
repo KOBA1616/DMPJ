@@ -106,6 +106,8 @@ def _teacher_choice(eng, d, me: int, budget: int) -> list[int]:
         score = 1e18 if (r and r.get("winner") == me) else evaluate(leaf, me, _W)
         if score > best_score:
             best, best_score = sorted(c), score
+    if best is None:  # 全候補が不合法・範囲外のときは常に合法な基準候補へ
+        best = sorted(cands[0])
     return best
 
 
