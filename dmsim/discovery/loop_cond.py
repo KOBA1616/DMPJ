@@ -1,16 +1,20 @@
 """静的なループ判定の「条件」を読む部分（tools/fast_loop_screen.py が使う、2026-11-14）。
 
-engine.zone_graph の束（Bundle）は日次の経路も使うので変えない。ここでは同じ形の束を作り直し、移動に条件を付ける。
-- 移動の条件 Move.conds: その移動を囲む if の cond の並び（may・modal の選択はいつでも選べるので条件にしない）。
-- modal（モードを選ぶ呪文）の各モードの移動も拾う（zone_graph は拾わない。H.D.2. の「相手の山札の上2枚をマナへ」）。
-- play_free で自分自身（ref: self / self_moved）を唱える・出す移動は、誘発の後に札がいるゾーン（premise の to）から動かす。
-  呪文の面を唱えるなら、その面の呪文の移動も同じ束に足す（H.D.2. のラスト・バースト）。
-- 特殊勝利 win_paths: 勝つ効果（op: win）と、そこに至る条件（能力の if・置換の if・囲む if）と前提（誘発・置換の when）。
+束化そのものは正準モジュール dmsim.engine.bundle_canon に寄せた（抽出層の
+語彙統合、2026-11-26）。本モジュールは発見側固有の付加情報だけを持つ:
+- 移動の条件 Move.conds: その移動を囲む if の cond の並び（bundle_canon が
+  束への注釈として付ける。may・modal の選択はいつでも選べるので条件にしない）
+- gate: 前提のうち移動だけでは満たせない限定の判定（発見側のポリシー）
+- 特殊勝利 win_paths: 勝つ効果（op: win）と、そこに至る条件（能力の if・
+  置換の if・囲む if）と前提（誘発・置換の when）
+- 条件の評価 cond_state(cond, ctx): "yes"（組の中で満たせる）/ "no"
+  （満たせない）/ "unknown"（読めない）。ctx はループ1周の収支など。
 
-条件の評価 cond_state(cond, ctx) は "yes"（組の中で満たせる）/ "no"（満たせない）/ "unknown"（読めない）。ctx はループ1周の収支など。
+_walk / _many は後方互換のため残す（束化には使わない）。
 """
 from __future__ import annotations
 
+from dmsim.engine import bundle_canon as BC
 from dmsim.engine import zone_graph as Z
 
 CHILD = ("then", "else", "body")
@@ -45,104 +49,48 @@ def _many(sel):
 
 
 def moves(ops, zone="bz", after=None, card=None) -> list[Z.Move]:
-    """zone: 能力が働くゾーン。after: 誘発の後に自分がいるゾーン（ref: self_moved）。card: 自分の札の定義（呪文の面を唱える時）。"""
-    out = []
-    for op, conds, dl in _walk(ops):
-        o = op["op"]
-        if o == "draw":
-            m = Z.Move("deck", "hand", conditional=bool(conds), draw=True, delayed=dl, blind=True, owner=op.get("player", "you"))
-        elif o == "move":
-            sel = op["select"]
-            ref = sel.get("ref")
-            ref_self = ref in ("self", "self_moved")
-            src = (after or zone) if ref == "self_moved" else zone if ref_self else sel.get("zone", "?")
-            m = Z.Move(src, op["to"], ref_self, dict(sel.get("filter", {})), bool(conds), sel.get("owner", "you"),
-                       delayed=dl, blind=src == "deck" and "from_top" in sel, many=_many(sel), alias=op.get("as"),
-                       ref=None if ref_self else ref)
-        elif o == "play_free":
-            sel = op["select"]
-            ref = sel.get("ref")
-            ref_self = ref in ("self", "self_moved")
-            src = (after or zone) if ref_self else sel.get("zone", "hand")
-            face = op.get("face")
-            spell = None
-            if ref_self and card is not None and face == "spell":
-                for f in (card.faces or [card]):
-                    if f.spell:
-                        spell = f
-            dst = (spell.resolve_to if spell else None) or op.get("resolve_to", "bz")
-            m = Z.Move(src, dst, ref_self, dict(sel.get("filter", {})), bool(conds), sel.get("owner", "you"),
-                       delayed=dl, many=_many(sel), alias=op.get("as"))
-            m.conds = conds
-            out.append(m)
-            if spell is not None:
-                for x in moves(spell.spell, dst, card=card):
-                    x.conds = tuple(conds) + tuple(getattr(x, "conds", ()))
-                    x.conditional = x.conditional or bool(conds)
-                    out.append(x)
-            continue
-        else:   # swap
-            for m in (Z.Move("bz", "hand", False, {}, bool(conds), delayed=dl), Z.Move("hand", "bz", True, {}, bool(conds), delayed=dl)):
-                m.conds = conds
-                out.append(m)
-            continue
-        m.conds = conds
-        out.append(m)
-    return out
+    """zone: 能力が働くゾーン。after: 誘発の後に自分がいるゾーン（ref: self_moved）。card: 自分の札の定義（呪文の面を唱える時）。
+
+    正準モジュール bundle_canon.moves_of への委譲（2026-11-26 統合）。
+    従来の本モジュール独自の解釈との差は bundle_canon の docstring 参照:
+    ref の束縛解決、特殊セレクタ、play_free の宛先推定、移動を生む op の
+    拡充（put_under / play_self / break 等）がエンジン解釈に一致した。
+    """
+    return BC.moves_of(ops, zone, after=after, card=card)
 
 
 def bundles(rules) -> list[Z.Bundle]:
-    """zone_graph.bundles_of と同じ束を、条件つきの移動で作る（日次の経路は使わない）。"""
-    out = []
-    for cd in rules.cards.values():
-        faces = cd.faces or [cd]
-        for f in faces:
-            if f.free_if and f.is_creature():
-                out.append(Z.Bundle(cd.id, cd.name, Z.Premise("move", "hand", subject="self", zone="hand"),
-                                    [Z.Move("hand", "bz", True)], origin="free"))
-            for ab in f.abilities:
-                if ab.get("kind") not in ("trigger", "declare"):
-                    continue
-                pr = Z._premise(ab)
-                ms = moves(ab.get("effect", []), ab.get("zone", "bz"), after=(pr.to if pr else None), card=cd)
-                top = ab.get("if")
-                if top is not None:
-                    for m in ms:
-                        m.conds = (top,) + tuple(m.conds)
-                        m.conditional = True
-                if pr and (ms or Z._rearms(ab.get("effect", []))):
-                    b = Z.Bundle(cd.id, cd.name, pr, ms, rearm=Z._rearms(ab.get("effect", [])))
-                    b.when = ab.get("when") or {}
-                    b.once = bool(ab.get("once_per_turn"))
-                    out.append(b)
-            if f.spell:
-                ms = ([Z.Move("hand", f.resolve_to, True)] + moves(f.spell, card=cd)
-                      + moves(f.after_resolve, f.resolve_to, card=cd))
-                for m in ms:
-                    if not hasattr(m, "conds"):
-                        m.conds = ()
-                out.append(Z.Bundle(cd.id, cd.name, Z.Premise("move", "hand", subject="self", zone="hand"), ms,
-                                    origin="spell", cost=f.cost))
-        if "creature" in cd.types:
-            out.append(Z.Bundle(cd.id, cd.name, Z.Premise("move", "hand", subject="self", zone="hand"),
-                                [Z.Move("hand", "bz", True)], origin="summon", cost=cd.cost))
-    for b in out:
-        if not hasattr(b, "when"):
-            b.when, b.once = {}, False
-        for m in b.moves:
-            if not hasattr(m, "conds"):
-                m.conds = ()
-    return out
+    """全カードの束（正準 bundle_canon.bundles への委譲）。
+
+    従来との差: trigger/declare に加えて replace / activate / silent /
+    static の束が増え、前提イベントの範囲が defs.EVENTS 全体に広がった。
+    ループ判定側の受け止めは gate() が担う（下記）。
+    """
+    return BC.bundles(rules)
 
 
 def gate(b) -> str | None:
     """誘発の前提のうち、カードの移動だけでは満たせない限定。via（特定の方法で出た時: D・D・D 等）・unpaid（コストを払わずに出た時）は
-    閉路の移動がその方法かを読めないので受け渡しに数えない。once_per_turn は1ターンに1回なので回らない。"""
+    閉路の移動がその方法かを読めないので受け渡しに数えない。once_per_turn は1ターンに1回なので回らない。
+
+    統合（2026-11-26）で増えた束の受け止めもここが担う（発見側のポリシー）:
+    - replace の束は「起きたイベントを置き換える」もので、サイクルの一員や
+      付け足しにはならない → "replace"
+    - move / cast / draw と TICKS 以外の前提イベント（tap・break・
+      attack_end 等）は、ゾーン移動の連鎖では満たせない → "event"
+      （束自体は正準側に残り、前提閉集合などの消費側は直接読める）
+    """
+    if getattr(b, "origin", "") == "replace":
+        return "replace"
     w = getattr(b, "when", {}) or {}
     if w.get("via") or w.get("unpaid"):
         return "via"
     if getattr(b, "once", False):
         return "once"
+    prem = getattr(b, "prem", None)
+    if prem is not None and prem.kind not in ("move", "cast", "draw") \
+            and prem.kind not in Z.TICKS:
+        return "event"
     return None
 
 
