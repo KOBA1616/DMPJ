@@ -33,7 +33,7 @@ class AttnModel(Model):
 
     def _trunk(self, st: dict):
         p = self.p
-        emb_tok = p["emb"][st["tok_defn"]]
+        emb_tok = self._embed(st["tok_defn"])
         x = np.concatenate([emb_tok, st["tok_num"]], axis=1)
         h0 = _tanh(x @ p["W1"].T + p["b1"])                    # [T, H]
         h = h0 + p["zemb"][st["tok_zone"]]
