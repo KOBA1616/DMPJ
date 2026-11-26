@@ -358,6 +358,114 @@ fn push_f32(buf: &mut Vec<u8>, xs: &[f32]) {
     }
 }
 
+/// Phase 25: 座席ごとの方策（run_batch2 用）。Model はその座席の重みへの参照。
+pub enum Seat<'a> {
+    First,
+    Random,
+    Model(&'a Weights),
+}
+
+/// Phase 25: 観測ダイジェスト。状態から [player][zone] = [defn 添字（vocab_ids の
+/// 0 始まり、未知は -1）...] を作る。ゾーンの並びは呼び出し側が渡した order。
+/// 枚数だけでなく defn 構成まで含むので、Python 側で「ゾーン × 名前/種族/文明」の
+/// 条件数（tools/loop_stages.py の入口条件など）を再現できる。検出ロジック自体は
+/// Rust に持たない。
+fn zone_digest(s: &GameState, order: &[String], vocab: &Vocab) -> Value {
+    let mut players = Vec::with_capacity(2);
+    for p in 0..2usize {
+        let mut zones = Vec::with_capacity(order.len());
+        for z in order {
+            let cids: &[i64] = s.zones.get(z).and_then(|c| c.get(p)).map(|v| v.as_slice()).unwrap_or(&[]);
+            zones.push(Value::Array(cids.iter().map(|&cid| {
+                json!(vocab.idx(&s.cards[cid as usize].defn) as i64 - 1)
+            }).collect::<Vec<_>>()));
+        }
+        players.push(Value::Array(zones));
+    }
+    Value::Array(players)
+}
+
+/// Phase 25: 座席ごとの方策で1局を回す。モデル座席の決定だけ軌跡を buf へ追記する
+/// （並びは run_game_model と同じ）。obs_zones が Some なら、各決定への回答直後の
+/// 状態ダイジェストを obs に積む（Python 側の到達判定は回答直後の盤面で評価する）。
+pub fn run_game_seats(e: &mut Engine, seats: &[Seat], vocab: &Vocab, seed: u64,
+                      obs_zones: Option<&[String]>, buf: &mut Vec<u8>) -> Value {
+    let mut rng = BatchRng(seed | 1);
+    let mut meta: Vec<Value> = vec![];
+    let mut obs: Vec<Value> = vec![];
+    let mut decisions = 0i64;
+    let finish = |meta: Vec<Value>, obs: Vec<Value>, e: &Engine, decisions: i64| -> Value {
+        let mut out = json!({
+            "winner": e.s.result.clone().unwrap_or(Value::Null)["winner"].clone(),
+            "turn": e.s.result.clone().unwrap_or(Value::Null)["turn"].clone(),
+            "decisions": decisions, "traj": meta,
+        });
+        if obs_zones.is_some() {
+            out["obs"] = Value::Array(obs);
+        }
+        out
+    };
+    loop {
+        match e.advance() {
+            Ok(Some(d)) => {
+                if decisions >= 100_000 {
+                    let mut out = json!({"error": "decision limit", "traj": meta});
+                    if obs_zones.is_some() {
+                        out["obs"] = Value::Array(obs);
+                    }
+                    return out;
+                }
+                let player = d["player"].as_i64().unwrap_or(0);
+                let choice = match &seats[player as usize] {
+                    Seat::First => crate::batch_answer(&d, "first", &mut rng),
+                    Seat::Random => crate::batch_answer(&d, "random", &mut rng),
+                    Seat::Model(w) => {
+                        let st = encode_state(&e.s, player, vocab);
+                        let op = encode_options(&e.s, &d, vocab);
+                        let choice = act(w, &st, &op, &mut rng);
+                        push_i32(buf, &st.tok_defn);
+                        for row in &st.tok_num {
+                            push_f32(buf, row);
+                        }
+                        push_i32(buf, &st.tok_zone);
+                        push_f32(buf, &st.glob);
+                        push_i32(buf, &op.opt_defn);
+                        for row in &op.opt_num {
+                            push_f32(buf, row);
+                        }
+                        push_i32(buf, &choice);
+                        meta.push(json!({
+                            "t": st.tok_defn.len(), "o": op.opt_defn.len(), "k": choice.len(),
+                            "player": player, "min": op.min, "max": op.max,
+                        }));
+                        choice
+                    }
+                };
+                if let Err(err) = e.answer(choice) {
+                    let mut out = json!({"error": format!("{err:?}"), "traj": meta});
+                    if obs_zones.is_some() {
+                        out["obs"] = Value::Array(obs);
+                    }
+                    return out;
+                }
+                decisions += 1;
+                if let Some(order) = obs_zones {
+                    obs.push(zone_digest(&e.s, order, vocab));
+                }
+            }
+            Ok(None) => break,
+            Err(err) => {
+                let mut out = json!({"error": format!("{err:?}"), "traj": meta});
+                if obs_zones.is_some() {
+                    out["obs"] = Value::Array(obs);
+                }
+                return out;
+            }
+        }
+    }
+    finish(meta, obs, e, decisions)
+}
+
 /// モデル方策で1局を回し、軌跡をバイナリバッファ（buf）へ追記する。
 /// 戻りはメタ情報（winner/turn と決定ごとの要素数）。特徴の並びは決定ごとに
 /// tok_defn(i32×T), tok_num(f32×T×8), tok_zone(i32×T), glob(f32×12),
