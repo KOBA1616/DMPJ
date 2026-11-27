@@ -31,14 +31,15 @@ def _settle(e, done, max_steps=40):
     return done()
 
 
-def test_field_uniqueness(rules):
+def test_normal_fields_have_no_limit(rules):
+    """D2 でないフィールドに枚数制限は無い（703.4l は D2 だけ。2026-11-27 koba 裁定）。旧テストは通常フィールド同士も1枚としていた。"""
     e = setup(rules, {"hand": ["T069", "T070"], "mana": ["T005", "T005", "T001", "T001"], "deck": ["T001"]}, {})
     _play(e, "play:T069")
     assert _settle(e, lambda: any(e.s.cards[c].defn == "T069" for c in e.bz_tops(0)))
     _play(e, "play:T070")
-    ok = _settle(e, lambda: any(e.s.cards[c].defn == "T069" for c in e.zlist("graveyard", 0)))
-    assert ok, "新しいフィールドが出ても古いフィールドが破壊されなかった"
-    assert any(e.s.cards[c].defn == "T070" for c in e.bz_tops(0))
+    assert _settle(e, lambda: any(e.s.cards[c].defn == "T070" for c in e.bz_tops(0)))
+    assert any(e.s.cards[c].defn == "T069" for c in e.bz_tops(0)), "通常フィールドが破壊された（制限は D2 だけ）"
+    assert not any(e.s.cards[c].defn == "T069" for c in e.zlist("graveyard", 0))
 
 
 def test_d_d_d(rules):

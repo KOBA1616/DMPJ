@@ -199,4 +199,10 @@ def h_put_under(eng, t):
     c.face_up = False if s.cards[top].zone == "shield" else c.face_up
     s.cards[top].under.append(t["cid"])
     eng._sba()   # 山札の最後の1枚を重ねたら敗北（104.2b）
+    if s.cards[top].zone == "bz" and s.alive(t["onto"]) and "evolution" in eng.chars_ro(top)["types"]:
+        # 効果で進化クリーチャー（NEO等を含む）の下に置かれた: 進化元になる時（シンカパワー）。
+        # 2026-11-27 koba 裁定: 効果で下に置いても発動する。進化の重ね（events._apply_one）と同じ evolve_base を出す。
+        # 進化でないクリーチャー・シールドの下に置いた場合は進化元ではないので出さない。
+        eng._push(eng.ev_task([{"ev": "evolve_base", "subject": s.ref(t["cid"]), "top": s.ref(top),
+                                "controller": s.cards[t["cid"]].controller}]))
     return None
