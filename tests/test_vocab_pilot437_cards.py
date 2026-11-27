@@ -1,5 +1,5 @@
 """語彙パイロット第437弾（cards 側）: shield_faceup_trigger —
-対象はまだ rejects に残る（登録はラウンド471）。
+ラウンド471で登録済み。
 
 対象は dmd11-006 大焔団 フォルクス（pure 1件、multi にも
 現れない）。提出形は partial（骨格〔クリーチャー / 火 /
@@ -15,6 +15,8 @@ subject: {owner: you}, face_up: true}, effect:
 dm23rp3-017 等の確立形、表向きの照合は第176弾で
 move レコードに載る face_up を when で見る形、
 ブレイクの区別は h_break が付ける reason: break。
+登録形は提出形と完全一致〔source 以外の全フィールドを
+照合〕、abilities は trigger 1件ちょうど、text は公式全文。
 
 alias は無し（identity 実測で canon_id は対象自身、
 aliases_for = []）。登録ブロッカーの確認（第375弾の
@@ -24,7 +26,7 @@ aliases_for = []）。登録ブロッカーの確認（第375弾の
 keywords と完全一致（欠落なし）、定型所有の ability は
 無い。対象行は gaps=[shield_faceup_trigger]・
 reason == "vocab" のため、ラウンド471の reopen の
-出力は対象1件ちょうどのはず。
+出力は対象1件ちょうどだった。
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が
 復活するので _conv_cache を直接使う（第319弾以降の作法）。
@@ -71,26 +73,27 @@ def _reject_rows():
             .read_text(encoding="utf-8").splitlines() if x.strip()]
 
 
-def test_target_still_rejected_and_family_shape():
+def test_target_registered_and_family_cleared():
     rows = _reject_rows()
     mine = {r["id"]: r for r in rows}
-    assert TARGET in mine                # 対象行はまだ残る
-    row = mine[TARGET]
-    assert row["gaps"] == [GAP]
-    assert row["reason"] == "vocab"
-    # ファミリーはこの1件のみ（pure / multi 問わず）
+    assert TARGET not in mine            # 対象行は登録で解消
+    # ファミリーは pure 1件のみで完全解消
     fam = sorted(r["id"] for r in rows if GAP in (r.get("gaps") or []))
-    assert fam == [TARGET]
-    partial = row["partial"]
-    assert partial["text"] == FULL_TEXT  # partial の時点で公式全文
-    assert partial["keywords"] == ["speed_attacker", "double_breaker"]
-    assert "abilities" not in partial    # ability は未構築（補完対象）
-    needs = [u["need"] for u in
-             (partial.get("source") or {}).get("unsupported") or []]
-    assert needs == [GAP]
-    # 未登録の確認
-    assert find(CONVERTED, TARGET) is None
-    assert find(str(PROTO), TARGET) is None
+    assert fam == []
+    c = find(CONVERTED, TARGET)
+    assert c is not None
+    reg = {k: v for k, v in c.items() if k != "source"}
+    assert reg == SUBMIT                 # 登録形 == 提出形
+    assert len(c["abilities"]) == 1      # abilities は trigger 1件ちょうど
+    assert c["abilities"][0]["kind"] == "trigger"
+    assert c["abilities"][0]["when"] == {
+        "event": "move", "from": "shield", "reason": "break",
+        "subject": {"owner": "you"}, "face_up": True}
+    assert c["text"] == FULL_TEXT        # 公式全文
+    assert c["keywords"] == ["speed_attacker", "double_breaker"]
+    src = c.get("source") or {}
+    assert not src.get("unsupported")
+    assert not src.get("aliases")        # alias 無し
     # 正本は対象自身・alias 無し
     assert canon_id(TARGET) == TARGET
     assert aliases_for(NAME, TARGET) == []
@@ -99,10 +102,12 @@ def test_target_still_rejected_and_family_shape():
         "destroy_self_after_attacking_player"]
 
 
-def test_submit_form_parses_and_matches_proto():
-    d = parse_card(copy.deepcopy(SUBMIT), TABLES)
+def test_registered_form_parses_and_matches_proto():
+    c = find(CONVERTED, TARGET)
+    d = parse_card(copy.deepcopy(c), TABLES)
     assert d.types == ["creature"]
     assert d.cost == 7 and d.power == 7000
+    assert find(str(PROTO), TARGET) is None
     proto = proto_card("T1227")
     for k in ("name", "types", "civs", "cost", "power",
               "races", "mana", "text", "abilities", "keywords"):

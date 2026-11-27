@@ -85,7 +85,7 @@ class SelectorMixin:
             return x
         if isinstance(x, dict):
             if "count" in x:
-                return len(self.candidates(x["count"], env))
+                return self._count_candidates(x["count"], env)
             if "civ_count" in x:   # 対象カード群にある文明の種類数（多色カードは持つ文明をすべて数える）
                 return len({cv for c in self.candidates(x["civ_count"], env) for cv in self.chars_ro(c)["civs"]})
             if "distinct_cost_count" in x:   # 対象カード群にあるコストの種類数（同じコストは1つに数える。第145弾、バラバラエティ）
@@ -180,6 +180,9 @@ class SelectorMixin:
             if "bundles" in x:   # シールドの束の数（束の中身のカードは数えない。113.2）。face_up: true は「表向きのカードを含む束」だけ、false は「表向きのカードを含まない束」だけを数える
                 spec = x["bundles"]
                 tops = self.zlist("shield", self._rel(spec.get("owner", "you"), env))
+                w = self._waiting_cids()   # 113.6a: 待機状態の束はシールドの数に数えない
+                if w:
+                    tops = [t for t in tops if t not in w]
                 if "face_up" not in spec:
                     return len(tops)
                 want = bool(spec["face_up"])
@@ -242,12 +245,42 @@ class SelectorMixin:
     # 単一キー制限をかけると variety breaker の mod が壊れるため、これらは従来どおりキー有無で判定する
     _LEGACY_EXPR_KEYS = {"civ_count", "distinct_cost_count", "sum", "var", "bundles"}
 
+    def _waiting_cids(self) -> set[int]:
+        """113.6a の待機状態にあるシールドのカード集合（束のトップ＋その下すべて）。
+
+        待機状態はブレイクタスクが宣言窓の間だけ t["st_waiting"] で保持する
+        （h_break が開閉する。窓を開いているブレイクタスクは同時に1つだけ:
+        窓はそのタスク自身の呼び出しの中に閉じていて、宣言の Decision が
+        返っている間は他のタスクが実行されない）。待機状態のシールドは
+        シールドゾーンにあるが、シールドの数にもシールドゾーンにある
+        カードの枚数にも数えない（113.6a）。"""
+        s = self.s
+        for t in reversed(s.tasks):
+            if t.get("t") == "break" and t.get("st_waiting"):
+                out = set()
+                for c in t.get("chosen", []):
+                    if s.cards[c].zone == "shield":
+                        out.add(c)
+                        out.update(s.cards[c].under)
+                return out
+        return set()
+
+    def _count_candidates(self, sel, env) -> int:
+        """セレクタの候補を「枚数」として数える（113.6a の待機状態を除く）。
+        exists・選択などの候補列挙そのものには効かせない（待機状態の
+        シールドはシールドゾーンに「ある」）。"""
+        cands = self.candidates(sel, env)
+        w = self._waiting_cids()
+        if w:
+            cands = [c for c in cands if c not in w]
+        return len(cands)
+
     def count_of(self, v, env):
         """mod の count の評価: セレクタなら体数、式（civ_count / distinct_cost_count / sum / 履歴式等）ならその値。"""
         if isinstance(v, dict) and (any(k in v for k in self._LEGACY_EXPR_KEYS)
                                     or (len(v) == 1 and next(iter(v)) in self._EXPR_KEYS)):
             return self.eval_expr(v, env)
-        return len(self.candidates(v, env))
+        return self._count_candidates(v, env)
 
     def _turn_count(self, spec: dict, env) -> int:
         """式 {turn_count: spec} の評価。記録は events の _record_history が turn_counters の hist: キーに集約する。

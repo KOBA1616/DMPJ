@@ -268,6 +268,7 @@ class BreakTask(TypedDict):
     brk_waiting: NotRequired[list]          # instead を実行中の [シールドの cid, continue か]
     brk_done: NotRequired[bool]             # 諮問が終わったか
     strigger: NotRequired[str]              # 手札に加わるカードへの S・トリガーの印（"off" / "on"。op move の strigger 引数から。バンドC2 U68）
+    st_waiting: NotRequired[bool]           # 113.6a の宣言窓が開いているか（true の間 chosen は待機状態で、宣言時点の枚数に数えない）
 
 
 class CrossTask(TypedDict):

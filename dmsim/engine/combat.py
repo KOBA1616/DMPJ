@@ -23,6 +23,39 @@ class CombatMixin:
             return False
         return c.entered_turn != self.s.turn or self.permits(cid, "attack_summoning_sick")   # 506.1a
 
+    def _creature_opts(self, a, cid):
+        """攻撃先クリーチャーの選択肢。505.2 既定ではタップ状態のクリーチャーだけ。
+        「タップされていないクリーチャーを攻撃できる」(マッハファイター等)は allow で広げる。"""
+        dfn = self.s.cards[cid].defn
+        allow = [e for e in self.chars_ro(cid)["allow"] if isinstance(e, dict) and e["action"] == "attack_creature"]
+        out = []
+        for tc in self.bz_tops(1 - a):
+            if (self.s.cards[tc].tapped or any(e.get("other", {}).get("tapped") is False and self.filter_match(tc, e["other"]) and self._only_ok(e, tc) for e in allow)) \
+                    and self.permits(cid, "attack_creature", tc) and self.permits(tc, "be_attacked", cid):
+                out.append({"key": f"attack:{dfn}:{self.s.cards[tc].defn}", "cid": cid,
+                            "target": self.s.ref(tc)})
+        return out
+
+    def _taunt_filter(self, cid, creature_opts):
+        """誘引と「可能ならクリーチャーを攻撃する」による絞り込み。
+        戻り値は (出す選択肢, プレイヤー攻撃を併せて出してよいか)。
+        「可能ならこのクリーチャーを攻撃する」（第51弾）: 合法な攻撃先になる誘引持ちがいれば、攻撃先はそれらに限る
+        「はじめて攻撃するなら」（第160弾）は、そのクリーチャーがこのターンまだ攻撃していなければ（履歴カウンタ hist:attack_by が 0）制限する
+        「可能ならクリーチャーを攻撃する」（第171弾）: 攻撃できるクリーチャーがいればプレイヤーは攻撃できない。
+        first_only は第160弾と同じく攻撃側クリーチャー単位の初回攻撃だけ。特定の誘引（taunts）があればそちらが優先する"""
+        _attacked = self.s.turn_counters.get(f"hist:attack_by:{cid}", 0)
+        def _taunt(o):
+            _tch = self.chars_ro(o["target"][0])
+            return _tch["must_be_attacked"] or (_tch.get("must_be_attacked_first") and _attacked == 0)
+        taunts = [o for o in creature_opts if _taunt(o)]
+        if taunts:
+            return taunts, False
+        _ch = self.chars_ro(cid)
+        _mac = _ch["must_attack_creature"] or (_ch.get("must_attack_creature_first") and _attacked == 0)
+        if _mac and creature_opts:
+            return creature_opts, False
+        return creature_opts, True
+
     def _attack_options(self, a):
         lim = self._action_limit(a, "attack")   # 攻撃回数の制限（第254弾）
         if lim is not None and self.s.turn_counters.get(f"atk_decl:{a}", 0) >= lim:
@@ -31,6 +64,14 @@ class CombatMixin:
         for cid in self.bz_tops(a):
             dfn = self.s.cards[cid].defn
             if not self._can_attack(cid):
+                c = self.s.cards[cid]
+                # 出たターンの召喚酔いだけが理由で、attack_creature の許可（辞書形）を持つなら、
+                # そのターンだけクリーチャーへの攻撃はできる（マッハファイター／フュリー・チャージ、
+                # 第445弾）。プレイヤーへの攻撃は召喚酔いの原則どおりできない
+                if not c.tapped and "creature" in self.chars_ro(cid)["types"] and c.entered_turn == self.s.turn \
+                        and any(isinstance(e, dict) and e["action"] == "attack_creature" for e in self.chars_ro(cid)["allow"]):
+                    opts, _player_ok = self._taunt_filter(cid, self._creature_opts(a, cid))
+                    out += opts
                 # アビスラッシュで出たターンだけ、召喚酔いでもプレイヤーへの攻撃はできる（クリーチャーは不可）
                 if (self.s.turn_counters.get(f"rush:{cid}") == self.s.turn or self.chars_ro(cid).get("player_rush")) and not self.s.cards[cid].tapped \
                         and "creature" in self.chars_ro(cid)["types"] and self.permits(cid, "attack_player"):
@@ -38,33 +79,10 @@ class CombatMixin:
                 continue
             player_opt = {"key": f"attack:{dfn}:player", "cid": cid, "target": "player"} \
                 if self.permits(cid, "attack_player") else None
-            allow = [e for e in self.chars_ro(cid)["allow"] if isinstance(e, dict) and e["action"] == "attack_creature"]
-            creature_opts = []
-            for tc in self.bz_tops(1 - a):
-                # 505.2 既定ではタップ状態のクリーチャーだけ。「タップされていないクリーチャーを攻撃できる」(マッハファイター等)は allow で広げる
-                if (self.s.cards[tc].tapped or any(e.get("other", {}).get("tapped") is False and self.filter_match(tc, e["other"]) and self._only_ok(e, tc) for e in allow)) \
-                        and self.permits(cid, "attack_creature", tc) and self.permits(tc, "be_attacked", cid):
-                    creature_opts.append({"key": f"attack:{dfn}:{self.s.cards[tc].defn}", "cid": cid,
-                                          "target": self.s.ref(tc)})
-            # 「可能ならこのクリーチャーを攻撃する」（第51弾）: 合法な攻撃先になる誘引持ちがいれば、攻撃先はそれらに限る
-            # 「はじめて攻撃するなら」（第160弾）は、そのクリーチャーがこのターンまだ攻撃していなければ（履歴カウンタ hist:attack_by が 0）制限する
-            _attacked = self.s.turn_counters.get(f"hist:attack_by:{cid}", 0)
-            def _taunt(o):
-                _tch = self.chars_ro(o["target"][0])
-                return _tch["must_be_attacked"] or (_tch.get("must_be_attacked_first") and _attacked == 0)
-            taunts = [o for o in creature_opts if _taunt(o)]
-            # 「可能ならクリーチャーを攻撃する」（第171弾）: 攻撃できるクリーチャーがいればプレイヤーは攻撃できない。
-            # first_only は第160弾と同じく攻撃側クリーチャー単位の初回攻撃だけ。特定の誘引（taunts）があればそちらが優先する
-            _ch = self.chars_ro(cid)
-            _mac = _ch["must_attack_creature"] or (_ch.get("must_attack_creature_first") and _attacked == 0)
-            if taunts:
-                out += taunts
-            elif _mac and creature_opts:
-                out += creature_opts
-            else:
-                if player_opt:
-                    out.append(player_opt)
-                out += creature_opts
+            creature_opts, player_ok = self._taunt_filter(cid, self._creature_opts(a, cid))
+            if player_ok and player_opt:
+                out.append(player_opt)
+            out += creature_opts
         return out
 
     def _activate_options(self, a, attack_opts):
@@ -566,6 +584,11 @@ def h_break(eng, t):
             r = eng._break_consult(t)   # ブレイクの置換の諮問（第146弾。chosen 確定後・宣言の前。擬似ブレイクは対象外）
             if r is not True:
                 return r
+        # 113.6a: 置換が確定し「手札に加わるシールド」が決まったここから、
+        # 使用宣言が終わる（移動シーケンスを積む）まで chosen は待機状態。
+        # 宣言時点の枚数評価（selectors の _waiting_cids）が chosen を数えない。
+        # 諮問中の評価は窓の外（手札に加わるかどうか自体が未確定のため）。
+        t["st_waiting"] = True
         opts = []
         for c in [x for ch in t["chosen"] for x in [ch] + list(s.cards[ch].under)]:   # シールドの束は、重なったカードのどれも宣言できる（113.2）
             d = eng.cdef(c)
@@ -643,5 +666,6 @@ def h_break(eng, t):
         seq.append(eng.ev_task(ev))
     if t["in_effect"]:   # S・トリガーの解決中のブレイクは、新しい S・トリガーをその場で解決する（101.4g）
         seq = eng._window(*seq, only_st=True)
+    t["st_waiting"] = False   # 113.6a: 使用宣言はここで終わり。以後の評価（ブレイク前の誘発・移動・解決）は通常の数え方
     eng._push(*seq)
     return None
