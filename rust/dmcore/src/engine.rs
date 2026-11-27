@@ -3279,6 +3279,7 @@ impl Engine {
             c.face_up = public;
             c.controller = controller.unwrap_or(c.owner);
             c.entered_turn = if to == "bz" { turn } else { -1 };
+            c.entered_from = if to == "bz" { from.clone() } else { String::new() };   // Python と同じ（直前のゾーン）
             if to == "bz" {
                 c.entered_seq = seq;
             }
