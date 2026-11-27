@@ -496,16 +496,14 @@ class EventMixin:
             new = s.ref(cid)
             if ev["to"] == "bz" and (self.link_side(cid) is not None or self.link_spec(cid)):   # ゴッドが出たらリンク手順を行う
                 self._push({"t": "g_link", "cid": cid, "player": c.controller, "step": "start"})
-            if ev["to"] == "bz" and "field" in self.fdef(cid).types:
-                # 一意性はプール分離（第151弾。公式裏取り済み）: D2フィールドは D2フィールド同士だけが
-                # 数え合い（703.4l。両プレイヤー合わせて1つだけ。行き先は破壊＝701.6＋109.1＋公式 QA 47896）、
-                # 通常フィールド同士は第25弾の挙動を温存する。通常フィールドと D2 は互いに影響しない。
+            if ev["to"] == "bz" and "d2_field" in self.fdef(cid).types:
+                # 703.4l: 他のD2フィールドが出たら、先にあったD2フィールドは持ち主の墓地に置かれる（両プレイヤー合わせて1つ。
+                # 行き先は破壊＝701.6＋109.1＋公式 QA 47896）。D2でないフィールド（DG・ドラゴニック・通常など）には
+                # 枚数制限がない（2026-11-27 koba 裁定。旧実装は通常フィールド同士も1枚にしていた）。
                 # 適用は出現イベントごとに1回だけ（このフックは move の適用時にだけ走る）: 置換で生き残った
                 # D2 は、次の新しい D2 が出るまで残る（QA 47896）
-                d2 = "d2_field" in self.fdef(cid).types
                 others = [x for p in (0, 1) for x in self.bz_tops(p)
-                          if x != cid and "field" in self.fdef(x).types
-                          and ("d2_field" in self.fdef(x).types) == d2]
+                          if x != cid and "d2_field" in self.fdef(x).types]
                 if others:
                     self._push(self.ev_task([{"ev": "move", "subject": s.ref(x), "to": "graveyard",
                                               "reason": "destroy"} for x in others]))
@@ -671,7 +669,7 @@ class EventMixin:
                 for m in self.link_members(ev["subject"][0]):
                     s.mut_card(m).tapped = c.tapped
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
-        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_lose", "battle_start", "attack_end", "attack_unblocked", "break_before", "mugon_used", "link_established", "battle_end", "janken"):
+        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_lose", "battle_start", "attack_end", "attack_unblocked", "break_before", "mugon_used", "link_established", "evolve_base", "battle_end", "janken"):
             return [dict(ev)]
         raise ValueError(kind)
 

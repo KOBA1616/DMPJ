@@ -1043,12 +1043,29 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         ch["keywords"] = sorted(ch["keywords"])   # 状態（LKI）に入るので JSON にできる形で返す
         return ch
 
+    def _dream_duplicate(self, cid: int) -> bool:
+        """817.2: cid がドリーム・エレメントで、その持ち主のバトルゾーンに同名のドリーム・エレメントが既にあるか。
+        既に複数ある状態は残る（817.3）ので、ここは「新しく出す」時の可否だけを決める。"""
+        if "dream_creature" not in self.fdef(cid).types:
+            return False
+        s = self.s
+        name = self.cdef(cid).name
+        owner = s.cards[cid].owner
+        for p in (0, 1):
+            for x in self.bz_tops(p):
+                if x != cid and s.cards[x].owner == owner and "dream_creature" in self.fdef(x).types \
+                        and self.cdef(x).name == name:
+                    return True
+        return False
+
     def _permits_face(self, cid: int, action: str, face: int | None) -> bool:
         return self.permits(cid, action, face=face)
 
     def permits(self, cid: int, action: str, other: int | None = None, face: int | None = None) -> bool:
         """101.2:「できない」は「できる」に勝つ。禁止 → 許可 → 既定値の順に見る。
         other は相手側のカード（攻撃先・攻撃クリーチャー・ブロッカー）。要素の other フィルタはそれに当てる。"""
+        if action == "enter_bz" and self._dream_duplicate(cid):
+            return False   # 817.2: ドリーム・エレメントは、同名のドリーム・エレメントが自分のバトルゾーンにある間、出せない
         ch = self.chars_ro(cid, face)
 
         def hit(entries):
