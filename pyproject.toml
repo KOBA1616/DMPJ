@@ -11,7 +11,7 @@ convert = ["anthropic>=2"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--durations=30 -m \"not slow\""
+addopts = "-q --tb=short --durations=10 -m \"not slow\""
 markers = [
   "slow: 実シミュレーション等の長時間テスト。通常の全体テストでは除外し、全部走らせる時は -m \"slow or not slow\" を付ける",
 ]

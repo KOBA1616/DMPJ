@@ -1073,11 +1073,16 @@ impl Engine {
                 Ask::Decision(d) => return Ok(Some(d)),
                 Ask::Answer(x) => x,
             };
-            for c in opts[ans[0]]["cids"].as_array().unwrap() {
-                self.s.cards[c.as_i64().unwrap() as usize].tapped = true;
-            }
             self.s.tasks.last_mut().unwrap()["summon_paid"] = opts[ans[0]]["cids"].clone();
             self.s.tasks.last_mut().unwrap()["paid_done"] = json!(true);
+            // 第436弾（Python と同じ）: 支払いのマナタップは tap イベント。適用と誘発の収集を済ませてから後段へ進む
+            let paid_evs: Vec<Value> = opts[ans[0]]["cids"].as_array().unwrap().iter()
+                .map(|c| json!({"ev": "tap", "subject": self.refv(c.as_i64().unwrap())})).collect();
+            if !paid_evs.is_empty() {
+                let te = self.ev_task(paid_evs);
+                self.push(vec![te]);
+                return Ok(None);
+            }
         }
         let paid: Vec<i64> = self.s.tasks.last().unwrap().get("summon_paid")
             .and_then(|v| v.as_array()).map(|a| a.iter().filter_map(|x| x.as_i64()).collect()).unwrap_or_default();
