@@ -501,7 +501,8 @@ def judge_conversion3(rules, core_cards: dict[str, int], conv_cards: list[str], 
                       delta: dict | None = None, lap_cap: int = 12,
                       deck_cards: list[str] | None = None,
                       shield_cards: list[str] | None = None,
-                      controls: bool = True) -> dict:
+                      controls: bool = True, conv_deck_floor: int | None = 3,
+                      conv_time_limit: float | None = None, conv_lock_rounds: int = 2) -> dict:
     """変換判定 v3: 認定済みエンジンを実際に回して得た実局面から勝ちを探す。
 
     段1（蓄積）: 仕込み局面（最小コア＋変換札1枚）を _play_accum で進める（ターンは探索に
@@ -559,7 +560,9 @@ def judge_conversion3(rules, core_cards: dict[str, int], conv_cards: list[str], 
             ot = own_turn(eng_cur, 0)
             res2, _eng2 = play_game(rules, [], [], sd, first_player=0,
                                     max_turn=ot + conv_turns, budget=conv_budget,
-                                    start=eng_cur, lock_judge=lock_probe)
+                                    start=eng_cur, lock_judge=lock_probe,
+                                    deck_floor=conv_deck_floor if delta else None,
+                                    time_limit=conv_time_limit, lock_rounds=conv_lock_rounds)
             row.update({"kill_turn": res2.kill_turn, "kind": res2.kind, "origin": res2.origin,
                         "lost": res2.lost, "error": res2.error,
                         "pass": res2.kill_turn is not None})

@@ -286,6 +286,7 @@ class TurnSearch:
         self.value_fn = value_fn              # 葉の評価を差し替える関数 f(eng, me)（None なら evaluate）。勝敗を使わない局面評価の測定用
         self.order_fn = order_fn              # 候補の並べ替え f(eng, d, cands) -> cands（Phase 12: 学習方策による並べ替え用。None は従来どおり）
         self.me = me
+        self.deck_floor: int | None = None    # 自分の山札がこの枚数以下になる局面は探索しない（周回を回し切っての山札切れ自滅を避ける。None は無効）
         self.budget = budget
         self.w = weights or Weights()
         self.opp_policy = opp_policy
@@ -298,6 +299,14 @@ class TurnSearch:
         self.repeat_first: bool | None = None   # 引いて捨てる型のループ検出（None は DRAW_DISCARD）
         self.macros: list | None = None       # 登録簿の手順（search.macro）。None は macro.active()（既定は無効で空）
         self.collect: list | None = None      # ループ発見モード: 見つけたループ（局面の複製, 証明書）をここへ集めて、ストックはしない
+
+    def _below_floor(self, eng: Engine) -> bool:
+        """山札が下限以下で、かつこのターンの開始時より減っている局面（周回を回して山札を削る線）。
+        開始時から既に下限以下の場合に根を切ると、ターンが進まず無限に繰り返すので、減った分だけ見る。"""
+        if self.deck_floor is None:
+            return False
+        n = len(eng.s.zones["deck"][self.me])
+        return n <= self.deck_floor and n < getattr(self, "_root_deck", n + 1)
 
     def _eval(self, eng: Engine) -> float:
         return self.value_fn(eng, self.me) if self.value_fn else evaluate(eng, self.me, self.w)
@@ -312,12 +321,16 @@ class TurnSearch:
                 return d
             eng.answer(self.opp_policy(eng, d))
 
+    deck_floor: int | None = None   # クラス既定（__init__ を通さない生成でも無効になるように）
     rollout_cap = 2000     # 貪欲な先読みの最大の決定数。通常は数手で終わる（実測 5 手以下）。超えたら終わらない繰り返しとみなす
 
     def _rollout(self, eng: Engine) -> Engine:
         n = 0
         while (d := self._settle(eng)) is not None:
             n += 1
+            if self._below_floor(eng):
+                eng.s.result = {"winner": None, "reason": "deck_floor", "turn": eng.s.turn}
+                break
             if n > self.rollout_cap:
                 # 貪欲な手が同じ状況を繰り返して終わらない。エンジンの step_limit（約2万ステップ）まで回しても同じ結果
                 # （勝者なし・-WIN/2 の評価）になるので、数秒かかる空回しを打ち切る
@@ -355,6 +368,7 @@ class TurnSearch:
         self.left = self.budget
         self._la_left = ROLLOUT_TOTAL     # 先読みの総手数の残り（1手の探索あたり、§35）
         self._root_log = len(eng.log)
+        self._root_deck = len(eng.s.zones["deck"][self.me])
         self._rf = REPEAT_FIRST if self.repeat_first is None else self.repeat_first
         self._deadline = None if self.time_limit is None else time.monotonic() + self.time_limit
         self.seen: set = set()
@@ -370,6 +384,8 @@ class TurnSearch:
         d = self._settle(eng)
         if d is None:
             return self._eval(eng), eng, ()
+        if self._below_floor(eng):
+            return -WIN / 2, eng, ()
         if self._deadline is not None and self.left > 0 and time.monotonic() > self._deadline:
             self.left = 0                     # 時間切れ: 以降は予算切れと同じ扱い
         if self.left <= 0:
