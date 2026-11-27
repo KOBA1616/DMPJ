@@ -523,6 +523,8 @@ class SelectorMixin:
                      if self.s.cards[x].fortifies is not None and list(self.s.cards[x].fortifies) == list(self.s.ref(cid))]
             if bool(forts) != bool(f["fortified"]):
                 return False
+        if "entered_from" in f and c.entered_from != f["entered_from"]:
+            return False   # 「自分の墓地から出た」等: バトルゾーンに出る直前のゾーン
         if "entered_this_turn" in f:
             if (c.entered_turn == self.s.turn) != bool(f["entered_this_turn"]):
                 return False   # 「このターン中に出た」: entered_turn はバトルゾーンに出たターン（それ以外は -1）

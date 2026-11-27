@@ -52,6 +52,7 @@ fn raw_move(s: &mut GameState, spec: &NewGameSpec, cid: i64, to: &str) {
         c.face_up = *spec.public.get(to).unwrap_or(&false);
         c.controller = c.owner;
         c.entered_turn = -1;
+        c.entered_from = String::new();
         c.face = -1;
         c.under.clear();
         c.top_of = -1;

@@ -50,6 +50,14 @@ def unordered(pairs):
     return list(best.values())
 
 
+def free_feed(a, b) -> bool:
+    """b は「コストを支払わずに出た時」の誘発（unpaid）だけで閉路から外れていて、a が効果で出す（誘発・置く・無償で出す）束なら、
+    出し方はマナを払わない踏み倒し＝b の前提を満たす。via（特定の方法）や1ターンに1回の限定は従来どおり外す。"""
+    w = getattr(b, "when", {}) or {}
+    return bool(w.get("unpaid")) and not w.get("via") and not getattr(b, "once", False) and a.origin == "trigger" \
+        and getattr(b, "origin", "") != "replace"
+
+
 def cycles_of(bs, rules, max_len=4):
     """bs（2〜3枚の札の束）の中の閉路。全部の札を使うものだけ。"""
     n = len(bs)
@@ -57,8 +65,8 @@ def cycles_of(bs, rules, max_len=4):
     succ = {i: [] for i in range(n)}
     for i in range(n):
         for j in range(n):
-            if COND and C.gate(bs[j]):
-                continue        # 移動では満たせない限定つきの誘発（via・unpaid・1ターンに1回）は閉路に入れない
+            if COND and C.gate(bs[j]) and not free_feed(bs[i], bs[j]):
+                continue        # 移動では満たせない限定つきの誘発（via・unpaid・1ターンに1回）は閉路に入れない（unpaid は効果で出す束が前提を満たす時だけ入れる）
             v = Z.feeds(bs[i], bs[j], rules)
             if v:
                 st[i, j] = v
@@ -147,7 +155,8 @@ def side_bundles(c: Z.Cycle, bs, rules, helpers=()) -> list:
     inside = {id(b) for b in c.bundles}
     out = []
     for b in bs:
-        if id(b) in inside or not b.prem or b.prem.kind in Z.TICKS or (COND and C.gate(b)):
+        if id(b) in inside or not b.prem or b.prem.kind in Z.TICKS or \
+                (COND and C.gate(b) and not any(free_feed(a, b) for a in c.bundles)):
             continue
         if b.origin == "trigger" or (COND and helpers and b.origin in ("spell", "summon")
                                      and cycle_mana(Z.Cycle([b]), rules, helpers) == 0):
@@ -183,10 +192,24 @@ def net(bundles, owner="you", skip=frozenset()) -> dict:
     return {k: v for k, v in d.items() if v}
 
 
-def classify(c: Z.Cycle, rules=None, helpers=(), side=(), skip=frozenset()) -> str | None:
-    """閉路が残れば None、落ちれば理由。"""
+def grave_rush(d) -> bool:
+    """墓地から出たクリーチャーが出たターンにプレイヤーを攻撃できる常在能力（ジャビビルブラッド）。
+    組にあると、墓地からバトルゾーンへ出す閉路の「攻撃した時」は、同じターンで何度でも起こせる。"""
+    for f in (getattr(d, "faces", None) or [d]):
+        for ab in f.abilities or []:
+            aff = ab.get("affects")
+            if ab.get("kind") == "static" and (ab.get("mod") or {}).get("player_rush") and isinstance(aff, dict) \
+                    and (aff.get("filter") or {}).get("entered_from") == "graveyard":
+                return True
+    return False
+
+
+def classify(c: Z.Cycle, rules=None, helpers=(), side=(), skip=frozenset(), rush=False) -> str | None:
+    """閉路が残れば None、落ちれば理由。rush: 組に墓地から出たクリーチャーのプレイヤー攻撃を許す札があるか。"""
     if c.period != "in_turn":
-        return "gated"
+        grave_in = any(m.from_any("graveyard") and m.dst == "bz" for b in c.bundles for m in b.moves)
+        if not (rush and c.gates() == ["attack"] and grave_in):
+            return "gated"
     if not c.sure:
         return "blind"
     d = net(list(c.bundles) + list(side), skip=skip)
@@ -270,6 +293,7 @@ def judge_set(cards, by_card, rules, strict=False, max_len=6):
     winners = {x for x in ids if special_win(rules.cards[x])}
     wpaths = {x: C.win_paths(rules.cards[x]) for x in winners}
     hl = [f for fs in helpers.values() for f in fs]
+    rush = any(grave_rush(rules.cards[x]) for x in ids)
     cyc = cycles_of(bs, rules, max_len=max_len)
     if not cyc:
         return "no_cycle", None
@@ -292,7 +316,7 @@ def judge_set(cards, by_card, rules, strict=False, max_len=6):
                 elif st == "unknown":
                     sw.add(x)
                     unk += 1
-        r = classify(c, rules, hl, side, skip)
+        r = classify(c, rules, hl, side, skip, rush)
         if r:
             reasons[r] += 1
             continue
