@@ -90,7 +90,7 @@ def layout_of(c, cards, rules) -> tuple[dict, list]:
             z = p.zone or "bz"
         lay.setdefault(x, z)
         for m in b.moves:
-            if F._zone(m.src) == "graveyard" and m.owner == "you" and not m.ref_self and not m.draw:
+            if m.from_any("graveyard") and m.owner_may_be("you") and not m.ref_self and not m.draw:
                 grave.append(dict(m.flt))
     for x in cards:
         if x not in lay:
@@ -654,7 +654,7 @@ def helper_sets(rules, by_card, ids, log=None) -> list[list[str]]:
         nodes = [x for x in ids if x != h and any(F._admits(f, rules.cards[x]) for f in fl) and by_card.get(rules.cards[x].id)]
         bs = {x: by_card.get(rules.cards[x].id, []) for x in nodes}
         # 回収する札（自分の墓地から手札・場へ狙って戻す束を持つ札）を片方に要る。総当たりを避ける
-        rec = [x for x in nodes if any(F._zone(m.src) == "graveyard" and m.dst in ("hand", "bz") and not m.blind
+        rec = [x for x in nodes if any(m.from_any("graveyard") and m.dst in ("hand", "bz") and not m.blind
                                        for b in bs[x] for m in b.moves)]
         for x in rec:
             for y in nodes:
@@ -698,7 +698,7 @@ def cheap_seeds(rules, by_card, ids, max_cost: int = 4) -> list[str]:
     pk = set(peaky(rules, cheap))
 
     def mover(i):
-        return any(m.owner == "you" and not m.blind and F._zone(m.src) in ("graveyard", "mana", "shield", "bz") and m.dst in ("hand", "bz")
+        return any(m.owner_may_be("you") and not m.blind and m.from_any("graveyard", "mana", "shield", "bz") and m.dst in ("hand", "bz")
                    for b in by_card[rules.cards[i].id] for m in b.moves)
     return [i for i in cheap if i in pk or mover(i)]
 

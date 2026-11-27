@@ -125,6 +125,7 @@ class Coverage:
         self.ops_unwalked = Counter()       # 子 op リストを辿れなかった (op, key)
         self.moves_total = 0
         self.moves_qmark = 0
+        self.owner_chosen = 0               # owner が choose_player の選択（"any"）
         self.owner_expr = 0                 # owner が式（dict）の移動
         self.zone_list = 0                  # zone がリストの移動元
         self.play_free_dst_inferred = Counter()  # play_free 宛先の推定内訳
@@ -143,6 +144,7 @@ class Coverage:
             "ops_seen": dict(self.ops_seen),
             "ops_unwalked_child_lists": dict(self.ops_unwalked),
             "owner_expr_moves": self.owner_expr,
+            "owner_chosen_moves": self.owner_chosen,
             "zone_list_moves": self.zone_list,
             "play_free_dst_inferred": dict(self.play_free_dst_inferred),
             "reason_bundles": self.reason_bundles,
@@ -173,7 +175,8 @@ def premise_of(ab: dict) -> Z.Premise | None:
         return Z.Premise("move", "bz", None, subj, w.get("player"), zone)
     if ev in PREMISE_EVENTS:
         return Z.Premise(ev, w.get("to"), w.get("from"), w.get("subject"),
-                         w.get("player"), zone)
+                         w.get("player"), zone,
+                         draw_gated=ev == "draw" and bool(w.get("turn_draw") or w.get("ord")))
     return None
 
 
@@ -182,7 +185,8 @@ def premise_of(ab: dict) -> Z.Premise | None:
 # ---------------------------------------------------------------------------
 
 class _Ctx:
-    __slots__ = ("zone", "after", "card", "prem", "bindings", "out", "cov")
+    __slots__ = ("zone", "after", "card", "prem", "bindings", "out", "cov",
+                 "players")
 
     def __init__(self, zone, after, card, prem, cov):
         self.zone = zone
@@ -190,14 +194,20 @@ class _Ctx:
         self.card = card
         self.prem = prem
         self.bindings: dict[str, str | None] = {}
+        self.players: set[str] = set()   # choose_player で束縛した名前
         self.out: list[Z.Move] = []
         self.cov = cov
 
 
-def _norm_owner(raw, cov) -> object:
-    """owner は通常 "you"/"opp"/"owner" の文字列。式（dict）の場合は
-    そのまま保持し（従来の両系統と同じ）、カバレッジに数える。"""
+def _norm_owner(raw, cov, ctx=None) -> object:
+    """owner は通常 "you"/"opp"/"owner" の文字列。choose_player で選んだ
+    プレイヤー（{"var": 名前}）は「自分か相手か選ぶ」ので "any"。それ以外の
+    式（dict）はそのまま保持し（従来の両系統と同じ）、カバレッジに数える。"""
     if isinstance(raw, dict):
+        if ctx is not None and set(raw) == {"var"} and raw["var"] in ctx.players:
+            if cov is not None:
+                cov.owner_chosen += 1
+            return "any"
         if cov is not None:
             cov.owner_expr += 1
         return raw
@@ -229,6 +239,9 @@ def _resolve_src(sel: dict, ctx: _Ctx, default: str | None = None):
         return ctx.zone, True
     if ref == "self_moved":
         return (ctx.after or ctx.zone), True
+    if ref == "crossed":
+        # クロスギアをクロスしているクリーチャー（selectors の特殊参照）はバトルゾーン
+        return "bz", False
     if ref:
         bound = ctx.bindings.get(ref)
         if bound:
@@ -245,7 +258,9 @@ def _resolve_src(sel: dict, ctx: _Ctx, default: str | None = None):
             # イベントレコードの参照（selectors.candidates の event.* 解釈）。
             # zone 併記があればそれが著者の主張する現在地として最も強い。
             z = sel.get("zone")
-            if isinstance(z, str):
+            if isinstance(z, str) or (isinstance(z, list) and z):
+                if isinstance(z, list) and cov is not None:
+                    cov.zone_list += 1
                 return z, False
             if ref in ("event.attacker", "event.opponent", "event.target"):
                 return "bz", False
@@ -261,7 +276,10 @@ def _resolve_src(sel: dict, ctx: _Ctx, default: str | None = None):
                 cov.qmark_ref_names[str(ref)] += 1
             return "?", False
         if cov is not None:
-            cov.qmark["ref_unbound"] += 1
+            # 名前がどこにも束縛されていない（原文データの欠陥）か、
+            # 束縛はあるが置き場所を決められないか、を分けて数える
+            cov.qmark["ref_never_bound" if ref not in ctx.bindings
+                      else "ref_unbound"] += 1
             cov.qmark_ref_names[str(ref)] += 1
         return "?", False
     for key, zone in SPECIAL_SELECTOR_ZONES.items():
@@ -281,6 +299,29 @@ def _resolve_src(sel: dict, ctx: _Ctx, default: str | None = None):
     if cov is not None:
         cov.qmark["no_zone_no_ref"] += 1
     return "?", False
+
+
+def _choose_binding(sel: dict, ctx: _Ctx):
+    """choose が束縛する名前の置き場所（ゾーン名。決められなければ None）。
+
+    zone があればそれ、ref があれば元の束縛（選び直しは部分集合なので同じ場所）、
+    特殊セレクタは実体のゾーン。どれも無ければ None（束縛先不明）。
+    """
+    z = sel.get("zone")
+    if isinstance(z, (str, list)) and z:
+        return z
+    ref = sel.get("ref")
+    if ref:
+        # 参照は _resolve_src と同じ解釈（event.* は zone 併記・イベント先から）。
+        # 解けなければ None（測定は黙って数えない: 実際に移動へ使われた時に数える）。
+        probe = _Ctx(ctx.zone, ctx.after, ctx.card, ctx.prem, None)
+        probe.bindings = ctx.bindings
+        src, _ = _resolve_src(sel, probe)
+        return None if src == "?" else src
+    for key, zone in SPECIAL_SELECTOR_ZONES.items():
+        if key in sel:
+            return zone
+    return None
 
 
 def _play_free_dst(op: dict, sel: dict, ctx: _Ctx, ref_self: bool) -> str:
@@ -337,7 +378,7 @@ def _handle_op(op: dict, conds: tuple, delayed: bool, ctx: _Ctx) -> None:
         src, ref_self = _resolve_src(sel, ctx)
         dst = op.get("to")
         mv = Z.Move(src, dst, ref_self, _flt(sel),
-                    bool(conds), _norm_owner(sel.get("owner", "you"), cov),
+                    bool(conds), _norm_owner(sel.get("owner", "you"), cov, ctx),
                     delayed=delayed,
                     blind=src == "deck" and "from_top" in sel,
                     many=_many(sel),
@@ -351,7 +392,7 @@ def _handle_op(op: dict, conds: tuple, delayed: bool, ctx: _Ctx) -> None:
     if name == "draw":
         # 従来の発見側の解釈に合わせ、ドローは blind（中身は伏せた移動）
         mv = Z.Move("deck", "hand", False, {}, bool(conds),
-                    _norm_owner(op.get("player", "you"), cov), delayed=delayed,
+                    _norm_owner(op.get("player", "you"), cov, ctx), delayed=delayed,
                     draw=True, blind=True)
         _finish(ctx, mv, conds)
         return
@@ -368,7 +409,7 @@ def _handle_op(op: dict, conds: tuple, delayed: bool, ctx: _Ctx) -> None:
             src = "hand"
         dst = _play_free_dst(op, sel, ctx, ref_self)
         mv = Z.Move(src, dst, ref_self, _flt(sel), bool(conds),
-                    _norm_owner(sel.get("owner", "you"), cov), delayed=delayed,
+                    _norm_owner(sel.get("owner", "you"), cov, ctx), delayed=delayed,
                     many=_many(sel),
                     alias=op.get("as"), ref=None if ref_self else ref)
         _finish(ctx, mv, conds)
@@ -404,7 +445,7 @@ def _handle_op(op: dict, conds: tuple, delayed: bool, ctx: _Ctx) -> None:
         sel = op.get("select") or {}
         src, ref_self = _resolve_src(sel, ctx, default="bz")
         _finish(ctx, Z.Move(src, "bz", ref_self, _flt(sel), bool(conds),
-                            _norm_owner(sel.get("owner", "you"), cov), delayed=delayed),
+                            _norm_owner(sel.get("owner", "you"), cov, ctx), delayed=delayed),
                 conds)
         return
 
@@ -470,7 +511,7 @@ def _handle_op(op: dict, conds: tuple, delayed: bool, ctx: _Ctx) -> None:
         src, ref_self = _resolve_src(sel, ctx)
         _finish(ctx, Z.Move(src, prem.to, ref_self, _flt(sel),
                             bool(conds),
-                            _norm_owner(sel.get("owner", "you"), cov), delayed=delayed),
+                            _norm_owner(sel.get("owner", "you"), cov, ctx), delayed=delayed),
                 conds)
         return
 
@@ -478,7 +519,7 @@ def _handle_op(op: dict, conds: tuple, delayed: bool, ctx: _Ctx) -> None:
         prem = ctx.prem
         if prem is None or not prem.to or prem.to == "bz":
             if cov is not None:
-                cov.excluded["move_under_to_event_no_event_dst"] += 1
+                cov.excluded["move_under_to_event:g_neo_variable_dst"] += 1
             return
         _finish(ctx, Z.Move("bz", prem.to, False, {}, bool(conds), "you",
                             delayed=delayed), conds)
@@ -492,12 +533,21 @@ def _handle_op(op: dict, conds: tuple, delayed: bool, ctx: _Ctx) -> None:
             ctx.bindings[op["rest_as"]] = "deck"
         return
 
+    if name == "choose_player" and op.get("as"):
+        ctx.players.add(op["as"])
+        ctx.bindings[op["as"]] = None
+        return
+
     if name in ("choose", "choose_player", "choose_race", "choose_number",
                 "choose_name", "choose_civ"):
         if op.get("as"):
-            sel = op.get("select") or {}
-            z = sel.get("zone")
-            ctx.bindings[op["as"]] = z if isinstance(z, str) else None
+            ctx.bindings[op["as"]] = _choose_binding(op.get("select") or {}, ctx)
+        return
+
+    if name == "repeat":
+        # 「over の各要素を as に束縛して body を回す」: as は over と同じ場所
+        if op.get("as"):
+            ctx.bindings[op["as"]] = ctx.bindings.get(op.get("over"))
         return
 
     if name == "set_var":
@@ -515,7 +565,10 @@ def _handle_op(op: dict, conds: tuple, delayed: bool, ctx: _Ctx) -> None:
 
     if name in _COMPOSITE_OPS:
         if cov is not None:
-            cov.excluded[f"composite_op:{name}"] += 1
+            # ガチンコ・ジャッジは各自の山札の上を見せて一番下へ回すだけ
+            # （ops.op_gachinko）。ゾーンごとの枚数は動かないので移動を生まない。
+            cov.excluded["gachinko:deck_rotation_no_zone_change"
+                         if name == "gachinko" else f"composite_op:{name}"] += 1
         if op.get("as"):
             ctx.bindings[op["as"]] = "deck"
         if op.get("mine_as"):
