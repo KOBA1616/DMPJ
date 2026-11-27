@@ -46,6 +46,7 @@ class Card:
     face_up: bool = False
     face_down: bool = False                            # マナゾーンで裏向き（水晶武装）。マナとしては無色扱い
     entered_turn: int = -1
+    entered_from: str = ""                            # バトルゾーンに出る直前のゾーン（出ていなければ空。「墓地から出た」の照合用）
     under: list[int] = field(default_factory=list)  # 下に重なっているカード（進化元など。設計判断②）
     stack_bases: list[int] = field(default_factory=list)  # 直接の進化元（重ねた順。第231弾: star 離脱時のセグメント分離に使う）。ゾーン移動で消える
     top_of: int = -1                                  # 自分が下に重なっている場合、その一番上の cid

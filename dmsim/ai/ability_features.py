@@ -283,6 +283,7 @@ BASE_VOCABULARIES = {
   "crossed_le",
   "crossed_name",
   "entered_this_turn",
+  "entered_from",
   "evo_source_of",
   "evolution",
   "evolves_from",

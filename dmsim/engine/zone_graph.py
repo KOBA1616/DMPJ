@@ -196,9 +196,10 @@ def bundles_of(rules) -> list[Bundle]:
 
 def _match(flt: dict, cd) -> bool:
     """移動の絞り込みが、そのカードに当てはまりうるか（式や未知の条件は通す）。"""
-    if "types" in flt and not set(flt["types"]) & set(cd.types):
+    types = set(cd.types) | ({"creature"} if getattr(cd, "ace", False) else set())   # ACEタマシードはバトルゾーン以外ではクリーチャー（タマシード/クリーチャー）
+    if "types" in flt and not set(flt["types"]) & types:
         return False
-    if "not_types" in flt and set(flt["not_types"]) >= set(cd.types):
+    if "not_types" in flt and set(flt["not_types"]) >= types:
         return False
     if "races" in flt and not set(flt["races"]) & set(cd.races):
         return False

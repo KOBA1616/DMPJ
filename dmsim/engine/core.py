@@ -781,8 +781,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         """_chars_calc の本体（_chars_busy に cid を入れた状態で呼ぶ）。"""
         if (d.neo or d.grave_evo) and c.zone == "bz" and c.under and "evolution" not in ch["types"]:
             ch["types"].append("evolution")   # NEO進化・墓地進化: カードが下にあれば進化クリーチャーとして扱う
-        if d.ace and c.zone == "bz" and "creature" not in ch["types"] and self._ace_active(cid):
-            ch["types"].append("creature")   # ACEタマシード（第179弾）: 条件を満たす間だけクリーチャーとして扱う
+        if d.ace and "creature" not in ch["types"] and (c.zone != "bz" or self._ace_active(cid)):
+            ch["types"].append("creature")   # ACEタマシード（第179弾）: バトルゾーンでは条件を満たす間だけクリーチャーとして扱う。他のゾーンでは「タマシード/クリーチャー」のカード（公式のカードタイプ）なので墓地・手札でもクリーチャー
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
         ref = self.s.ref(cid)
         env_self = {"you": c.controller, "self": ref}
@@ -1181,6 +1181,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.face_up = self.rules.zones[to]["public"]
         c.controller = c.owner if controller is None else controller
         c.entered_turn = s.turn if to == "bz" else -1
+        c.entered_from = frm if to == "bz" else ""
         c.face = -1
         if to == "bz":
             s.seq += 1
