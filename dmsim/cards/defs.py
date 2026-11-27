@@ -136,6 +136,11 @@ class Face:
         """G城: 実行するとシールドゾーンに表向きで置かれる（第176弾）。バトルゾーンには出ない。"""
         return "g_castle" in self.types
 
+    def is_tamaseed_creature(self) -> bool:
+        """タマシード/クリーチャー: クリーチャーでもありタマシードでもある（どのゾーンでも両方の種類を持つ）。
+        手札からは召喚でも実行でも出せる（engine の _play_action が選ぶ）。"""
+        return "creature" in self.types and "tamaseed" in self.types
+
 
 @dataclass
 class CardDef:
@@ -210,6 +215,11 @@ class CardDef:
     def is_castle(self) -> bool:
         """G城: 実行するとシールドゾーンに表向きで置かれる（第176弾）。バトルゾーンには出ない。"""
         return "g_castle" in self.types
+
+    def is_tamaseed_creature(self) -> bool:
+        """タマシード/クリーチャー: クリーチャーでもありタマシードでもある（どのゾーンでも両方の種類を持つ）。
+        手札からは召喚でも実行でも出せる（engine の _play_action が選ぶ）。"""
+        return "creature" in self.types and "tamaseed" in self.types
 
     def face(self, i: int | None) -> "CardDef | Face":
         return self if i is None or not self.faces else self.faces[i]

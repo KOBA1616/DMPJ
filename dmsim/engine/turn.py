@@ -109,7 +109,7 @@ class TurnMixin:
                 # 無料で唱えられなかったため、呪文も同じ条件で :free を出す（第167弾）。
                 # 下の cast_free 許可の分岐が重複を弾くので、キーは同じ :free でよい。
                 if f.free_if and self.eval_cond(f.free_if, {"you": p, "self": self.s.ref(cid), "vars": {}}) \
-                        and ((f.is_creature() and self.permits(cid, "summon"))
+                        and ((f.is_creature() and (self.permits(cid, "summon") or (f.is_tamaseed_creature() and self.permits(cid, "generate"))))
                              or ("spell" in f.types and self.permits(cid, "cast"))
                              or (f.is_permanent() and self.permits(cid, "generate"))):   # クロスギアの G・ゼロ（第224弾: クルト・アーム型。ジェネレートも無料になる）
                     opt = {"key": f"{o['key']}:free" if fi is None else f"{o['key']}:{fi}:free", "cid": cid,
@@ -332,7 +332,7 @@ class TurnMixin:
                 continue
             d = self.cdef(cid)
             for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
-                action = "summon" if f.is_creature() else "generate" if f.is_permanent() or f.is_castle() else "cast"
+                action = self._play_action(f, cid)
                 grant = self._deck_top_grant(cid, f"{action}_from_deck_top")
                 if grant is None:
                     continue
@@ -471,7 +471,7 @@ class TurnMixin:
     def _climb_ready(self, cid, p, fi, mc) -> bool:
         """ムゲンクライムの前提: 代替コストが払えて、タップできる自分のクリーチャーが足りる。"""
         f = self.cdef(cid).face(fi)
-        action = "summon" if f.is_creature() else "generate" if f.is_permanent() or f.is_castle() else "cast"
+        action = self._play_action(f, cid)
         if not self.permits(cid, action):
             return False
         pool = [c for c in self.bz_tops(p) if not self.s.cards[c].tapped
@@ -551,9 +551,17 @@ class TurnMixin:
                 out.append({"key": f"hyper:{s.cards[c].defn}", "cid": c, "hyper_act": True})
         return out
 
+    def _play_action(self, d, cid) -> str:
+        """この面を手札などから出す時の動詞: 召喚 summon・実行 generate・唱える cast。
+        タマシード/クリーチャーは召喚でも実行でも出せるので、実行が許されていれば実行、そうでなければ召喚で数える
+        （どちらも許されない時は summon を返し、呼び出し側の permits が偽になる）。"""
+        if d.is_tamaseed_creature():
+            return "generate" if self.permits(cid, "generate") else "summon"
+        return "summon" if d.is_creature() else "generate" if d.is_permanent() or d.is_castle() else "cast"
+
     def _can_play_face(self, cid, p, face) -> bool:
         d = self.cdef(cid).face(face)
-        action = "summon" if d.is_creature() else "generate" if d.is_permanent() or d.is_castle() else "cast"
+        action = self._play_action(d, cid)
         if not self.permits(cid, action) or (d.is_creature() and not self.permits(cid, "enter_bz")):
             return False
         if "evolution" in d.types and not d.s_max:   # S-MAX進化は進化元を必要としない（通常召喚として扱う）
@@ -1353,7 +1361,7 @@ def h_play(eng, t):
         eng._pop(t)
         return None
     d = eng.cdef(cid).face(face)
-    action = "summon" if d.is_creature() else "generate" if d.is_permanent() or d.is_castle() else "cast"
+    action = eng._play_action(d, cid)
     with eng.chars_scope():   # 読み取りだけの判定
         denied = not eng.permits(cid, action) or (d.is_creature() and not eng.permits(cid, "enter_bz"))
     if denied:
@@ -1825,7 +1833,7 @@ def h_play(eng, t):
         eng._push(eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": "shield", "reason": "put",
                                "controller": p, "face_up": True}))
         return None
-    if d.is_creature():
+    if d.is_creature() and action != "generate":
         ev = {"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "summon", "controller": p,
               "unpaid": bool(t["free"]) and not t.get("as_paid")}
         if t.get("enter_tapped"):   # タップして出す（第259弾）
@@ -1855,7 +1863,7 @@ def h_play(eng, t):
             if len(t["evo"]) > 1:
                 ev["stack_more"] = t["evo"][1:]
         eng._push(eng.ev_task(ev))
-    elif d.is_permanent():      # タマシード・フィールド・クロスギア: 実行（展開・ジェネレート）したらバトルゾーンに出る（315.2, 308.2, 303.2）
+    elif d.is_permanent() or d.is_tamaseed_creature():      # タマシード（タマシード/クリーチャーを含む）・フィールド・クロスギア: 実行（展開・ジェネレート）したらバトルゾーンに出る（315.2, 308.2, 303.2）
         ev = {"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "put",
               "controller": p, "via": t.get("via") or "generate", "unpaid": bool(t["free"])}
         # 出し方の印（第149弾）: play_self の via があればそちらを優先し、無ければ従来どおり generate
