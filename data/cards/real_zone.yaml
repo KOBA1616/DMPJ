@@ -50,12 +50,12 @@ cards:
     abilities:
       - &mag_summon_you
         kind: trigger
-        when: {event: summon, unpaid: true, player: you}
+        when: {event: move, to: bz, unpaid: true, subject: {owner: you, filter: {types: [creature]}}}
         effect:
           - {op: destroy, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}}
       - &mag_summon_opp
         kind: trigger
-        when: {event: summon, unpaid: true, player: opp}
+        when: {event: move, to: bz, unpaid: true, subject: {owner: opp, filter: {types: [creature]}}}
         effect:
           - {op: destroy, select: {zone: bz, owner: opp, chooser: opp, filter: {types: [creature]}, count: 1}}
       - &mag_cast_you
@@ -68,7 +68,7 @@ cards:
         when: {event: cast, unpaid: true, player: opp}
         effect:
           - {op: destroy, select: {zone: bz, owner: opp, chooser: opp, filter: {types: [creature]}, count: 1}}
-    source: {official: dm20-013, review: pending, notes: "「クロスギア」は未対応（クロスギアはモデルに無い）。タップせずに=コストを支払わずに実行（unpaid）として扱う。自分が踏み倒すと自分のクリーチャーが破壊される（盗掘人形モールス等とのループ・縛りの部品）"}
+    source: {official: dm20-013, review: pending, notes: "「クロスギア」は未対応（クロスギアはモデルに無い）。タップせずに=コストを支払わずに実行（unpaid）として扱う。出す側は move（to: bz）で受け、召喚（G・ゼロ・踏み倒し）だけでなく効果で「出す」（墓地から出す等の reason: put）でも誘発する。自分が踏み倒すと自分のクリーチャーが破壊される（盗掘人形モールス等とのループ・縛りの部品）"}
 
   - id: dm16-027
     name: 盗掘人形モールス
@@ -263,3 +263,93 @@ cards:
           - op: may
             body: [{op: draw, count: 1}]
     source: {official: dm04-028, review: pending, notes: "破壊を伴う入れ替えループ（盗掘人形モールス＋百発人形マグナム等）に載せるとドローが増える資源ループになる。相手のクリーチャーが墓地に置かれた時も引ける"}
+
+  - id: dm26ex1-018
+    name: 邪魂龍 ジャビビルブラッド
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 4
+    mana: 1
+    text: 'ブロッカー
+
+      自分の墓地から出たクリーチャーはすべて、出たターンに相手プレイヤーを攻撃できる。
+
+      ハイパー化：自分の他のクリーチャーを１体タップする。（自分のメインステップ中に、ハイパーモードを解放できる。ハイパーモードは次の自分のターンのはじめまで続く）'
+    power: 4000
+    races:
+    - アビスドラゴン
+    - 超化獣
+    keywords:
+    - blocker
+    hyper: true
+    abilities:
+    - kind: static
+      affects:
+        owner: you
+        zone: bz
+        filter:
+          types:
+          - creature
+          entered_from: graveyard
+          entered_this_turn: true
+      mod:
+        player_rush: true
+    - kind: static
+      affects: self
+      mod:
+        power: 6000
+      if:
+        hyper: true
+    - kind: static
+      affects: self
+      mod:
+        grant:
+        - double_breaker
+      if:
+        hyper: true
+    - kind: trigger
+      first_time: true
+      when:
+        event: attack
+        subject:
+          owner: you
+          filter:
+            race_has: アビス
+      if:
+        hyper: true
+      effect:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          count: 2
+          from_top: 2
+        to: graveyard
+        reason: put
+      - op: may
+        body:
+        - op: move
+          select:
+            zone: graveyard
+            owner: you
+            count: 1
+            filter:
+              types:
+              - creature
+              race_has: アビス
+              cost_le: 3
+          to: bz
+          reason: put
+    source:
+      official: dm26ex1-018
+      review: pending
+      notes: 'ハイパー面（raw faces[1]）のパワー差分は {hyper: true} 条件の power 修整、ハイパー時だけの能力・キーワードは {hyper: true} 条件で表現。期限は文面どおり（次の自分のターンのはじめまで）。「自分の墓地から出たクリーチャーは出たターンにプレイヤーを攻撃できる」は player_rush を墓地から出たクリーチャー（filter entered_from: graveyard）に与える常在で表した。'
+      unsupported: []
+      aliases:
+      - dm24ex3-rp2s06
+      - dm24ex3-rp2sec04
+      - dm24rp2-s06
+      - dm24rp2-sec04
+      - promoy24-095

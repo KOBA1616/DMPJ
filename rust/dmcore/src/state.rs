@@ -16,6 +16,7 @@ pub struct Card {
     pub defn: String,
     pub drawn_turn: i64,
     pub dswitched: bool,
+    pub entered_from: String,
     pub entered_seq: i64,
     pub entered_turn: i64,
     pub exlife_of: Option<Value>,
@@ -51,7 +52,7 @@ impl Card {
     pub fn new(cid: i64, defn: &str, owner: i64) -> Card {
         Card {
             bazurenda: 0, cid, controller: owner, crossed: None, defn: defn.to_string(), drawn_turn: -1, dswitched: false,
-            entered_seq: 0, entered_turn: -1, exlife_of: None, face: -1, face_down: false, face_up: false,
+            entered_from: String::new(), entered_seq: 0, entered_turn: -1, exlife_of: None, face: -1, face_down: false, face_up: false,
             fortifies: None, gen: 0, hyper: false, link: 0, no_untap_next: false, odrive: false, odrive_civs: vec![],
             owner, seal_of: -1, seals: vec![], sforce_of: None, sst: false, stack_bases: vec![], stp: false, strigger_off: false, strigger_on: false, summon_fuel: vec![], summon_tapped: vec![], tapped: false, top_of: -1,
             under: vec![], vivid: false, zone: "deck".to_string(),
