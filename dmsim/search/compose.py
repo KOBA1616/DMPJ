@@ -20,6 +20,12 @@ def kinds(eng, z: str, p: int = 0) -> frozenset:
     return frozenset(eng.s.cards[c].defn for c in eng.zlist(z, p))
 
 
+def superset(a: tuple, b: tuple) -> bool:
+    """場の札の名前の多重集合 a が b を含む（盤面が増えるのは回帰として許す。増えた札は次の周で邪魔にならない前提）。"""
+    ca, cb = Counter(a), Counter(b)
+    return all(ca[k] >= v for k, v in cb.items())
+
+
 def counts(eng, p: int = 0) -> dict[str, int]:
     return {z: len(eng.zlist(z, p)) for z in ("deck", "graveyard", "hand", "mana", "shield")}
 
@@ -142,7 +148,7 @@ def chain(eng, origin_key: str, *, player: int = 0, laps_max: int = 8, max_nodes
         if len(hist) >= laps_max:
             return True
         mv, _n = enumerate_moves(cur, origin_key, player=player, max_nodes=max_nodes)
-        good = [m for m in mv if m.get("again") and m["core"] == c0 and kinds(m["eng"], "graveyard", player) >= g0]
+        good = [m for m in mv if m.get("again") and superset(m["core"], c0) and kinds(m["eng"], "graveyard", player) >= g0]
         seen, cands = set(), []
         for m in sorted(good, key=lambda m: (-m["counts"]["deck"], len(m["keys"]))):
             sig = (m["counts"]["deck"], m["counts"]["graveyard"])
