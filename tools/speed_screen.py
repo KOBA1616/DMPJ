@@ -14,6 +14,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from dmsim.base.registry import load_candidates  # noqa: E402
 from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.discovery.candidates import candidate_pairs  # noqa: E402
 from dmsim.eval import speed_bound as S  # noqa: E402
@@ -31,7 +32,7 @@ def main():
     a = ap.parse_args()
     rules = load_rules()
     out = {"registry": [], "pairs": {}}
-    for c in yaml.safe_load((ROOT / "data/registry/candidates.yaml").read_text(encoding="utf-8"))["candidates"]:
+    for c in load_candidates():
         if c.get("split") == "holdout":
             continue
         core = [p["id"] for p in c["core"]]

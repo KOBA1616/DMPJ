@@ -14,6 +14,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import exec_tier  # noqa: E402
+from dmsim.base.registry import load_known_combos  # noqa: E402
 from dmsim.autofix import Knobs, Rule, harness_measure  # noqa: E402
 from dmsim.autofix.batch import default_board, default_need  # noqa: E402
 from dmsim.autofix.gate import check_paths, compare  # noqa: E402
@@ -26,7 +27,7 @@ from dmsim.eval.measure import load_deck  # noqa: E402
 
 def measure_all(a) -> dict:
     """対象ごとの測定を連結（局の並びは対象順・シード順で固定）。"""
-    combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
+    combos = {c["id"]: c for c in load_known_combos()}
     ts = [t for t in yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"]
           if combos.get(t["combo"], {}).get("split") != "holdout" and (not a.only or t["combo"] in a.only.split(","))]
     store = (yaml.safe_load(Path(a.store).read_text(encoding="utf-8")) or {}) if Path(a.store).exists() else {}

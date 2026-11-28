@@ -7,6 +7,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dmsim.base.registry import load_known_combos  # noqa: E402
 from dmsim.autofix import Knobs, Rule, autofix, harness_measure  # noqa: E402
 from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.eval.progress import ProgressSpec  # noqa: E402
@@ -171,7 +172,7 @@ def main(argv=None):
     ap.add_argument("--issue-file", default="logs/autofix_issue.md", help="失敗した段階の要約（Issue 本文）の出力先。失敗が無ければ作らない")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
-    combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
+    combos = {c["id"]: c for c in load_known_combos()}
     cards = {x.split(":")[0]: int(x.split(":")[1]) if ":" in x else 1 for x in a.need}
     board: dict = {}
     for x in a.board:

@@ -7,6 +7,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dmsim.base.registry import load_known_combos  # noqa: E402
 from dmsim.base.loopspec import LoopSpec  # noqa: E402
 from dmsim.plan.stagegen import stages_from_leaf_parts, stages_from_loopspec  # noqa: E402
 
@@ -17,7 +18,7 @@ def main(argv=None):
     ap.add_argument("--from", dest="src", choices=["leaf", "loopspec"], default="leaf")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
-    combos = yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]
+    combos = load_known_combos()
     c = next(x for x in combos if x["id"] == a.combo)
     if a.src == "loopspec":
         st = stages_from_loopspec(LoopSpec.from_json(Path(c["loopspec"]).read_text(encoding="utf-8")))

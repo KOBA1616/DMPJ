@@ -19,6 +19,7 @@ from pathlib import Path
 
 import yaml
 
+from ..base.registry import load_known_combos
 from . import basebuild as B
 from . import synergy_hunt as SH
 
@@ -28,8 +29,7 @@ OUT = ROOT / "data" / "registry" / "addon_hunt.yaml"   # candidates.yaml の syn
 
 def core_of(entry: str) -> dict[str, int]:
     """data/known_combos/combos.yaml の中核（role: core）の id → 4。"""
-    y = yaml.safe_load((ROOT / "data" / "known_combos" / "combos.yaml").read_text(encoding="utf-8"))
-    for c in y.get("combos") or y:
+    for c in load_known_combos():
         if isinstance(c, dict) and c.get("id") == entry:
             return {p["id"]: B.COPIES for p in c.get("parts") or [] if p.get("role") == "core"}
     raise KeyError(entry)
