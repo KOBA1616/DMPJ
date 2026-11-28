@@ -136,6 +136,13 @@ def play(start, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, rules=None
                       actions=list(r.engine.log), log={"log_len": r.log_len}, engine=r.engine, seconds=time.perf_counter() - t0)
 
 
+def play_cheat(rules, deck, opp_deck, seed: int, **kw):
+    """CHEAT の1局を回して (GameResult, 終局の Engine) をそのまま返す軽い口（PlayResult に包まない）。
+    S5 発見・S4 評価が search.game.play_game を直接 import せずに済ませるための窓口。引数は play_game と同じ。"""
+    from .search.game import play_game
+    return play_game(rules, deck, opp_deck, seed, **kw)
+
+
 def play_turns(eng, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, opp_policy=None, before_turn=None,
                on_turn=None, reuse_search: bool = True, holder: list | None = None, record=None):
     """1局の手番ループ（search.game.run_turns）を、自分のターンごとに呼び出し側の処理を挟んで回す。最後の局面を返す。
