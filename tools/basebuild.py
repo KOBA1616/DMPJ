@@ -12,6 +12,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from dmsim.cards.decks import load_deck  # noqa: E402
 
 from dmsim.base.registry import load_candidates, load_known_combos  # noqa: E402
 from dmsim import load_rules  # noqa: E402
@@ -58,7 +59,7 @@ def main(argv=None) -> int:
             from dmsim.eval.api import measure_assembly
             from dmsim.search import macro
             cur = L.deck_of(L.load(entry))
-            new = yaml.safe_load((ROOT / "data/decks" / f"basebuild_{name}.yaml").read_text(encoding="utf-8"))["deck"]
+            new = load_deck("data/decks/" + f"basebuild_{name}.yaml")
             seeds = range(1, a.games + 1)
             res = {}
             for label, deck in (("現行", cur), ("選択", new)):

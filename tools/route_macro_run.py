@@ -22,6 +22,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from dmsim.cards.decks import load_deck  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools"))
 
 
@@ -71,7 +72,7 @@ def main(argv=None):
     ls = L.load(a.entry)
     if not a.deck and a.entry.split("_")[0] == "saga":
         a.deck = DEFAULT_DECK["saga"]   # サガの測定の既定はユーザー指定のレシピ（2026-11-16）
-    deck = yaml.safe_load(Path(a.deck).read_text(encoding="utf-8"))["deck"] if a.deck else L.deck_of(ls)
+    deck = load_deck(a.deck) if a.deck else L.deck_of(ls)
     if a.control:
         core = core_of(a.entry.split("_")[0])
         deck = B.base_deck(core, B.fillers(rules, core))

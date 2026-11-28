@@ -119,7 +119,8 @@ def required_ids(ls: LoopSpec) -> list[str]:
 
 
 def deck_of(ls: LoopSpec) -> list[str]:
-    return yaml.safe_load(Path(ls.source["deck"]).read_text(encoding="utf-8"))["deck"]
+    from ..cards.decks import load_deck
+    return load_deck(ls.source["deck"])
 
 
 def entry_spec(ls: LoopSpec, seed: int = 1) -> dict:
