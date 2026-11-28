@@ -118,7 +118,7 @@ def measure_assembly(rules, entry: str, deck, seeds, *, max_turn: int = 6, budge
     from . import assemble
     from . import loop_entry as L
     ls = L.load(entry) if isinstance(entry, str) else entry    # LoopSpec をそのまま渡してもよい（ファイルに無い入口、2026-11-14）
-    from .parallel import map_ordered
+    from ..base.parallel import map_ordered
 
     def one(s):
         r = assemble.run_one(rules, ls, s, deck=list(deck), max_turn=max_turn, budget=budget, n_det=n_det,

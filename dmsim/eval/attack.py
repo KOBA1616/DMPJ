@@ -77,7 +77,7 @@ def run_one(rules, deck, seed: int, *, opp_level: int = DEFAULT_OPP, max_turn: i
 
 
 def measure(rules, deck, seeds, workers: int | None = None, **kw) -> list[dict]:
-    from .parallel import map_ordered
+    from ..base.parallel import map_ordered
     return map_ordered(lambda s: run_one(rules, deck, s, **kw), seeds, workers)
 
 

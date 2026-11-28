@@ -200,14 +200,15 @@ def main(argv=None):
               f" ({rec['seconds']}s) {rec.get('error', '')}", flush=True)
 
     if a.workers > 1:
-        from concurrent.futures import ProcessPoolExecutor
-        with ProcessPoolExecutor(a.workers, initializer=_init_worker) as ex:
-            futs = [ex.submit(run_candidate, c, cfg) for c in todo]
-            for fu in futs:
-                if a.time_cap and time.time() - t0 > a.time_cap:
-                    print("時間上限に達したため打ち切ります（残りは再開時に続きます）", flush=True)
-                    break
-                emit(fu.result())
+        from dmsim.base.parallel import imap_ordered
+        _ensure()       # 親で1回読み、fork した子へ引き継ぐ
+        results = imap_ordered(lambda c: run_candidate(c, cfg), todo, a.workers)
+        for rec in results:
+            if a.time_cap and time.time() - t0 > a.time_cap:
+                print("時間上限に達したため打ち切ります（残りは再開時に続きます）", flush=True)
+                break
+            emit(rec)
+        results.close()
     else:
         for c in todo:
             if a.time_cap and time.time() - t0 > a.time_cap:

@@ -184,7 +184,7 @@ class Run:
         return {"controls": rows, "ok": all(x["ok"] for x in rows)}
 
     def trial(self):
-        from ..eval.parallel import map_ordered
+        from ..base.parallel import map_ordered
         pool = self._pool()
         cfg = self.cfg
         self.log(f"試し打ち {len(pool)} 組（予算 {cfg.trial_budget}・{cfg.trial_seeds} シード・{cfg.trial_turns} ターン）")
@@ -222,7 +222,7 @@ class Run:
                                 "budget": self.cfg.measure_budget, "note": "部品探索（hunt_pipeline）が作った入口。自分の4ターン目相当（マナ4）"})
 
     def measure(self):
-        from ..eval.parallel import map_ordered
+        from ..base.parallel import map_ordered
         from ..eval.ruler_control import run_one
         from ..eval import speed_bound as S
         cfg = self.cfg

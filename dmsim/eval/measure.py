@@ -10,6 +10,7 @@ import time
 from collections import Counter
 from dataclasses import asdict
 
+from ..cards.decks import load_deck  # noqa: F401  （デッキ読み込みの窓口。従来の import 先を保つ）
 from ..play_api import play_cheat as play_game
 from ..search.game import GameResult
 from . import lockcheck  # noqa: F401  （import 時に play_game の既定のロック判定役 lock_probe を登録する）
@@ -77,20 +78,12 @@ def measure(deck: list[str], opp_deck: list[str], seeds, *, first: str = "both",
         if W["rules"] is None:
             init_worker(None)
         return [_one(j) for j in jobs]
-    from concurrent.futures import ProcessPoolExecutor
-    with ProcessPoolExecutor(workers, initializer=init_worker, initargs=(None,)) as ex:
-        return list(ex.map(_one, jobs, chunksize=max(1, len(jobs) // (workers * 8))))
-
-
-def load_deck(path: str) -> list[str]:
-    """YAML: {deck: [id, ...]} か {cards: {id: 枚数}}。"""
-    from pathlib import Path
-
-    import yaml
-    y = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
-    if "deck" in y:
-        return list(y["deck"])
-    return [cid for cid, n in y["cards"].items() for _ in range(n)]
+    from ..base.parallel import map_ordered
+    if rules is not None:
+        W["rules"] = rules
+    elif W.get("rules") is None:
+        init_worker(None)       # 親で1回読み、fork した子へ引き継ぐ
+    return map_ordered(_one, jobs, workers, chunksize=max(1, len(jobs) // (workers * 8)))
 
 
 def main(argv=None):

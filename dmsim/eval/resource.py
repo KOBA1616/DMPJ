@@ -74,7 +74,8 @@ def summarize(rows: list[dict]) -> dict:
 def load_setup(path: str) -> tuple[dict, list[str]]:
     import yaml
     spec = json.loads((REPO / path).read_text(encoding="utf-8"))
-    deck = yaml.safe_load((REPO / spec["deck"]).read_text(encoding="utf-8"))["deck"]
+    from ..cards.decks import load_deck
+    deck = load_deck(spec["deck"])
     return spec, deck
 
 

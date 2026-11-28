@@ -16,6 +16,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from dmsim.cards.decks import load_deck  # noqa: E402
 
 ZONES = ("hand", "graveyard", "bz", "mana", "deck", "shield")
 
@@ -60,7 +61,7 @@ def main(argv=None):
     from dmsim.eval import loop_entry as L
     rules = load_rules()
     ls = L.load(a.entry)
-    deck = yaml.safe_load(Path(a.deck).read_text(encoding="utf-8"))["deck"] if a.deck else None
+    deck = load_deck(a.deck) if a.deck else None
     names = sorted({p.match["name"] for p in ls.minimal if "name" in p.match} | {"dm22ex1-007"})
     rows, reasons = [], Counter()
     for seed in range(1, a.games + 1):

@@ -21,7 +21,6 @@ import json
 import random
 import sys
 import time
-from multiprocessing import Pool
 from pathlib import Path
 
 import yaml
@@ -57,8 +56,8 @@ def _job(args):
 
 def measure_many(decks: dict, seeds, procs=4, **kw) -> dict:
     jobs = [(d, s, kw) for d in decks.values() for s in seeds]
-    with Pool(procs) as p:
-        rows = p.map(_job, jobs)
+    from dmsim.base.parallel import map_ordered
+    rows = map_ordered(_job, jobs, procs)
     out, i = {}, 0
     for name in decks:
         out[name] = rows[i:i + len(seeds)]
@@ -119,7 +118,8 @@ def pairs(rules, ids, raw_missing) -> list[dict]:
 
 
 def deck_of(name):
-    return yaml.safe_load((ROOT / "data/decks" / f"{name}.yaml").read_text(encoding="utf-8"))["deck"]
+    from dmsim.cards.decks import load_deck
+    return load_deck(f"data/decks/{name}.yaml")
 
 
 VANILLA = ("dm01-075", "dm01-083", "dm01-090", "dm01-097")   # 2コストのバニラ（キーワードも効果もない札）を10枚ずつ＝「並べるだけ」の対照

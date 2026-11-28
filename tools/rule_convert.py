@@ -17,7 +17,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.cards.defs import DATA  # noqa: E402
+from dmsim.cards.defs import DATA, load_rule_table  # noqa: E402
 
 CIVS = {"光": "light", "水": "water", "闇": "darkness", "火": "fire", "自然": "nature", "ゼロ": "zero"}
 NOTE = "ルールのみで変換（モデル不使用）"
@@ -32,7 +32,7 @@ def norm(s: str) -> str:
 
 
 def _table(with_card_kinds: bool = False) -> dict[str, str]:
-    ks = yaml.safe_load((DATA / "rules" / "keywords.yaml").read_text(encoding="utf-8"))["keywords"]
+    ks = load_rule_table("keywords.yaml")["keywords"]
     out = {}
     for name, d in ks.items():
         if ({"resolve_to", "after_resolve"} & set(d.get("card") or {})) and not with_card_kinds:       # 呪文用（チャージャー等）は全体変換の対象外。部分変換では扱う
@@ -51,7 +51,7 @@ def _noise() -> set[str]:
     """原文にあっても意味を持たない記号（{GS} など）。比較用に正規化した形の集合。"""
     global _NOISE
     if _NOISE is None:
-        y = yaml.safe_load((DATA / "rules" / "keyword_patterns.yaml").read_text(encoding="utf-8"))
+        y = load_rule_table("keyword_patterns.yaml")
         _NOISE = {norm(x) for x in y.get("noise", [])}
     return _NOISE
 
@@ -92,7 +92,7 @@ def _patterns() -> list:
     """数値つきキーワード（data/rules/keyword_patterns.yaml）。(名前, 正規表現, 能力の雛形) のリスト。"""
     global _PATTERNS
     if _PATTERNS is None:
-        ps = yaml.safe_load((DATA / "rules" / "keyword_patterns.yaml").read_text(encoding="utf-8"))["patterns"]
+        ps = load_rule_table("keyword_patterns.yaml")["patterns"]
         _PATTERNS = [(n, re.compile(d["re"].replace("{TRG}", _TRG).replace("{ETB}", _ETB)), d.get("abilities") or d["builder"], bool(d.get("whole_line")))
                      for n, d in ps.items()]
     return _PATTERNS
@@ -105,7 +105,7 @@ def _spell_effects() -> list:
     """呪文の効果文（keyword_patterns.yaml の spell_effects）。(正規表現, ops の雛形) のリスト。"""
     global _SPELL
     if _SPELL is None:
-        ps = yaml.safe_load((DATA / "rules" / "keyword_patterns.yaml").read_text(encoding="utf-8")).get("spell_effects") or {}
+        ps = load_rule_table("keyword_patterns.yaml").get("spell_effects") or {}
         _SPELL = [(re.compile(d["re"]), d["spell"]) for d in ps.values()]
     return _SPELL
 
@@ -240,7 +240,7 @@ def _peel_line(line: str) -> list[str]:
     キーワード1つごとの行に分ける。分けるのは直後が注釈・別のキーワード・「このクリーチャー」等の文頭の時だけ（「進化クリーチャー」を割らない）。"""
     global _KW_NAMES
     if _KW_NAMES is None:
-        ks = yaml.safe_load((DATA / "rules" / "keywords.yaml").read_text(encoding="utf-8"))["keywords"]
+        ks = load_rule_table("keywords.yaml")["keywords"]
         _KW_NAMES = sorted({unicodedata.normalize("NFKC", j) for d in ks.values() for j in [d["ja"], *d.get("aliases", [])]},
                            key=len, reverse=True)
     out, rest = [], line
@@ -345,7 +345,7 @@ def _spell_keywords() -> dict[str, str]:
     if _SPELL_KWS is None:
         if _ALL is None:
             _ALL = _table(with_card_kinds=True)
-        ks = yaml.safe_load((DATA / "rules" / "keywords.yaml").read_text(encoding="utf-8"))["keywords"]
+        ks = load_rule_table("keywords.yaml")["keywords"]
         ok = {k for k, d in ks.items() if k in ("s_trigger", "g_strike") or {"resolve_to", "after_resolve"} & set(d.get("card") or {})}
         _SPELL_KWS = {n: k for n, k in _ALL.items() if k in ok}
     return _SPELL_KWS
