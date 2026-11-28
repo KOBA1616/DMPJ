@@ -781,8 +781,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         """_chars_calc の本体（_chars_busy に cid を入れた状態で呼ぶ）。"""
         if (d.neo or d.grave_evo) and c.zone == "bz" and c.under and "evolution" not in ch["types"]:
             ch["types"].append("evolution")   # NEO進化・墓地進化: カードが下にあれば進化クリーチャーとして扱う
-        if d.ace and c.zone == "bz" and "creature" not in ch["types"] and self._ace_active(cid):
-            ch["types"].append("creature")   # ACEタマシード（第179弾）: 条件を満たす間だけクリーチャーとして扱う
+        if d.ace and "creature" not in ch["types"] and (c.zone != "bz" or self._ace_active(cid)):
+            ch["types"].append("creature")   # ACEタマシード（第179弾）: バトルゾーンでは条件を満たす間だけクリーチャーとして扱う。他のゾーンでは「タマシード/クリーチャー」のカード（公式のカードタイプ）なので墓地・手札でもクリーチャー
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
         ref = self.s.ref(cid)
         env_self = {"you": c.controller, "self": ref}
@@ -1043,12 +1043,29 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         ch["keywords"] = sorted(ch["keywords"])   # 状態（LKI）に入るので JSON にできる形で返す
         return ch
 
+    def _dream_duplicate(self, cid: int) -> bool:
+        """817.2: cid がドリーム・エレメントで、その持ち主のバトルゾーンに同名のドリーム・エレメントが既にあるか。
+        既に複数ある状態は残る（817.3）ので、ここは「新しく出す」時の可否だけを決める。"""
+        if "dream_creature" not in self.fdef(cid).types:
+            return False
+        s = self.s
+        name = self.cdef(cid).name
+        owner = s.cards[cid].owner
+        for p in (0, 1):
+            for x in self.bz_tops(p):
+                if x != cid and s.cards[x].owner == owner and "dream_creature" in self.fdef(x).types \
+                        and self.cdef(x).name == name:
+                    return True
+        return False
+
     def _permits_face(self, cid: int, action: str, face: int | None) -> bool:
         return self.permits(cid, action, face=face)
 
     def permits(self, cid: int, action: str, other: int | None = None, face: int | None = None) -> bool:
         """101.2:「できない」は「できる」に勝つ。禁止 → 許可 → 既定値の順に見る。
         other は相手側のカード（攻撃先・攻撃クリーチャー・ブロッカー）。要素の other フィルタはそれに当てる。"""
+        if action == "enter_bz" and self._dream_duplicate(cid):
+            return False   # 817.2: ドリーム・エレメントは、同名のドリーム・エレメントが自分のバトルゾーンにある間、出せない
         ch = self.chars_ro(cid, face)
 
         def hit(entries):
@@ -1163,6 +1180,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         s = self.s
         c = s.cards[cid]
         frm = c.zone
+        held_from = c.entered_from if frm == "hold" else ""
         if c.zone == "hold":
             s.hold.remove(cid)
         else:
@@ -1181,6 +1199,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.face_up = self.rules.zones[to]["public"]
         c.controller = c.owner if controller is None else controller
         c.entered_turn = s.turn if to == "bz" else -1
+        c.entered_from = (held_from or frm) if to == "bz" else ""   # 保留を経由した札は保留の前のゾーン
         c.face = -1
         if to == "bz":
             s.seq += 1
@@ -1221,6 +1240,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c = self.s.cards[cid]
         self.zlist(c.zone, c.owner).remove(cid)
         self._note_deck(c)
+        c.entered_from = c.zone   # 保留の前のゾーン（「墓地から出た」の照合用。バトルゾーンに出る時に使う）
         c.zone = "hold"
         self.s.hold.append(cid)
 

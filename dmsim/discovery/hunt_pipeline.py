@@ -263,7 +263,7 @@ class Run:
     def register(self, rows) -> list[dict]:
         from ..base import registry
         from ..base.loopspec import LoopSpec
-        from ..eval.verify import register
+        from .submit import submit_entry
         out = []
         known = {tuple(sorted(c["id"] for c in e.get("core", []))) for e in registry.load(registry.PATH).get("entries", [])} \
             if hasattr(registry, "load") else set()
@@ -278,14 +278,12 @@ class Run:
             ep.parent.mkdir(parents=True, exist_ok=True)
             ep.write_text(LoopSpec.from_json(json.dumps(r["spec"])).to_json(), encoding="utf-8")
             win = "opp_deck_out" if any(v in ("loop",) for v in r["vias"]) else "effect"
-            cand = registry.Candidate(
-                id=cid, name="＋".join(r["names"])[:200], split="discovered", types=["loop"],
-                core=[{"id": c, "name": self.rules.cards[c].name, "role": "部品", "part": p["part"]}
-                      for c, p in zip(r["cards"], r["spec"]["source"]["core"])],
-                win=win, entry=str(ep.relative_to(REPO)), seeds=list(range(1, 9)), max_turn=self.cfg.measure_turns,
-                budget=self.cfg.measure_budget, note=f"部品探索が自動で載せた候補（段2 {r['stage2']}/{r['games']}、相手の段階 {self.cfg.opp_level}）")
+            core = [{"id": c, "role": "部品", "part": p["part"]} for c, p in zip(r["cards"], r["spec"]["source"]["core"])]
             try:
-                ev, row = register(self.rules, cand, purpose="tuning")
+                ev, row = submit_entry(
+                    self.rules, id=cid, name="＋".join(r["names"])[:200], core=core, entry=str(ep.relative_to(REPO)), win=win,
+                    seeds=range(1, 9), max_turn=self.cfg.measure_turns, budget=self.cfg.measure_budget, purpose="tuning",
+                    note=f"部品探索が自動で載せた候補（段2 {r['stage2']}/{r['games']}、相手の段階 {self.cfg.opp_level}）")
                 out.append({"id": cid, "cards": r["cards"], "passed": ev.passed})
             except Exception as ex:   # noqa: BLE001
                 out.append({"id": cid, "cards": r["cards"], "error": f"{type(ex).__name__}: {ex}"[:200]})

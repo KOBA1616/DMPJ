@@ -1073,11 +1073,16 @@ impl Engine {
                 Ask::Decision(d) => return Ok(Some(d)),
                 Ask::Answer(x) => x,
             };
-            for c in opts[ans[0]]["cids"].as_array().unwrap() {
-                self.s.cards[c.as_i64().unwrap() as usize].tapped = true;
-            }
             self.s.tasks.last_mut().unwrap()["summon_paid"] = opts[ans[0]]["cids"].clone();
             self.s.tasks.last_mut().unwrap()["paid_done"] = json!(true);
+            // 第436弾（Python と同じ）: 支払いのマナタップは tap イベント。適用と誘発の収集を済ませてから後段へ進む
+            let paid_evs: Vec<Value> = opts[ans[0]]["cids"].as_array().unwrap().iter()
+                .map(|c| json!({"ev": "tap", "subject": self.refv(c.as_i64().unwrap())})).collect();
+            if !paid_evs.is_empty() {
+                let te = self.ev_task(paid_evs);
+                self.push(vec![te]);
+                return Ok(None);
+            }
         }
         let paid: Vec<i64> = self.s.tasks.last().unwrap().get("summon_paid")
             .and_then(|v| v.as_array()).map(|a| a.iter().filter_map(|x| x.as_i64()).collect()).unwrap_or_default();
@@ -1098,6 +1103,7 @@ impl Engine {
             }
         }
         self.note_deck(cid);
+        self.s.cards[cid as usize].entered_from = from_zone.clone();   // 保留の前のゾーン（Python の _to_hold と同じ）
         self.s.cards[cid as usize].zone = "hold".to_string();
         self.s.hold.push(cid);
         if let Some(f) = face {
@@ -3239,9 +3245,9 @@ impl Engine {
                 self.s.cards[tp as usize].under.retain(|&x| x != cid);
             }
         }
-        let (owner, from) = {
+        let (owner, from, held_from) = {
             let c = &self.s.cards[cid as usize];
-            (c.owner as usize, c.zone.clone())
+            (c.owner as usize, c.zone.clone(), if c.zone == "hold" { c.entered_from.clone() } else { String::new() })
         };
         let idx = if self.shared(&from) { 0 } else { owner };
         if from == "hold" {
@@ -3274,6 +3280,7 @@ impl Engine {
             c.face_up = public;
             c.controller = controller.unwrap_or(c.owner);
             c.entered_turn = if to == "bz" { turn } else { -1 };
+            c.entered_from = if to == "bz" { if held_from.is_empty() { from.clone() } else { held_from.clone() } } else { String::new() };   // Python と同じ（直前のゾーン）
             if to == "bz" {
                 c.entered_seq = seq;
             }

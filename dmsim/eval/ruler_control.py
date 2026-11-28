@@ -29,6 +29,7 @@ from pathlib import Path
 
 import yaml
 
+from ..base.registry import load_known_combos
 from ..base.store import REPO
 from . import loop_entry as le
 from .ruler import judge
@@ -47,9 +48,8 @@ COMBOS = Path("data/known_combos/combos.yaml")
 
 
 def core_ids(path: Path = COMBOS) -> set[str]:
-    d = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     out = set()
-    for c in d.get("combos", []):
+    for c in load_known_combos(path):
         for p in c.get("parts", []):
             if p.get("role") == "core" and p.get("id"):
                 out.add(p["id"])
@@ -282,7 +282,7 @@ def run_one(rules, ls, seed: int, max_turn: int = 2, budget: int | None = None, 
     ブロック・トリガーを使う相手。0（既定）は従来どおり。段2の定義は変えない。loop_beat: 段1（ループ）が成立したうえでの
     殴り勝ち（ループで出した体による殴り勝ち、段2とは別の欄。設計書 §24）。"""
     from dmsim.engine import scenario
-    from dmsim.search.game import play_game
+    from dmsim.play_api import play_cheat as play_game
     from .lockcheck import lock_probe
     deck = _deck(ls)
     v = vary(rules, ls, seed)

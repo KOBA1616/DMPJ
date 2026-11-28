@@ -174,3 +174,17 @@ def test_linlullaby_both_decks_to_mana_and_l_gate(rules):
     answer(e, "main", "play:dm23-035")
     finish(e)
     assert len(e.zlist("mana", 0)) == 5 and len(e.zlist("mana", 1)) == 1
+
+
+def test_magnum_triggers_on_creature_put_by_effect(rules):
+    """マグナムは召喚だけでなく、効果で墓地から「出す」（reason: put）クリーチャーにも誘発する（マナをタップせずに出た）。"""
+    e = setup(rules, {"bz": ["dm20-013"], "hand": ["dmbd17-009"], "mana": [DARK] * 3, "graveyard": [WATER]})
+    answer(e, "charge", "pass")
+    d = e.advance()
+    e.answer([keys(d).index("play:dmbd17-009:1")])
+    while (d := e.advance()) and d["player"] == 0 and d["kind"] != "attack":
+        e.answer([0])
+    gy = names(e, "graveyard", 0)
+    # 墓地の札が出て、マグナムの誘発で自分のクリーチャーが1体破壊された（呪文＋破壊された1体で2枚。誘発しなければ呪文だけ）
+    assert len(gy) == 2 and ("dm20-013" in gy or WATER in gy), gy
+

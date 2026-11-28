@@ -369,6 +369,8 @@ class SelectorMixin:
             d = self.fdef(cid)
             ch = {"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races,
                   "keywords": set(d.keywords), "name": d.name, "names": [d.name]}
+            if getattr(d, "ace", False) and "creature" not in d.types and (self.s.cards[cid].zone != "bz" or self._ace_active(cid)):
+                ch["types"] = list(d.types) + ["creature"]   # 印刷特性で見る時も、ACEタマシードはクリーチャーでもある（常在型の範囲の判定で自分自身を見落とさない）
         else:
             ch = lki["chars"] if lki else self.chars(cid)
         names = ch.get("names") or [ch["name"]]   # 名前の集合（主名＋add_names。バンドC2 U97）
@@ -523,6 +525,8 @@ class SelectorMixin:
                      if self.s.cards[x].fortifies is not None and list(self.s.cards[x].fortifies) == list(self.s.ref(cid))]
             if bool(forts) != bool(f["fortified"]):
                 return False
+        if "entered_from" in f and c.entered_from != f["entered_from"]:
+            return False   # 「自分の墓地から出た」等: バトルゾーンに出る直前のゾーン
         if "entered_this_turn" in f:
             if (c.entered_turn == self.s.turn) != bool(f["entered_this_turn"]):
                 return False   # 「このターン中に出た」: entered_turn はバトルゾーンに出たターン（それ以外は -1）

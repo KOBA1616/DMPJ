@@ -16,10 +16,11 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from dmsim.base.registry import load_known_combos  # noqa: E402
 from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.discovery.cyclesetup import setup_from_cycle  # noqa: E402
 from dmsim.engine.scenario import build  # noqa: E402
-from dmsim.search.game import play_game  # noqa: E402
+from dmsim.play_api import play_cheat as play_game  # noqa: E402
 from dmsim.engine.zone_graph import TICKS, Cycle, bundles_of, feeds  # noqa: E402
 
 
@@ -68,7 +69,7 @@ def main(argv=None):
     a = ap.parse_args(argv)
     rules = load_rules()
     if a.known:
-        y = yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]
+        y = load_known_combos()
         for c in y:
             cores = [i for i in cores_of(c) if i in rules.cards]
             cs = cycles_among(rules, cores)

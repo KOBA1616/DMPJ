@@ -10,7 +10,8 @@ import time
 from collections import Counter
 from dataclasses import asdict
 
-from ..search.game import GameResult, play_game
+from ..play_api import play_cheat as play_game
+from ..search.game import GameResult
 from . import lockcheck  # noqa: F401  （import 時に play_game の既定のロック判定役 lock_probe を登録する）
 
 

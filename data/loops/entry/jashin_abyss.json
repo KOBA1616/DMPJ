@@ -1,0 +1,179 @@
+{
+ "deck_floor": 1,
+ "delta": {},
+ "goal": [],
+ "hazards": [
+  "field_removal",
+  "counter"
+ ],
+ "kind": "deterministic",
+ "limit": null,
+ "minimal": [
+  {
+   "match": {
+    "name": "dm25sd1-001"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "bz",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm26ex1-018"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "bz",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm20-013"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "bz",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm25sd1-003"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "bz",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm26ex2-pr004"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "graveyard",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm20-013"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "graveyard",
+   "zones": []
+  }
+ ],
+ "name": "ジャシン帝系ループ（入口）",
+ "routes": [],
+ "source": {
+  "board": {
+   "opp_deck": 26,
+   "opp_deck_total": 40,
+   "p0": {
+    "bz": [
+     "dm25sd1-001",
+     "dm26ex1-018",
+     "dm20-013",
+     "dm25sd1-003"
+    ],
+    "graveyard": [
+     "dm26ex2-pr004",
+     "dm20-013"
+    ],
+    "hand": [
+     "dm01-090",
+     "dm25sd1-001",
+     "dm26ex2-pr004",
+     "dm01-090",
+     "dm25sd1-003"
+    ],
+    "mana": [
+     "dm01-090",
+     "dm25sd1-003",
+     "dm20-013",
+     "dm01-090",
+     "dm26ex2-pr004"
+    ],
+    "shield": [
+     "dm01-090",
+     "dm01-090",
+     "dm20-013",
+     "dm26ex1-018",
+     "dm26ex2-pr004"
+    ]
+   },
+   "p1": {
+    "hand": [
+     "T001",
+     "T001",
+     "T001",
+     "T001",
+     "T001"
+    ],
+    "mana": [
+     "T001",
+     "T001",
+     "T001",
+     "T001"
+    ]
+   }
+  },
+  "budget": 1500,
+  "core": [
+   {
+    "any": [
+     {
+      "dm25sd1-001": 1
+     }
+    ],
+    "part": "loop",
+    "role": "攻撃で墓地のゴルギーニを出す（ACE）"
+   },
+   {
+    "any": [
+     {
+      "dm26ex2-pr004": 1
+     }
+    ],
+    "part": "loop",
+    "role": "出た時に墓地から2回出す"
+   },
+   {
+    "any": [
+     {
+      "dm20-013": 2
+     }
+    ],
+    "part": "loop",
+    "role": "踏み倒しのたびに自分のクリーチャーを破壊（破壊を溜める）"
+   },
+   {
+    "any": [
+     {
+      "dm26ex1-018": 1
+     }
+    ],
+    "part": "loop",
+    "role": "墓地から出た札が出たターンに攻撃できる"
+   },
+   {
+    "any": [
+     {
+      "dm25sd1-003": 1
+     }
+    ],
+    "part": "loop",
+    "role": "アビスが離れる時に墓地4枚を山札へ戻す（山札の回復）"
+   }
+  ],
+  "deck": "data/decks/jashin_abyss.yaml",
+  "note": "note 記事（ドラ焼き）の手順の初期盤面（2026-11-27 koba 指定）。場: ジャシン帝・ジャビビルブラッド・マグナム・ジャブラッド／墓地: ゴルギーニ・マグナム。マナ5。手の登録なしで段1に届くかを測る陽性対照。"
+ }
+}

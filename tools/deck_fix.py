@@ -9,6 +9,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dmsim.base.registry import load_known_combos  # noqa: E402
 from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.deckplan.auto import add_candidates, support_for, two_stage, unused_names  # noqa: E402
 from dmsim.eval.measure import load_deck  # noqa: E402
@@ -52,7 +53,7 @@ def auto_setup(rules, combo: str, root: Path = Path("data/loops")):
 def parts_setup_for(rules, t: dict, deck: list[str]):
     """LoopSpec が無いコンボ用: 部品表（known_combos）とデッキから作る。"""
     from dmsim.deckplan.setup import parts_setup
-    combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
+    combos = {c["id"]: c for c in load_known_combos()}
     c = combos.get(t["combo"])
     return parts_setup(rules, c, deck) if c else None
 
@@ -88,7 +89,7 @@ def main(argv=None):
     ap.add_argument("--history", default="data/autofix/deckfix_times.yaml", help="--time-budget 用の所要時間の履歴（前回途中のデッキを優先する）")
     ap.add_argument("--out", default="logs/deckfix.jsonl")
     a = ap.parse_args(argv)
-    combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
+    combos = {c["id"]: c for c in load_known_combos()}
     ts = yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"]
     gate = cards_stage_decks(a.stage_from) if a.stage_from else None
     if gate is not None and not gate:

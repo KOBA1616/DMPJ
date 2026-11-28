@@ -6142,3 +6142,404 @@ rejected:
     commit: bb40e05
     measured_at: '2026-11-13'
   failed_at: lock
+- id: jashin_abyss
+  name: ジャシン帝系ループ（ゴルギーニ＋マグナム＋ジャシン帝＋ジャビビルブラッド＋ジャブラッド）
+  split: discovered
+  types:
+  - loop
+  core:
+  - id: dm25sd1-001
+    name: 漆黒の深淵 ジャシン帝
+    role: 攻撃で墓地のゴルギーニを出す（ACE）
+    part: loop
+  - id: dm26ex2-pr004
+    name: アーテル・ゴルギーニ
+    role: 出た時に墓地から2回出す
+    part: loop
+  - id: dm20-013
+    name: 百発人形マグナム
+    role: 踏み倒しのたびに自分のクリーチャーを破壊（破壊を溜める）
+    part: loop
+  - id: dm26ex1-018
+    name: 邪魂龍 ジャビビルブラッド
+    role: 墓地から出た札が出たターンに攻撃できる
+    part: loop
+  - id: dm25sd1-003
+    name: 邪龍 ジャブラッド
+    role: アビスが離れる時に墓地4枚を山札へ戻す
+    part: loop
+  win: effect
+  entry: data/loops/entry/jashin_abyss.json
+  procedure:
+  - '初期盤面（場: ジャシン帝・ジャビビルブラッド・マグナム・ジャブラッド／墓地: ゴルギーニ・マグナム）。ジャシン帝の攻撃でゴルギーニを墓地から出し、マグナムの破壊でジャシン帝を墓地へ、ゴルギーニの出た時に墓地から2回出してマグナムの破壊を3回溜め、破壊をアビスに当ててジャブラッドの置換で山札を回復し、ジャシン帝の出た時に山札から1枚墓地へ。1に戻る（note 記事 ドラ焼き、2026-11-27
+    koba 指定）。'
+  lock_mode: passive
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 2
+  budget: null
+  setup: null
+  policy: []
+  policy_avoid: []
+  opp_levels:
+  - 0
+  route_stages: null
+  note: 手の登録なしで段1に届くかを測る陽性対照（2026-11-27）。静的判定は通過（#545）、探索は未到達。
+  digest: 9e0ea1cafcf3dc7c
+  checks:
+  - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: true
+    detail: loop として段1・段2で測る
+  - name: entry
+    ok: true
+    detail: data/loops/entry/jashin_abyss.json（ジャシン帝系ループ（入口））
+  - name: ruler
+    ok: false
+    detail: '段1 0/8・段2 0/8（基準 0.8）勝ち方 {''beat'': 8}'
+  measured:
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    max_turn: 2
+    budget: 1500
+    stage1: 0/8
+    stage2: 0/8
+    stage2_rate: 0.0
+    via:
+      beat: 8
+    win_turns: []
+    threshold: 0.8
+    rows:
+    - seed: 1
+      start: 2c251b18c60f
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+    - seed: 2
+      start: e152bb71d8d8
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+    - seed: 3
+      start: 06fcdd0b0e85
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+    - seed: 4
+      start: 3783a3dc99d1
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+    - seed: 5
+      start: e43b8b503655
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+    - seed: 6
+      start: 790a51d4920f
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+    - seed: 7
+      start: a350833a3f9a
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+    - seed: 8
+      start: 20a56da16c17
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+  version:
+    fingerprint: 39ff2a2dbb6e8eab
+    commit: 37e3a77
+    measured_at: '2026-11-27'
+  failed_at: ruler
+- id: jashin_part_a
+  name: ジャシン帝系ループ 部品A
+  split: discovered
+  types:
+  - loop
+  core:
+  - id: dm25sd1-001
+    name: 漆黒の深淵 ジャシン帝
+    role: 部品
+    part: loop
+  - id: dm20-013
+    name: 百発人形マグナム
+    role: 部品
+    part: loop
+  - id: dm26ex1-018
+    name: 邪魂龍 ジャビビルブラッド
+    role: 部品
+    part: loop
+  - id: dm25sd1-003
+    name: 邪龍 ジャブラッド
+    role: 部品
+    part: loop
+  - id: dm26ex2-pr004
+    name: アーテル・ゴルギーニ
+    role: 部品
+    part: loop
+  - id: dm25rp4-066
+    name: オア:ナテハ
+    role: 部品
+    part: loop
+  win: effect
+  entry: data/loops/entry/auto/jashin_part_a.json
+  procedure: []
+  lock_mode: passive
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 2
+  budget: 1500
+  setup: null
+  policy: []
+  policy_avoid: []
+  opp_levels:
+  - 0
+  route_stages: null
+  note: '合成手の証明書: finite、3周（見積り 7）、山札の差分Δ [-3, -3, 1]、最小盤面M {''bz'': [''dm20-013'', ''dm25sd1-001'', ''dm25sd1-003'', ''dm26ex1-018''], ''graveyard'': [''dm25rp4-066'', ''dm26ex2-pr004''], ''hand'': []}、起点
+    dm25sd1-001、seed 1'
+  certificate:
+    kind: finite
+    origin: dm25sd1-001
+    seed: 1
+    M:
+      bz:
+      - dm20-013
+      - dm25sd1-001
+      - dm25sd1-003
+      - dm26ex1-018
+      graveyard:
+      - dm25rp4-066
+      - dm26ex2-pr004
+      hand: []
+    moves:
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm20-013:0
+      - - choose_mode
+        - - mode:2
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - choose_cards
+        - - graveyard:dm20-013:0
+      - - order_pending
+        - - pending:normal:dm25sd1-001:1
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex1-018:0
+      - - choose_replacement
+        - - replace:dm25sd1-003:3
+      - - choose_cards
+        - - graveyard:dm25rp4-066:0
+          - graveyard:dm25sd1-003:0
+          - graveyard:dm25sd1-001:0
+          - graveyard:dm25rp4-066:0
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+      - - choose_shields
+        - - shield
+          - shield
+    laps: 3
+    est_laps: 7
+    deltas:
+    - -3
+    - -3
+    - 1
+    decks:
+    - 19
+    - 16
+    - 13
+    - 14
+  digest: 1b9a9ad3e47e8e37
+  checks:
+  - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: true
+    detail: loop として段1・段2で測る
+  - name: entry
+    ok: true
+    detail: data/loops/entry/auto/jashin_part_a.json（ジャシン帝系ループ 部品A（入口））
+  - name: stage1_cert
+    ok: true
+    detail: 証明書を再生して 3/3 周が回帰（山札の差分 [-3, -3, 1]）
+  - name: ruler
+    ok: false
+    detail: '段1 0/8・段2 0/8（基準 0.8）勝ち方 {''beat'': 8}'
+  measured:
+    stage1_cert:
+      ok: true
+      laps: 3
+      deltas:
+      - -3
+      - -3
+      - 1
+      origin: dm25sd1-001
+      detail: 証明書を再生して 3/3 周が回帰（山札の差分 [-3, -3, 1]）
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    max_turn: 2
+    budget: 1500
+    stage1: 0/8
+    stage2: 0/8
+    stage2_rate: 0.0
+    via:
+      beat: 8
+    win_turns: []
+    threshold: 0.8
+    rows:
+    - seed: 1
+      start: e959fadfa2aa
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 2
+      start: d5821bb48bfb
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 3
+      start: 11fe6a4a6b9f
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 4
+      start: ebe822c8c90b
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 5
+      start: c9745cd9aeca
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 6
+      start: 175e5bb09797
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 7
+      start: 2bbe07ab8e3d
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 8
+      start: 500b4b68a262
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+  version:
+    fingerprint: 08c5fd9b95cadab7
+    commit: d77e6df4
+    measured_at: '2026-11-28'
+  failed_at: ruler

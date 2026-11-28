@@ -299,3 +299,11 @@ def test_lock_judge_moved_to_s4():
     assert lockcheck.lock_probe.__module__ == "dmsim.eval.lockcheck"
     assert game._default_lock_judge is lockcheck.lock_probe
     assert not hasattr(game, "lock_probe")
+
+
+def test_discovery_eval_play_through_play_api():
+    """S5 発見・S4 評価は search.game.play_game を直接 import せず play_api.play_cheat を通す。"""
+    import re
+    bad = [str(p.relative_to(ROOT)) for d in ("discovery", "eval") for p in (ROOT / d).glob("*.py")
+           if re.search(r"search\.game import[^\n]*\bplay_game\b", p.read_text(encoding="utf-8"))]
+    assert not bad, bad

@@ -385,7 +385,8 @@ def _play_accum(rules, start, *, delta: dict | None, snap0: dict, lap_cap: int,
     実際に選ばれたラインの途中経過そのものなので、到達可能性は保たれる。
     停止条件に届かなかったターンはそのまま採用し、次のターンへ進む。"""
     from dmsim.eval.lockcheck import lock_probe
-    from dmsim.search.game import GameResult, finish_result, play_game, record_turn_loops
+    from dmsim.play_api import play_cheat as play_game
+    from dmsim.search.game import GameResult, finish_result, record_turn_loops
     from dmsim.search.turn import own_turn
     me = 0
     eng = start.clone()
@@ -515,7 +516,7 @@ def judge_conversion3(rules, core_cards: dict[str, int], conv_cards: list[str], 
     仕込みの山札は実カードで構成する（default_deck_cards。deck_cards/shield_cards で差し替え可）。
     ゲームが段1で決着していた場合は、その結果をそのまま記録する（勝ちなら変換不要で合格）。"""
     from dmsim.eval.lockcheck import lock_probe
-    from dmsim.search.game import play_game
+    from ..play_api import play_cheat as play_game
     from dmsim.search.turn import own_turn
     by_card = by_card if by_card is not None else bundles_by_card(rules)
     if deck_cards is None or shield_cards is None:

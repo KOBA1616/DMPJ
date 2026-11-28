@@ -20,12 +20,14 @@ import yaml
 
 from . import store
 
-OPTIONAL_NONE = ("contrib",)   # 後から足した欄。None の時は to_dict・指紋に出さない
+OPTIONAL_NONE = ("contrib", "certificate")   # 後から足した欄。None の時は to_dict・指紋に出さない
 TYPES = ("loop", "resource", "attack", "lock")        # 設計書 §11 の類型（重複可）
 SPLITS = ("tuning", "holdout", "discovered")         # discovered = システムが見つけた新規（調整に使ってよいかは tuning と同じ扱い）
 WINS = ("opp_deck_out", "effect", "lock", "beat")
 ISSUER = "dmsim.eval.verify"
 PATH = store.REPO / "data" / "registry" / "combos.yaml"
+CANDIDATES_PATH = store.REPO / "data" / "registry" / "candidates.yaml"      # 検証に出す候補の台帳（読むのはここの load_candidates だけ）
+KNOWN_COMBOS_PATH = store.REPO / "data" / "known_combos" / "combos.yaml"    # 既知コンボの定義（読むのはここの load_known_combos だけ）
 
 
 class RegistryError(ValueError):
@@ -58,6 +60,8 @@ class Candidate:
     # 組の寄与を値として測る設定（eval.verify._contrib、§29/§30）。{deck, opp_level, seeds, max_turn, values}。None は測らない。
     # 足切りには使わず measured.values に記録する。None の時は指紋に含めない（既存の候補の指紋を変えない）
     contrib: dict | None = None
+    # 合成手の回帰証明書（certify.make_certificate）。{origin, seed, M, moves（周ごとの選択列）, laps, deltas}。verify が再生して段1の証拠にする。手の登録（macro）ではない
+    certificate: dict | None = None
 
     def __post_init__(self):
         if self.split not in SPLITS:
@@ -114,6 +118,33 @@ def load(path: Path = PATH) -> dict:
         return {"entries": [], "rejected": []}
     d = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
     return {"entries": d.get("entries") or [], "rejected": d.get("rejected") or []}
+
+
+def load_candidates(path: Path = CANDIDATES_PATH) -> list[dict]:
+    """候補台帳 data/registry/candidates.yaml の candidates（無ければ空）。読み込みの窓口。"""
+    p = Path(path)
+    if not p.exists():
+        return []
+    return list((yaml.safe_load(p.read_text(encoding="utf-8")) or {}).get("candidates") or [])
+
+
+def load_candidates_doc(path: Path = CANDIDATES_PATH) -> dict:
+    """候補台帳の全体（candidates 以外の節 screened_attack・synergy_hunt なども含む）。"""
+    p = Path(path)
+    return (yaml.safe_load(p.read_text(encoding="utf-8")) or {}) if p.exists() else {}
+
+
+def write_candidates_tail(marker: str, lines: list[str], path: Path = CANDIDATES_PATH) -> None:
+    """候補台帳の末尾の節を書き直す書き込み口。marker（"\\n# 名前:" の形）から後ろを lines で置き換え、他の節には触れない。"""
+    s = Path(path).read_text(encoding="utf-8")
+    if marker in s:
+        s = s[:s.index(marker)]
+    Path(path).write_text(s.rstrip("\n") + "\n" + "\n".join(lines) + "\n", encoding="utf-8")
+
+
+def load_known_combos(path: Path = KNOWN_COMBOS_PATH) -> list[dict]:
+    """既知コンボ定義 data/known_combos/combos.yaml の combos。読み込みの窓口。"""
+    return list((yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}).get("combos") or [])
 
 
 def record(cand: Candidate, ev: Evidence, *, path: Path = PATH, purpose: str = "eval") -> dict:
