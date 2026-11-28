@@ -20,7 +20,7 @@ from dmsim.base.registry import load_known_combos  # noqa: E402
 from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.discovery.cyclesetup import setup_from_cycle  # noqa: E402
 from dmsim.engine.scenario import build  # noqa: E402
-from dmsim.search.game import play_game  # noqa: E402
+from dmsim.play_api import play_cheat as play_game  # noqa: E402
 from dmsim.engine.zone_graph import TICKS, Cycle, bundles_of, feeds  # noqa: E402
 
 

@@ -42,7 +42,7 @@ def _counts(eng, me=0) -> dict:
 
 def measure_one(rules, spec: dict, deck: list[str], seed: int, budget: int = 200) -> dict:
     from ..engine import scenario
-    from ..search.game import play_game
+    from ..play_api import play_cheat as play_game
     from .ruler_control import start_key
     e = scenario.build(rules, _deal(spec, deck, seed), first_player=0)
     key = start_key(e)

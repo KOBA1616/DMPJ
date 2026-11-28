@@ -130,7 +130,7 @@ def _macro_steps(rules, ls, seed: int, cand: Candidate) -> dict:
     """勝った局の手順（自分の決定の (種類, 選んだ意味キー)）。最初のマナチャージは除き、その後の決定から勝つまで。入口のターン（自分の1ターン目）に勝った局だけ。
     探索がこの手順を1手として使う（search.macro）。ruler_control.run_one と同じ局面・同じ設定で回し直して取る。"""
     from ..engine import scenario
-    from ..search.game import play_game
+    from ..play_api import play_cheat as play_game
     from .lockcheck import lock_probe
     from .ruler_control import _deck, _entry_spec, vary
     deck = _deck(ls)
