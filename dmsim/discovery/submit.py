@@ -65,13 +65,13 @@ def build_entry(rules, *, id: str, name: str, core: list[dict], bz=(), graveyard
 
 def submit_board(rules, *, id: str, name: str, core: list[dict], bz=(), graveyard=(), hand=(), mana: int = 5, win: str = "effect",
                  split: str = "discovered", types=("loop",), procedure=(), note: str = "", seeds=range(1, 9), max_turn: int = 2,
-                 budget: int = 1500, deck: list[str] | None = None, purpose: str = "eval", path=registry.PATH, root: Path = REPO):
+                 budget: int = 1500, deck: list[str] | None = None, certificate: dict | None = None, purpose: str = "eval", path=registry.PATH, root: Path = REPO):
     """中核（[{id, role, part, copies}]）と入口の盤面から候補を作って検証に流す。(Evidence, 登録簿の行) を返す。"""
     from ..eval.verify import register
     entry, _ = build_entry(rules, id=id, name=name, core=core, bz=bz, graveyard=graveyard, hand=hand, mana=mana,
                            budget=budget, note=note, deck=deck, root=root)
     cand = registry.Candidate(
         id=id, name=name, split=split, types=list(types), win=win, entry=entry, procedure=list(procedure), seeds=list(seeds),
-        max_turn=max_turn, budget=budget, note=note,
+        max_turn=max_turn, budget=budget, note=note, certificate=certificate,
         core=[{"id": c["id"], "name": rules.cards[c["id"]].name, "role": c.get("role", "部品"), "part": c.get("part", "loop")} for c in core])
     return register(rules, cand, purpose=purpose, path=path)

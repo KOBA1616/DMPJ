@@ -30,3 +30,19 @@ def test_part_a_registers_through_submit(tmp_path, monkeypatch):
                                          path=reg, seeds=range(1, 3), **BOARD)
     assert cert["kind"] in ("finite", "infinite")
     assert ev is not None and row is not None and "証明書" in row.get("note", "") + str(row)
+
+
+def test_certificate_replays_as_stage1_evidence(tmp_path, monkeypatch):
+    """証明書の選択列を再生すると、段1の証拠（measured['stage1_cert']）として受け付けられる。壊すと落ちる。"""
+    monkeypatch.delenv("DMSIM_SKIP_CONVERTED", raising=False)
+    rules = load_rules(only_approved=False)
+    monkeypatch.chdir(tmp_path)
+    from dmsim.base.loopspec import LoopSpec
+    from dmsim.eval.verify import _check_cert
+    entry, _ = Z.S.build_entry(rules, id="t_cert3", name="部品A", core=CORE, root=tmp_path, **BOARD)
+    cert = Z.make_certificate(rules, origin="dm25sd1-001", entry_json=entry, root=tmp_path, laps_max=2, max_nodes=800, tries=2, **BOARD)
+    ls = LoopSpec.from_json((tmp_path / entry).read_text(encoding="utf-8"))
+    m: dict = {}
+    assert cert["moves"] and _check_cert(rules, ls, cert, m) and m["stage1_cert"]["laps"] == len(cert["moves"])
+    bad = dict(cert, moves=[[("attack", ["no-such-key"])]])
+    assert not _check_cert(rules, ls, bad, {})

@@ -119,7 +119,13 @@ def replay(eng, origin_key: str, keys: list, *, player: int = 0):
         have = [o["key"] for o in d["options"]]
         if kind != d["kind"] or any(w not in have for w in want):
             return None
-        e.answer([have.index(w) for w in want]); i += 1
+        idx, used = [], set()
+        for w in want:   # 同じ key の選択肢が複数ある時は、まだ選んでいない次の位置を使う（同名札の重複）
+            j = next((k for k, h in enumerate(have) if h == w and k not in used), None)
+            if j is None:
+                return None
+            used.add(j); idx.append(j)
+        e.answer(idx); i += 1
 
 
 def laps(eng, origin_key: str, keys: list, *, player: int = 0, limit: int = 40):
@@ -155,7 +161,7 @@ def chain(eng, origin_key: str, *, player: int = 0, laps_max: int = 8, max_nodes
             if sig not in seen:
                 seen.add(sig); cands.append(m)
         for m in cands[:tries]:
-            if rec(m["eng"], hist + [(m["counts"]["deck"], m["counts"]["graveyard"], len(m["keys"]))]):
+            if rec(m["eng"], hist + [(m["counts"]["deck"], m["counts"]["graveyard"], len(m["keys"]), m["keys"])]):
                 return True
         return False
 
@@ -182,4 +188,24 @@ def find_loop(eng, origin_key: str, *, player: int = 0, laps_max: int = 6, max_n
     else:
         kind, est = "finite", len(hist)
     return {"kind": kind, "laps": len(hist), "deltas": deltas, "deck_start": d0, "est_laps": est,
-            "decks": decks, "last": hist[-1]}
+            "decks": decks, "last": hist[-1][:3], "moves": [h[3] for h in hist]}
+
+
+def check_certificate(eng, origin_key: str, moves: list, *, player: int = 0) -> dict:
+    """証明書（周ごとの選択列）を起点の局面から再生して確かめる。各周の終わりで、場が起点を含む・墓地に起点の札の種類が残る・
+    同じ攻撃をもう一度選べる、を見る。戻り: {ok, laps, deltas, decks}。ok は1周以上が全部この条件を満たした時。"""
+    c0, g0 = core(eng, player), kinds(eng, "graveyard", player)
+    cur, decks = eng, [counts(eng, player)["deck"]]
+    for keys in moves:
+        r = replay(cur, origin_key, [tuple(k) if isinstance(k, list) else k for k in keys], player=player)
+        if r is None or r[1] != "attack":
+            break
+        e = r[0]
+        d = e.advance()
+        if not (superset(core(e, player), c0) and kinds(e, "graveyard", player) >= g0
+                and d is not None and origin_key in [o["key"] for o in d["options"]]):
+            break
+        cur = e
+        decks.append(counts(e, player)["deck"])
+    n = len(decks) - 1
+    return {"ok": n >= 1 and n == len(moves), "laps": n, "decks": decks, "deltas": [b - a for a, b in zip(decks, decks[1:])]}
