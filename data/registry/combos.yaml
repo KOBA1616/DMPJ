@@ -6330,8 +6330,8 @@ rejected:
   opp_levels:
   - 0
   route_stages: null
-  note: '合成手の証明書: finite、3周（見積り 7）、山札の差分Δ [-3, -3, 1]、最小盤面M {''bz'': [''dm20-013'', ''dm25sd1-001'', ''dm25sd1-003'', ''dm26ex1-018''], ''graveyard'': [''dm25rp4-066'', ''dm26ex2-pr004''], ''hand'': []}、起点
-    dm25sd1-001、seed 1'
+  note: '合成手の証明書: finite、6周（見積り 6）、山札の差分Δ [-3, -3, -3, -3, -3, -3]、最小盤面M {''bz'': [''dm20-013'', ''dm25sd1-001'', ''dm25sd1-003'', ''dm26ex1-018''], ''graveyard'': [''dm25rp4-066'', ''dm26ex2-pr004''],
+    ''hand'': []}、起点 dm25sd1-001、seed 1'
   certificate:
     kind: finite
     origin: dm25sd1-001
@@ -6374,50 +6374,21 @@ rejected:
       - - choose_replacement
         - - decline
     - - - order_pending
-        - - pending:normal:dm25sd1-003:2
-      - - yes_no
-        - - 'yes'
+        - - pending:normal:dm25sd1-001:2
       - - yes_no
         - - 'yes'
       - - choose_cards
         - - graveyard:dm26ex2-pr004:0
       - - order_pending
-        - - pending:normal:dm20-013:0
-      - - choose_cards
-        - - bz:dm20-013:0
-      - - choose_mode
-        - - mode:2
-      - - choose_mode
-        - - mode:2
-      - - choose_cards
-        - - graveyard:dm25sd1-001:0
-      - - choose_cards
-        - - graveyard:dm20-013:0
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
       - - order_pending
-        - - pending:normal:dm25sd1-001:1
+        - - pending:normal:dm20-013:0
       - - choose_cards
         - - bz:dm25sd1-001:1
       - - choose_replacement
         - - decline
-    - - - order_pending
-        - - pending:normal:dm25sd1-003:2
-      - - yes_no
-        - - 'yes'
-      - - yes_no
-        - - 'yes'
-      - - choose_cards
-        - - graveyard:dm26ex2-pr004:0
-      - - order_pending
-        - - pending:normal:dm20-013:0
-      - - choose_cards
-        - - bz:dm26ex1-018:0
-      - - choose_replacement
-        - - replace:dm25sd1-003:3
-      - - choose_cards
-        - - graveyard:dm25rp4-066:0
-          - graveyard:dm25sd1-003:0
-          - graveyard:dm25sd1-001:0
-          - graveyard:dm25rp4-066:0
       - - choose_mode
         - - mode:0
       - - choose_mode
@@ -6430,21 +6401,136 @@ rejected:
         - - bz:dm26ex2-pr004:0
       - - choose_replacement
         - - decline
-      - - choose_shields
-        - - shield
-          - shield
-    laps: 3
-    est_laps: 7
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    laps: 6
+    est_laps: 6
     deltas:
     - -3
     - -3
-    - 1
+    - -3
+    - -3
+    - -3
+    - -3
     decks:
     - 19
     - 16
     - 13
-    - 14
-  digest: 1b9a9ad3e47e8e37
+    - 10
+    - 7
+    - 4
+    - 1
+  digest: 68892c3be315ada7
   checks:
   - name: cards
     ok: true
@@ -6457,20 +6543,23 @@ rejected:
     detail: data/loops/entry/auto/jashin_part_a.json（ジャシン帝系ループ 部品A（入口））
   - name: stage1_cert
     ok: true
-    detail: 証明書を再生して 3/3 周が回帰（山札の差分 [-3, -3, 1]）
+    detail: 証明書を再生して 6/6 周が回帰（山札の差分 [-3, -3, -3, -3, -3, -3]）
   - name: ruler
     ok: false
     detail: '段1 0/8・段2 0/8（基準 0.8）勝ち方 {''beat'': 8}'
   measured:
     stage1_cert:
       ok: true
-      laps: 3
+      laps: 6
       deltas:
       - -3
       - -3
-      - 1
+      - -3
+      - -3
+      - -3
+      - -3
       origin: dm25sd1-001
-      detail: 証明書を再生して 3/3 周が回帰（山札の差分 [-3, -3, 1]）
+      detail: 証明書を再生して 6/6 周が回帰（山札の差分 [-3, -3, -3, -3, -3, -3]）
     seeds:
     - 1
     - 2
@@ -6539,7 +6628,7 @@ rejected:
       via: beat
       win_turn: 1
   version:
-    fingerprint: 08c5fd9b95cadab7
-    commit: d77e6df4
+    fingerprint: 22848777e89925c4
+    commit: 733837e0
     measured_at: '2026-11-28'
   failed_at: ruler

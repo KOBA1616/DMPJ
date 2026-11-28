@@ -46,3 +46,13 @@ def test_certificate_replays_as_stage1_evidence(tmp_path, monkeypatch):
     assert cert["moves"] and _check_cert(rules, ls, cert, m) and m["stage1_cert"]["laps"] == len(cert["moves"])
     bad = dict(cert, moves=[[("attack", ["no-such-key"])]])
     assert not _check_cert(rules, ls, bad, {})
+
+
+def test_part_a_repeats_lap_until_deck_runs_low(tmp_path, monkeypatch):
+    """前の周の選択列の繰り返し（新しい任意の置換は断る）で、部品Aは山札が尽きる直前の6周まで回帰する（周ごとに山札 -3）。"""
+    monkeypatch.delenv("DMSIM_SKIP_CONVERTED", raising=False)
+    rules = load_rules(only_approved=False)
+    monkeypatch.chdir(tmp_path)
+    entry, _ = Z.S.build_entry(rules, id="t_cert4", name="部品A", core=CORE, root=tmp_path, **BOARD)
+    cert = Z.make_certificate(rules, origin="dm25sd1-001", entry_json=entry, root=tmp_path, laps_max=6, max_nodes=2500, tries=4, **BOARD)
+    assert cert["laps"] == 6 and cert["deltas"] == [-3] * 6
