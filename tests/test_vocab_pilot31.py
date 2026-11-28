@@ -120,7 +120,6 @@ def test_meteor_burn_replacement(rules):
     assert not e.s.cards[cid97].under   # 離れた下のカードは under から外れる（第33弾で修正したエンジンの潜在バグ）
 
 
-@__import__("pytest").mark.xfail(reason="再変換ラウンド307-317（1736f5c5）以降に落ちる。原因未特定（ジャンケン解決の2ドローが出ない）。調査待ち", strict=False)
 def test_janken_win_draws(rules):
     """ジャンケン: 自分グー・相手チョキで勝ち、2ドローする。"""
     e = setup(rules, {"hand": ["T098"], "mana": ["T005", "T005", "T005"]}, {})
@@ -138,7 +137,7 @@ def test_janken_win_draws(rules):
         return False
 
     assert _settle(e, lambda: any(e.s.cards[c].defn == "T098" for c in e.zlist("bz", 0)), drive, 200)
-    assert _settle(e, lambda: len(e.zlist("hand", 0)) == h0 + 1, None, 120)   # -1（出した）+2ドロー
+    assert _settle(e, lambda: len(e.zlist("hand", 0)) == h0 + 1, drive, 120)   # -1（出した）+2ドロー（相手の手出しも drive で選ぶ）
 
 
 def test_shield_plus(rules):
