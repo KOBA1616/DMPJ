@@ -96,7 +96,7 @@ def _setup_job(args):
     from ..engine import scenario
     from ..eval.measure import W as _W
     from ..eval.lockcheck import lock_probe
-    from ..search.game import play_game
+    from ..play_api import play_cheat as play_game
     spec, seed, turns, budget = args
     eng = scenario.build(_W["rules"], dict(spec, seed=seed))
     return play_game(_W["rules"], None, None, seed, max_turn=turns, budget=budget, start=eng, lock_rounds=2,

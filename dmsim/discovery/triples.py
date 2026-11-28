@@ -265,7 +265,7 @@ def measure(rules, deck, parts, *, T: int = 3, seeds=range(1, 5), budget: int = 
     from ..engine import scenario
     from ..eval.lockcheck import lock_probe
     from ..eval.ruler import judge
-    from ..search.game import play_game
+    from ..play_api import play_cheat as play_game
     rows = []
     for sd in seeds:
         try:
@@ -426,7 +426,7 @@ def trial(rules, base: Base, *, T: int = 4, seeds=(1, 2), budget: int = 100, raw
     from ..engine import scenario
     from ..eval.lockcheck import lock_probe
     from ..eval.ruler import judge
-    from ..search.game import play_game
+    from ..play_api import play_cheat as play_game
     rows = []
     ids = set(base.cards) | {rules.cards[i].id for i in base.cards}
     for lo in layouts(rules, base, raw):
@@ -512,7 +512,7 @@ def replay_check(rules, base: Base, *, T: int = 4, seed: int = 1, budget: int = 
     from ..engine import scenario
     from ..engine import loop as LP
     from ..eval.lockcheck import lock_probe
-    from ..search.game import play_game
+    from ..play_api import play_cheat as play_game
     lo = next((x for x in layouts(rules, base, raw) if x["name"] == layout), None)
     if lo is None:
         return {"result": "no_layout"}
