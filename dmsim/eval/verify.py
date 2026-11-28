@@ -80,6 +80,10 @@ def verify(rules, cand: Candidate, *, known_min: float = KNOWN_MIN) -> Evidence:
         return done(False)
     step("entry", True, f"{cand.entry}（{ls.name}）")
 
+    cert = cand.certificate
+    if cert:   # 合成手の回帰証明書を再生して、段1（ループ成立）の証拠にする。手の登録は使わない。段2は下の ruler で別に測る
+        if not step("stage1_cert", _check_cert(rules, ls, cert, measured), measured.get("stage1_cert", {}).get("detail", "")):
+            return done(False)
     rows = [run_one(rules, ls, s, max_turn=cand.max_turn, budget=cand.budget) for s in cand.seeds]
     n = len(rows)
     vias: dict[str, int] = {}
@@ -103,6 +107,23 @@ def verify(rules, cand: Candidate, *, known_min: float = KNOWN_MIN) -> Evidence:
     if not step("replay", not diff, f"seed {cand.seeds[:REPLAY_SEEDS]} を回し直して一致" if not diff else f"回し直すと結果が変わる seed {diff}"):
         return done(False)
     return done(True)
+
+
+def _check_cert(rules, ls, cert: dict, measured: dict) -> bool:
+    """証明書の選択列を入口局面から再生する。結果は measured['stage1_cert']（段2の stage2 とは別の欄）。"""
+    from ..search import compose as C
+    try:
+        e = le.build(rules, ls, int(cert.get("seed", 1)))
+        while (d := e.advance())["kind"] != "attack":
+            ks = [o["key"] for o in d["options"]]
+            e.answer([ks.index("pass") if "pass" in ks else 0])
+        r = C.check_certificate(e, f"attack:{cert['origin']}:player", cert.get("moves", []))
+    except Exception as ex:   # noqa: BLE001
+        r = {"ok": False, "laps": 0, "deltas": [], "error": str(ex)}
+    detail = (f"証明書を再生して {r['laps']}/{len(cert.get('moves', []))} 周が回帰（山札の差分 {r['deltas']}）" if r["ok"]
+              else f"証明書を再生できない（{r['laps']} 周で止まる）{r.get('error', '')}")
+    measured["stage1_cert"] = {"ok": r["ok"], "laps": r["laps"], "deltas": r["deltas"], "origin": cert.get("origin"), "detail": detail}
+    return r["ok"]
 
 
 def _macro_steps(rules, ls, seed: int, cand: Candidate) -> dict:

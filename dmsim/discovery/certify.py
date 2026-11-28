@@ -28,7 +28,7 @@ def make_certificate(rules, *, origin: str, bz=(), graveyard=(), hand=(), seed: 
     r = C.find_loop(e, f"attack:{origin}:player", laps_max=laps_max, max_nodes=max_nodes, tries=tries)
     return {"kind": r["kind"], "origin": origin, "seed": seed,
             "M": {"bz": sorted(bz), "graveyard": sorted(graveyard), "hand": sorted(hand)},
-            "laps": r["laps"], "est_laps": r.get("est_laps"), "deltas": r["deltas"], "decks": r.get("decks", [])}
+            "moves": r.get("moves", []), "laps": r["laps"], "est_laps": r.get("est_laps"), "deltas": r["deltas"], "decks": r.get("decks", [])}
 
 
 def certificate_note(cert: dict) -> str:
@@ -45,5 +45,5 @@ def certify_and_submit(rules, *, id: str, name: str, core: list[dict], origin: s
     if cert["kind"] == "none":
         return cert, None, None
     ev, row = S.submit_board(rules, id=id, name=name, core=core, bz=bz, graveyard=graveyard, hand=hand, mana=mana,
-                             note=(note + " " + certificate_note(cert)).strip(), path=path, root=root, **kw)
+                             note=(note + " " + certificate_note(cert)).strip(), certificate=cert, path=path, root=root, **kw)
     return cert, ev, row

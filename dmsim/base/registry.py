@@ -20,7 +20,7 @@ import yaml
 
 from . import store
 
-OPTIONAL_NONE = ("contrib",)   # 後から足した欄。None の時は to_dict・指紋に出さない
+OPTIONAL_NONE = ("contrib", "certificate")   # 後から足した欄。None の時は to_dict・指紋に出さない
 TYPES = ("loop", "resource", "attack", "lock")        # 設計書 §11 の類型（重複可）
 SPLITS = ("tuning", "holdout", "discovered")         # discovered = システムが見つけた新規（調整に使ってよいかは tuning と同じ扱い）
 WINS = ("opp_deck_out", "effect", "lock", "beat")
@@ -58,6 +58,8 @@ class Candidate:
     # 組の寄与を値として測る設定（eval.verify._contrib、§29/§30）。{deck, opp_level, seeds, max_turn, values}。None は測らない。
     # 足切りには使わず measured.values に記録する。None の時は指紋に含めない（既存の候補の指紋を変えない）
     contrib: dict | None = None
+    # 合成手の回帰証明書（certify.make_certificate）。{origin, seed, M, moves（周ごとの選択列）, laps, deltas}。verify が再生して段1の証拠にする。手の登録（macro）ではない
+    certificate: dict | None = None
 
     def __post_init__(self):
         if self.split not in SPLITS:
