@@ -5,6 +5,7 @@
 進む部分は各ゾーンの枚数で、差分Δとして記録する。"""
 from __future__ import annotations
 from collections import Counter
+from itertools import combinations
 
 END_KINDS = ("attack", "main", "charge")
 
@@ -12,6 +13,11 @@ END_KINDS = ("attack", "main", "charge")
 def core(eng, p: int = 0) -> tuple:
     s = eng.s
     return tuple(sorted(s.cards[c].defn for c in eng.bz_tops() if s.cards[c].controller == p))
+
+
+def kinds(eng, z: str, p: int = 0) -> frozenset:
+    """ゾーンにある札の種類の集合（枚数は見ない）。墓地・手札に必要な札が残っているかの判定に使う。"""
+    return frozenset(eng.s.cards[c].defn for c in eng.zlist(z, p))
 
 
 def counts(eng, p: int = 0) -> dict[str, int]:
@@ -22,7 +28,16 @@ def _pick_default(d):
     return [i for i in range(max(d["min"], 0))]
 
 
-def enumerate_moves(eng, origin_key: str, *, player: int = 0, max_nodes: int = 3000, max_depth: int = 60):
+def _subsets(n: int, k: int, cap: int) -> list[list[int]]:
+    allc = [list(c) for c in combinations(range(n), k)]
+    if len(allc) <= cap:
+        return allc
+    step = len(allc) / cap
+    return [allc[int(i * step)] for i in range(cap)]
+
+
+def enumerate_moves(eng, origin_key: str, *, player: int = 0, max_nodes: int = 3000, max_depth: int = 60,
+                    max_subsets: int = 12):
     """eng は player の attack 選択で待機中。origin_key の攻撃から始めて枝を全列挙する。
     戻り値: (moves, nodes)。move = {keys, core, counts, eng, end, again}。
     again は終わりの局面で同じ攻撃をもう一度選べること（回帰の必要条件。タップ・攻撃可否を見る）。"""
@@ -54,8 +69,10 @@ def enumerate_moves(eng, origin_key: str, *, player: int = 0, max_nodes: int = 3
             ans = [[i] for i in range(n)]
         elif d["min"] == 0 and d["max"] <= 1:
             ans = [[]] + [[i] for i in range(n)]
+        elif d["min"] == d["max"] and 1 < d["min"] < n:
+            ans = _subsets(n, d["min"], max_subsets)   # 複数枚を選ぶ点は組み合わせを展開（多い時は等間隔に間引く）
         else:
-            ans = [list(range(k))]   # 複数枚選ぶ点は先頭から（未展開）
+            ans = [list(range(k))]
         for a in ans:
             c = e.clone()
             c.answer(a)
@@ -63,3 +80,92 @@ def enumerate_moves(eng, origin_key: str, *, player: int = 0, max_nodes: int = 3
 
     rec(start, [], 0)
     return moves, nodes[0]
+
+
+def replay(eng, origin_key: str, keys: list, *, player: int = 0):
+    """記録した選択列を、選択肢の key で同じ順に再生する。途中で key が無ければ None。成功なら（終わりの局面, 終了種別）。"""
+    e = eng.clone()
+    d = e.advance()
+    ks = [o["key"] for o in d["options"]]
+    if d["kind"] != "attack" or origin_key not in ks:
+        return None
+    e.answer([ks.index(origin_key)])
+    i = 0
+    while True:
+        d = e.advance()
+        if d is None or e.s.result:
+            return e, "result"
+        if d["player"] != player:
+            e.answer([0]); continue
+        if d["kind"] in END_KINDS:
+            return (e, d["kind"]) if i == len(keys) else None
+        if i >= len(keys):
+            return None
+        kind, want = keys[i]
+        have = [o["key"] for o in d["options"]]
+        if kind != d["kind"] or any(w not in have for w in want):
+            return None
+        e.answer([have.index(w) for w in want]); i += 1
+
+
+def laps(eng, origin_key: str, keys: list, *, player: int = 0, limit: int = 40):
+    """同じ手を繰り返し再生して、何周できるか数える。各周の枚数も返す。"""
+    seq, cur = [], eng
+    for _ in range(limit):
+        r = replay(cur, origin_key, keys, player=player)
+        if r is None or r[1] != "attack":
+            break
+        cur = r[0]
+        seq.append(counts(cur, player))
+    return len(seq), seq
+
+
+def chain(eng, origin_key: str, *, player: int = 0, laps_max: int = 8, max_nodes: int = 1500, tries: int = 6):
+    """周ごとに合成手を作り直して回帰を続ける（深さ優先。ある周の候補から次の周が作れなければ、同じ周の別の候補に戻る）。
+    各周は「場の札の名前が起点と同じ・墓地に起点の札の種類が残る・同じ攻撃をもう一度選べる」手。
+    候補は枚数の組（山札, 墓地）ごとに1つ、山札が多く残る順に最大 tries 個試す。戻り: 最も長く続いた周ごとの (山札, 墓地, 手の長さ)。"""
+    c0, g0 = core(eng, player), kinds(eng, "graveyard", player)
+    best: list = []
+
+    def rec(cur, hist):
+        nonlocal best
+        if len(hist) > len(best):
+            best = list(hist)
+        if len(hist) >= laps_max:
+            return True
+        mv, _n = enumerate_moves(cur, origin_key, player=player, max_nodes=max_nodes)
+        good = [m for m in mv if m.get("again") and m["core"] == c0 and kinds(m["eng"], "graveyard", player) >= g0]
+        seen, cands = set(), []
+        for m in sorted(good, key=lambda m: (-m["counts"]["deck"], len(m["keys"]))):
+            sig = (m["counts"]["deck"], m["counts"]["graveyard"])
+            if sig not in seen:
+                seen.add(sig); cands.append(m)
+        for m in cands[:tries]:
+            if rec(m["eng"], hist + [(m["counts"]["deck"], m["counts"]["graveyard"], len(m["keys"]))]):
+                return True
+        return False
+
+    rec(eng, [])
+    return best
+
+
+def find_loop(eng, origin_key: str, *, player: int = 0, laps_max: int = 6, max_nodes: int = 2500, tries: int = 6) -> dict:
+    """合成手の連鎖でループを探し、判定をまとめて返す。
+    kind: none（1周も回帰しない） / finite（山札が毎周減る。見積り周回数つき） / infinite（山札が減らない周が続く）。
+    1周でも回帰が見つかれば none にはしない（有限ループも検出する）。"""
+    d0 = counts(eng, player)["deck"]
+    hist = chain(eng, origin_key, player=player, laps_max=laps_max, max_nodes=max_nodes, tries=tries)
+    if not hist:
+        return {"kind": "none", "laps": 0, "deltas": [], "deck_start": d0}
+    decks = [d0] + [h[0] for h in hist]
+    deltas = [b - a for a, b in zip(decks, decks[1:])]
+    tail = deltas[1:] or deltas      # 1周目は準備の分岐が混ざるので、2周目以降の差分で見積もる
+    loss = -min(tail)
+    if all(x >= 0 for x in tail) and len(hist) >= 2:
+        kind, est = "infinite", None
+    elif loss > 0:
+        kind, est = "finite", len(hist) + max(0, decks[-1] // loss)
+    else:
+        kind, est = "finite", len(hist)
+    return {"kind": kind, "laps": len(hist), "deltas": deltas, "deck_start": d0, "est_laps": est,
+            "decks": decks, "last": hist[-1]}
