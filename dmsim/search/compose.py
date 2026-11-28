@@ -1,4 +1,4 @@
-"""合成手: 起点（攻撃など）から、そのターン内の自分の選択（誘発順・モード・置換・対象）を全列挙し、
+"""合成手: 起点（攻撃・メインの行動など）から、そのターン内の自分の選択（誘発順・モード・置換・対象）を全列挙し、
 次に自分が攻撃などを選べる局面までを「1手」にまとめる。盤面が起点と同じ形に戻る手は回帰（ループ候補）。
 
 骨格は2つに分ける。戻る部分は場の札の名前（タップ・出たターンは見ない。復活した札は未タップで戻るため）。
@@ -54,7 +54,7 @@ def enumerate_moves(eng, origin_key: str, *, player: int = 0, max_nodes: int = 3
                     max_subsets: int = 12):
     """eng は player の attack 選択で待機中。origin_key の攻撃から始めて枝を全列挙する。
     戻り値: (moves, nodes)。move = {keys, core, counts, eng, end, again}。
-    again は終わりの局面で同じ攻撃をもう一度選べること（回帰の必要条件。タップ・攻撃可否を見る）。"""
+    again は終わりの局面で同じ起点をもう一度選べること（回帰の必要条件。攻撃ならタップ・攻撃可否、呪文なら手札に残っているかを見る）。"""
     moves, nodes = [], [0]
     start = eng.clone()
     d0 = start.advance()
@@ -72,7 +72,7 @@ def enumerate_moves(eng, origin_key: str, *, player: int = 0, max_nodes: int = 3
         if d["player"] != player:
             e.answer([0]); rec(e, keys, depth + 1); return
         if d["kind"] in END_KINDS or depth >= max_depth:
-            again = d["kind"] == "attack" and origin_key in [o["key"] for o in d["options"]]
+            again = origin_key in [o["key"] for o in d["options"]]   # 起点は攻撃でもメインの行動（呪文を唱える等）でもよい
             moves.append({"keys": keys, "end": d["kind"], "again": again, "eng": e,
                           "core": core(e, player), "counts": counts(e, player)})
             return
@@ -101,7 +101,7 @@ def replay(eng, origin_key: str, keys: list, *, player: int = 0):
     e = eng.clone()
     d = e.advance()
     ks = [o["key"] for o in d["options"]]
-    if d["kind"] != "attack" or origin_key not in ks:
+    if origin_key not in ks:
         return None
     e.answer([ks.index(origin_key)])
     i = 0
