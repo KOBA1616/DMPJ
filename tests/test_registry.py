@@ -188,8 +188,8 @@ def test_no_direct_yaml_read_of_candidates_or_known_combos():
     import re
     from pathlib import Path
     root = Path(__file__).resolve().parent.parent
-    allow = {"dmsim/base/registry.py", "dmsim/search/leaf_parts.py", "dmsim/discovery/synergy_hunt.py",
-             "tools/attack_screen.py", "tools/synergy_hunt.py", "tools/registry.py"}
+    allow = {"dmsim/base/registry.py", "dmsim/search/leaf_parts.py",
+             "tools/registry.py"}
     pat = re.compile(r"safe_load\([^\n]*(candidates|known_combos/combos)\.yaml")
     bad = [str(p.relative_to(root)) for d in ("dmsim", "tools") for p in (root / d).rglob("*.py")
            if str(p.relative_to(root)) not in allow and pat.search(p.read_text(encoding="utf-8"))]
