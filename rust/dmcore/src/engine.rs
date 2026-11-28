@@ -1103,6 +1103,7 @@ impl Engine {
             }
         }
         self.note_deck(cid);
+        self.s.cards[cid as usize].entered_from = from_zone.clone();   // 保留の前のゾーン（Python の _to_hold と同じ）
         self.s.cards[cid as usize].zone = "hold".to_string();
         self.s.hold.push(cid);
         if let Some(f) = face {
@@ -3244,9 +3245,9 @@ impl Engine {
                 self.s.cards[tp as usize].under.retain(|&x| x != cid);
             }
         }
-        let (owner, from) = {
+        let (owner, from, held_from) = {
             let c = &self.s.cards[cid as usize];
-            (c.owner as usize, c.zone.clone())
+            (c.owner as usize, c.zone.clone(), if c.zone == "hold" { c.entered_from.clone() } else { String::new() })
         };
         let idx = if self.shared(&from) { 0 } else { owner };
         if from == "hold" {
@@ -3279,7 +3280,7 @@ impl Engine {
             c.face_up = public;
             c.controller = controller.unwrap_or(c.owner);
             c.entered_turn = if to == "bz" { turn } else { -1 };
-            c.entered_from = if to == "bz" { from.clone() } else { String::new() };   // Python と同じ（直前のゾーン）
+            c.entered_from = if to == "bz" { if held_from.is_empty() { from.clone() } else { held_from.clone() } } else { String::new() };   // Python と同じ（直前のゾーン）
             if to == "bz" {
                 c.entered_seq = seq;
             }
