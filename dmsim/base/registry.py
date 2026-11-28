@@ -128,6 +128,20 @@ def load_candidates(path: Path = CANDIDATES_PATH) -> list[dict]:
     return list((yaml.safe_load(p.read_text(encoding="utf-8")) or {}).get("candidates") or [])
 
 
+def load_candidates_doc(path: Path = CANDIDATES_PATH) -> dict:
+    """候補台帳の全体（candidates 以外の節 screened_attack・synergy_hunt なども含む）。"""
+    p = Path(path)
+    return (yaml.safe_load(p.read_text(encoding="utf-8")) or {}) if p.exists() else {}
+
+
+def write_candidates_tail(marker: str, lines: list[str], path: Path = CANDIDATES_PATH) -> None:
+    """候補台帳の末尾の節を書き直す書き込み口。marker（"\\n# 名前:" の形）から後ろを lines で置き換え、他の節には触れない。"""
+    s = Path(path).read_text(encoding="utf-8")
+    if marker in s:
+        s = s[:s.index(marker)]
+    Path(path).write_text(s.rstrip("\n") + "\n" + "\n".join(lines) + "\n", encoding="utf-8")
+
+
 def load_known_combos(path: Path = KNOWN_COMBOS_PATH) -> list[dict]:
     """既知コンボ定義 data/known_combos/combos.yaml の combos。読み込みの窓口。"""
     return list((yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}).get("combos") or [])

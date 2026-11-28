@@ -233,10 +233,7 @@ def significant(x: dict, lvl="1") -> list[str]:
 
 def record(results: dict, path: Path, note: str) -> int:
     """candidates.yaml の synergy_hunt を書き直す（他の節には触れない）。値の記録のみ、足切りしない。"""
-    s = path.read_text(encoding="utf-8")
     head = "\n# synergy_hunt:"
-    if head in s:
-        s = s[:s.index(head)]
     rows = sorted(results.values(), key=lambda x: -((x["by_opp"].get("1") or {}).get("broken", {}).get("diff") or 0))
     lines = [head + f" 直接つながる2枚組の相乗分（dmsim/discovery/synergy_hunt.py）。{note}", "synergy_hunt:"]
     for x in rows:
@@ -246,20 +243,19 @@ def record(results: dict, path: Path, note: str) -> int:
             y[f"synergy_{lvl}"] = {v: {"diff": s["diff"], "ci95": list(s["ci95"]) if s["ci95"] else None,
                                        "main_a": s["main_a"]["diff"], "main_b": s["main_b"]["diff"]} for v, s in b.items()}
         lines.append("  - " + json.dumps(y, ensure_ascii=False))
-    path.write_text(s.rstrip("\n") + "\n" + "\n".join(lines) + "\n", encoding="utf-8")
+    from ..base.registry import write_candidates_tail
+    write_candidates_tail(head, lines, path)
     return len(rows)
 
 
 def run(rules=None, *, limit: int = 60, seeds: int = 40, opp=1, ref="2b", strong: float = 0.3, workers: int = 4,
         out: Path | None = None, write: bool = True, log=print) -> dict:
     """拾う→測る→記録する、を1回で回す。"""
-    import yaml
-
-    from ..base.store import REPO
+    from ..base.registry import CANDIDATES_PATH, load_candidates_doc
     from ..cards.defs import load_rules
     rules = rules or load_rules()
-    cpath = REPO / "data/registry/candidates.yaml"
-    y = yaml.safe_load(cpath.read_text(encoding="utf-8")) or {}
+    cpath = CANDIDATES_PATH
+    y = load_candidates_doc(cpath)
     st = _strong_from_yaml(y, strong)
     pk = pick(rules, strong=st, limit=limit)
     log(f"つながる組 {pk['linked']}、選んだ組 {len(pk['pairs'])}、単独で強い札 {len(st)}、効果の欠けた札 {len(pk["excluded_missing"])}")

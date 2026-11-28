@@ -27,7 +27,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from dmsim.base.registry import load_candidates  # noqa: E402
+from dmsim.base.registry import load_candidates, load_candidates_doc  # noqa: E402
 from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.engine import zone_graph as Z  # noqa: E402
 from dmsim.eval import attack as A  # noqa: E402
@@ -309,7 +309,7 @@ def cmd_synergy(a):
     from dmsim.discovery import basebuild as B
     rules = _rules()
     t0 = time.time()
-    y = yaml.safe_load((ROOT / "data/registry/candidates.yaml").read_text(encoding="utf-8"))
+    y = load_candidates_doc()
     prs = [(x["enabler"], x["payoff"]) for x in y.get("screened_attack") or []]
     if a.pairs:
         prs = [tuple(x.split("+")) for x in a.pairs.split(",")]
