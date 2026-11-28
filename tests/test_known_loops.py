@@ -25,3 +25,20 @@ def test_repeat_count():
     blk = [("choose_cards", ["hand:a:0"]), ("yes_no", ["yes"]), ("choose_cards", ["graveyard:b:0"])]
     assert C.repeat_count(blk * 3 + [("main", ["pass"])])[0] == 3
     assert C.repeat_count(blk)[0] == 1
+
+
+def test_saga_inner_certificate_replays(monkeypatch):
+    """inner ループの証明書（1手の選択列）を check_certificate で再生でき、壊した列は通らない。"""
+    from dmsim.eval import loop_entry as LE
+    from dmsim.search import compose as C
+    from dmsim.search.origins import auto_origins
+    monkeypatch.delenv("DMSIM_SKIP_CONVERTED", raising=False)
+    rules = load_rules(only_approved=False)
+    eng = LE.build(rules, LE.load("saga"), 1)
+    e0, o = auto_origins(eng)[0]
+    r = C.find_loop(e0, o, max_nodes=1500, laps_max=3, tries=3)
+    assert r.get("inner")
+    ok = C.check_certificate(e0, o, r["moves"], inner=True)
+    assert ok["ok"] and ok["laps"] >= 3
+    bad = C.check_certificate(e0, o, [r["moves"][0][:4]], inner=True)
+    assert not bad["ok"]

@@ -52,7 +52,7 @@ def make_certificate(rules, *, origin: str, bz=(), graveyard=(), hand=(), seed: 
     zd = zone_deltas(e, f"attack:{origin}:player", r.get("moves", []))
     return {"kind": r["kind"], "origin": origin, "seed": seed, "zone_deltas": zd,
             "M": {"bz": sorted(bz), "graveyard": sorted(graveyard), "hand": sorted(hand)},
-            "moves": r.get("moves", []), "laps": r["laps"], "est_laps": r.get("est_laps"), "deltas": r["deltas"], "decks": r.get("decks", [])}
+            "moves": r.get("moves", []), "inner": bool(r.get("inner")), "laps": r["laps"], "est_laps": r.get("est_laps"), "deltas": r["deltas"], "decks": r.get("decks", [])}
 
 
 def certificate_note(cert: dict) -> str:
