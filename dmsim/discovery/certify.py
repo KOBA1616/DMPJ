@@ -12,6 +12,7 @@ from ..base import registry
 from ..base.loopspec import LoopSpec
 from ..eval import loop_entry as LE
 from ..search import compose as C
+from ..search.origins import origin_key
 from . import submit as S
 
 REPO = S.REPO
@@ -19,13 +20,13 @@ REPO = S.REPO
 
 def make_certificate(rules, *, origin: str, bz=(), graveyard=(), hand=(), seed: int = 1, entry_json: str,
                      laps_max: int = 6, max_nodes: int = 2500, tries: int = 6, root: Path = REPO) -> dict:
-    """入口局面 JSON から盤面を作り、origin（攻撃する札の ID）から find_loop を回して証明書を返す。"""
+    """入口局面 JSON から盤面を作り、origin（札 ID なら攻撃の起点、':' を含めば起点キーそのまま）から find_loop を回して証明書を返す。"""
     ls = LoopSpec.from_json((root / entry_json).read_text(encoding="utf-8"))
     e = LE.build(rules, ls, seed)
     while (d := e.advance())["kind"] != "attack":
         ks = [o["key"] for o in d["options"]]
         e.answer([ks.index("pass") if "pass" in ks else 0])
-    r = C.find_loop(e, f"attack:{origin}:player", laps_max=laps_max, max_nodes=max_nodes, tries=tries)
+    r = C.find_loop(e, origin_key(origin), laps_max=laps_max, max_nodes=max_nodes, tries=tries)
     return {"kind": r["kind"], "origin": origin, "seed": seed,
             "M": {"bz": sorted(bz), "graveyard": sorted(graveyard), "hand": sorted(hand)},
             "moves": r.get("moves", []), "laps": r["laps"], "est_laps": r.get("est_laps"), "deltas": r["deltas"], "decks": r.get("decks", [])}
