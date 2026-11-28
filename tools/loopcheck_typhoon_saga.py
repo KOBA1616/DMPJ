@@ -4,7 +4,7 @@
 墓地にサガがあれば1ターンで置換勝利まで届く。闇が1枚だと届かない。"""
 from dmsim.engine import scenario as sc
 from dmsim.cards.defs import load_rules
-from dmsim.search.game import play_game
+from dmsim.play_api import play_cheat as play_game
 
 r = load_rules()
 SAGA, SHAKO, DRAG, IWA = "dm22ex2-021", "dmrp03-s03", "dm22ex1-007", "dmrp03-036"

@@ -282,7 +282,7 @@ def run_one(rules, ls, seed: int, max_turn: int = 2, budget: int | None = None, 
     ブロック・トリガーを使う相手。0（既定）は従来どおり。段2の定義は変えない。loop_beat: 段1（ループ）が成立したうえでの
     殴り勝ち（ループで出した体による殴り勝ち、段2とは別の欄。設計書 §24）。"""
     from dmsim.engine import scenario
-    from dmsim.search.game import play_game
+    from dmsim.play_api import play_cheat as play_game
     from .lockcheck import lock_probe
     deck = _deck(ls)
     v = vary(rules, ls, seed)

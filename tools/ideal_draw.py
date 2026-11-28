@@ -16,7 +16,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.eval.lockcheck import lock_probe  # noqa: E402
-from dmsim.search.game import play_game  # noqa: E402
+from dmsim.play_api import play_cheat as play_game  # noqa: E402
 
 
 def main():

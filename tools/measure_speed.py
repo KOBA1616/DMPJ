@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.cards.defs import load_rules
 from dmsim.engine.play import default_decks
 from dmsim.engine import Engine
-from dmsim.search.game import play_game
+from dmsim.play_api import play_cheat as play_game
 from dmsim.engine.view import turn_of  # noqa: E402
 
 def t(f, n):

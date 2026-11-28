@@ -21,7 +21,7 @@ from dmsim.engine import scenario  # noqa: E402
 from dmsim.eval import speed_bound as S  # noqa: E402
 from dmsim.eval.lockcheck import lock_probe  # noqa: E402
 from dmsim.eval.ruler import judge  # noqa: E402
-from dmsim.search.game import play_game  # noqa: E402
+from dmsim.play_api import play_cheat as play_game  # noqa: E402
 
 FILLER = "T022"
 

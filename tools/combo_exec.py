@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.engine.scenario import build  # noqa: E402
-from dmsim.search.game import play_game  # noqa: E402
+from dmsim.play_api import play_cheat as play_game  # noqa: E402
 
 
 def mana_for(rules, cards, n):

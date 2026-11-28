@@ -186,7 +186,7 @@ def measure_budget(ls, budget: int | None = None) -> int:
 def measure(rules, name: str, seeds, max_turn: int = 2, budget: int | None = None) -> list[dict]:
     """入口局面から play_game（相手はマナチャージだけ）を回す。budget 省略時は LoopSpec.source の既定。"""
     from dmsim.eval.lockcheck import lock_probe
-    from dmsim.search.game import play_game
+    from dmsim.play_api import play_cheat as play_game
     ls = load(name)
     deck = deck_of(ls)
     bud = measure_budget(ls, budget)
