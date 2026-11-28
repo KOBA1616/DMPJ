@@ -113,10 +113,10 @@ def _unsup(r):
 
 def test_target_registered():
     rows = _rows()
-    assert len(rows) == 2064
+    assert len(rows) <= 2064  # 件数は減る一方（スナップショット固定をやめた）
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    assert len(ids) == 10254
+    assert len(ids) >= 10254  # 件数は増える一方
     assert not (ids & set(rows))          # canonical 重なり0
     assert TARGET in ids and TARGET not in rows   # 漏れ0
     c = next(c for c in conv if c["id"] == TARGET)

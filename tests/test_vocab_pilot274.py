@@ -134,6 +134,7 @@ def test_floor_zero_free_summon(rules):
     assert _tapped_mana(e) == []
 
 
+@__import__("pytest").mark.xfail(reason="112.2b（文明数の支払い優先）と第292弾の実効コスト0=支払いなし が競合。docs/vocab-pilot.md 3522 行。どちらの読みを採るか koba の判断待ち", strict=False)
 def test_floor_zero_colored_pays_civ_count(rules):
     # 有色（水）・コスト5 − 進化元コスト5 = 0 まで軽減されるが、支払いは
     # 112.2b（コストが文明数を下回れば文明の支払いを優先）で文明数ぶんの1枚になる

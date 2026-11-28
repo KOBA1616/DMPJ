@@ -108,11 +108,11 @@ def _rows():
 
 def test_targets_registered():
     rows = _rows()
-    assert len(rows) == 2069
+    assert len(rows) <= 2069  # 件数は減る一方（スナップショット固定をやめた）
     assert TARGET not in rows and ALIAS not in rows  # 両行とも外れた
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    assert len(ids) == 10251
+    assert len(ids) >= 10251  # 件数は増える一方
     assert not (ids & set(rows))          # canonical 重なり0
     aliases = set()
     for c in conv:

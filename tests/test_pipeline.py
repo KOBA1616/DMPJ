@@ -10,6 +10,7 @@ CAND = dict(id="t_pipe", name="部品A", core=CORE, bz=["dm25sd1-001", "dm20-013
 def test_pipeline_auto_origin(tmp_path, monkeypatch):
     monkeypatch.delenv("DMSIM_SKIP_CONVERTED", raising=False)
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("dmsim.cards.decks.REPO", tmp_path)   # 相対パスのデッキは tmp_path 側から読む
     rules = load_rules(only_approved=False)
     rep = P.run_candidate(rules, CAND, root=tmp_path, path=tmp_path / "reg", seeds=range(1, 3),
                           find=dict(laps_max=2, max_nodes=800, tries=2))

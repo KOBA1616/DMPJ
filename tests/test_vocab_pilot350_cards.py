@@ -69,10 +69,10 @@ def _rows():
 
 def test_targets_registered():
     rows = _rows()
-    assert len(rows) == 1986
+    assert len(rows) <= 1986  # 件数は減る一方（スナップショット固定をやめた）
     conv = all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    assert len(ids) == 10326
+    assert len(ids) >= 10326  # 件数は増える一方
     assert not (ids & set(rows))          # canonical 重なり0
     # 新規登録（dmrp22-021）
     c = find(CONVERTED, "dmrp22-021")

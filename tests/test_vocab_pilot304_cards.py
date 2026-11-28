@@ -118,4 +118,5 @@ def test_evolution_cross_gear_targets_cleared():
     # ギャップ名自体は他ギャップ併記の3行に残る
     holders = {rid for rid, r in rows.items()
                if "evolution_cross_gear" in (r.get("gaps") or [])}
-    assert holders == {"dmc66-034", "dm17-004", "dm17-s04"}, holders
+    # 後続の再変換で登録済みになった行は減ってよい
+    assert holders <= {"dmc66-034", "dm17-004", "dm17-s04"}, holders
