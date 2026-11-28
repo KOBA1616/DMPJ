@@ -91,12 +91,13 @@ def _run(e, steps=120):
         if d is None:
             return
         keys = [o["key"] for o in d["options"]]
-        if played and d["kind"] in ("main", "attack"):
-            return   # 効果が解決し終わって、次の選択（攻撃・メイン）に戻った
+        if played and (d["kind"] in ("main", "attack") or e.s.turn != e.t0):
+            return   # 効果が解決し終わって、次の選択（攻撃・メイン）に戻った。出した自分のターンが終わっても止める
         if d["kind"] == "main":
             if played:
                 return
             e.h0 = _hand(e)   # 出す直前の手札枚数（出すカードを含む）
+            e.t0 = e.s.turn
             e.answer([next(i for i, k in enumerate(keys) if k.startswith("play:"))])
             played = True
             continue
@@ -182,3 +183,83 @@ def test_dream_other_players_same_name_is_not_blocked(dr):
     """持ち主ごとの制限: 相手の場に同名がいても出せる。"""
     e = setup(dr, {"hand": ["XD1"], "mana": ["T001"]}, {"bz": ["XD1"]})
     assert _can_play(e, "XD1")
+
+
+# ---------- タマシード/クリーチャー（クリーチャーでもあり、タマシードでもある） ----------
+
+TC_CARDS = """
+cards:
+  - id: XT1
+    name: 試験タマシード兼クリーチャー
+    civs: [nature]
+    cost: 1
+    power: 3000
+    types: [tamaseed, creature]
+    races: [テスト]
+    text: このタマシードが出た時、カードを１枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, subject: self, to: bz}
+        effect:
+          - {op: draw, count: 1}
+  - id: XT0
+    name: 試験タマシードのみ
+    civs: [nature]
+    cost: 1
+    power: 0
+    types: [tamaseed]
+    text: このタマシードが出た時、カードを１枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, subject: self, to: bz}
+        effect:
+          - {op: draw, count: 1}
+"""
+
+
+@pytest.fixture(scope="session")
+def tc(tmp_path_factory):
+    p = tmp_path_factory.mktemp("tamacre") / "t_cards.yaml"
+    p.write_text(TC_CARDS, encoding="utf-8")
+    return load_rules(card_yaml_files() + [p])
+
+
+def test_tamaseed_creature_play_action_prefers_generate(tc):
+    d = tc.cards["XT1"]
+    assert d.is_tamaseed_creature() and d.is_creature()
+    e = setup(tc, {"hand": ["XT1"], "mana": ["T001"]})
+    cid = e.zlist("hand", 0)[0]
+    assert e._play_action(d, cid) == "generate"   # 実行が許されていれば実行
+
+
+def test_tamaseed_creature_in_hand_has_both_types(tc):
+    e = setup(tc, {"hand": ["XT1"]})
+    ctx = {"you": 0, "self": None, "vars": {}}
+    for ty in ("creature", "tamaseed"):
+        assert e.candidates({"zone": "hand", "owner": "you", "filter": {"types": [ty]}}, ctx), ty
+
+
+def test_tamaseed_creature_enters_bz_as_both_and_cip_fires(tc):
+    """タマシードのみの札と同じ流れで出て（出た時が同じ回数だけ誘発する）、場では両方の種類を持つ。"""
+    e = setup(tc, {"hand": ["XT1"], "mana": ["T001"]})
+    _run(e)
+    top = next(c for c in e.bz_tops(0) if e.s.cards[c].defn == "XT1")
+    types = e.chars(top)["types"]
+    assert "creature" in types and "tamaseed" in types
+    ctl = setup(tc, {"hand": ["XT0"], "mana": ["T001"]})
+    _run(ctl)
+    assert any(ctl.s.cards[c].defn == "XT0" for c in ctl.bz_tops(0))
+    assert _hand(e) == _hand(ctl)   # 出た時の誘発回数（ドロー）が、実行したタマシードと同じ
+
+
+def test_tamaseed_creature_summon_when_generate_denied(tc):
+    """実行を禁じられていれば、召喚として出せる（どちらかが許されていれば出せる）。"""
+    e = setup(tc, {"hand": ["XT1"], "mana": ["T001"]})
+    cid = e.zlist("hand", 0)[0]
+    d = tc.cards["XT1"]
+    orig = e.permits
+    e.permits = lambda c, a, *x, **k: False if a == "generate" else orig(c, a, *x, **k)
+    assert e._play_action(d, cid) == "summon"
+    assert e._can_play_face(cid, 0, None)
+    e.permits = lambda c, a, *x, **k: False if a in ("generate", "summon") else orig(c, a, *x, **k)
+    assert not e._can_play_face(cid, 0, None)
