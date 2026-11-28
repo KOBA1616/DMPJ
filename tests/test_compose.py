@@ -33,3 +33,18 @@ def test_find_loop_reports_finite_loop_for_jashin_board(monkeypatch):
         e.answer([ks.index("pass") if "pass" in ks else 0])
     r = C.find_loop(e, f"attack:{S}:player", laps_max=1, max_nodes=800, tries=2)
     assert r["kind"] in ("finite", "infinite") and r["laps"] >= 1
+
+
+def test_minimal_board_shrinks_jashin_loop(monkeypatch):
+    """ジャシン帝の盤面を縮約して、ループが成立する最小盤面を LoopSpec で得る。墓地は必要な部品＋任意 n 枚で表す。"""
+    from dmsim.discovery import minboard as MB
+    monkeypatch.delenv("DMSIM_SKIP_CONVERTED", raising=False)
+    rules = load_rules(only_approved=False)
+    ls = LE.load("jashin_abyss")
+    spec = MB.board_spec(ls, 1)
+    mb = MB.minimal_board(rules, spec, "attack:dm25sd1-001:player", name="jashin_min", max_nodes=800)
+    n0 = sum(len(v) for v in spec["p0"].values())
+    n1 = sum(len(v) for v in mb.spec["p0"].values())
+    assert n1 < n0
+    assert mb.loopspec.minimal and mb.tests > 0
+    assert {p.match.get("name") for p in mb.loopspec.minimal if p.zone == "bz"} >= {"dm25sd1-001"}   # 起点の攻撃役は場に残る
