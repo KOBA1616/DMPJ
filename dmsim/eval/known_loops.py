@@ -9,22 +9,7 @@ from dmsim.eval import loop_entry as LE
 KNOWN = ("akashic", "akashic_hd2", "saga", "jashin_abyss")   # data/loops/entry の現行の入口（*_v1 は旧定義で除く）
 
 
-def _origins(eng, steps: int = 60) -> list[tuple]:
-    """pass を選びながら進め、最初の main 選択（play: の行動）と最初の attack 選択（攻撃）の起点候補を
-    (その時点のエンジン, key) で返す。攻撃を先に試す。"""
-    mains, atk = [], []
-    for _ in range(steps):
-        d = eng.advance()
-        if d is None or eng.s.result:
-            break
-        ks = [o["key"] for o in d["options"]]
-        if d["player"] == 0 and d["kind"] == "main" and not mains:
-            mains = [(eng.clone(), k) for k in ks if k.startswith("play:")]
-        if d["player"] == 0 and d["kind"] == "attack":
-            atk = [(eng.clone(), k) for k in ks if k.startswith("attack:")][:1]
-            break
-        eng.answer([ks.index("pass") if "pass" in ks else 0])
-    return atk + mains
+from dmsim.search.origins import auto_origins as _origins   # 起点の自動取得は共有（search/origins.py）
 
 
 def measure_one(rules, name: str, seed: int = 1, max_origins: int = 8, **kw) -> dict:
