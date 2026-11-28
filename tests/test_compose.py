@@ -48,3 +48,47 @@ def test_minimal_board_shrinks_jashin_loop(monkeypatch):
     assert n1 < n0
     assert mb.loopspec.minimal and mb.tests > 0
     assert {p.match.get("name") for p in mb.loopspec.minimal if p.zone == "bz"} >= {"dm25sd1-001"}   # 起点の攻撃役は場に残る
+
+
+def _board(monkeypatch, bz, gy, ident):
+    """盤面を指定して、自分の攻撃選択まで進めたエンジンを返す。"""
+    from dmsim.discovery.submit import build_entry, REPO
+    monkeypatch.delenv("DMSIM_SKIP_CONVERTED", raising=False)
+    rules = load_rules(only_approved=False)
+    ids = list(dict.fromkeys(bz + gy))
+    ep, dp = build_entry(rules, id=ident, name=ident, core=[{"id": i} for i in ids], bz=bz, graveyard=gy)
+    try:
+        ls = LE.load(f"auto/{ident}")
+        e = LE.build(rules, ls, 1)
+    finally:   # テスト用の入口とデッキは残さない
+        (REPO / ep).unlink(missing_ok=True)
+        (REPO / dp).unlink(missing_ok=True)
+    while (d := e.advance())["kind"] != "attack":
+        ks = [o["key"] for o in d["options"]]
+        e.answer([ks.index("pass") if "pass" in ks else 0])
+    return e
+
+
+S, M, JB, G, OA, BG = "dm25sd1-001", "dm20-013", "dm26ex1-018", "dm26ex2-pr004", "dm25rp4-066", "dm01-090"
+
+
+def test_attack_cancel_by_destroying_attacker_breaks_no_shield(monkeypatch):
+    """攻撃中のクリーチャーが破壊されると攻撃は中止になり、シールドはブレイクされない（攻撃時効果だけが出る）。"""
+    from dmsim.search import compose as C
+    e = _board(monkeypatch, [S, M, JB, BG], [G, OA], "t_cancel")
+    shields = len(e.zlist("shield", 1))
+    mv, _ = C.enumerate_moves(e, f"attack:{S}:player", max_nodes=500)
+    destroyed = [m for m in mv if len(m["eng"].zlist("graveyard", 0)) > len(e.zlist("graveyard", 0))]
+    assert destroyed
+    assert all(len(m["eng"].zlist("shield", 1)) == shields for m in mv)
+
+
+def test_ore_nateha_discards_each_lap_and_opponent_redraws(monkeypatch):
+    """オア:ナテハの出た時で相手が1枚捨て、破壊時に相手が1枚引く。周回で相手の手札は変わらず、墓地が1枚増える。"""
+    from dmsim.search import compose as C
+    e = _board(monkeypatch, [S, M, JB, BG], [G, OA], "t_ore")
+    hand0, gy0 = len(e.zlist("hand", 1)), len(e.zlist("graveyard", 1))
+    mv, _ = C.enumerate_moves(e, f"attack:{S}:player", max_nodes=1200)
+    good = [m for m in mv if m.get("again") and C.superset(m["core"], C.core(e))]
+    assert good
+    assert any(len(m["eng"].zlist("hand", 1)) == hand0 and len(m["eng"].zlist("graveyard", 1)) == gy0 + 1 for m in good)
