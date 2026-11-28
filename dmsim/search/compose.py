@@ -169,6 +169,51 @@ def chain(eng, origin_key: str, *, player: int = 0, laps_max: int = 8, max_nodes
     return best
 
 
+def _sig(step) -> tuple:
+    """選択1つの形（種類と、選んだ札のゾーン）。札名・枚数の違いは見ない（周ごとに捨てる札が違っても同じ形）。"""
+    kind, keys = step
+    return (kind, tuple(k.split(":", 1)[0] for k in keys))
+
+
+def repeat_count(keys: list, max_period: int = 6) -> tuple[int, int]:
+    """選択列の中で、同じ形のまとまりが続けて何回繰り返されるか。戻り: (最大の繰り返し数, その周期)。"""
+    sg = [_sig(k) for k in keys]
+    best = (1, 0)
+    for p in range(2, max_period + 1):
+        for i in range(0, len(sg) - p + 1):
+            n = 1
+            while i + (n + 1) * p <= len(sg) and sg[i + n * p:i + (n + 1) * p] == sg[i:i + p]:
+                n += 1
+            if n > best[0]:
+                best = (n, p)
+    return best
+
+
+def inner_loop(eng, origin_key: str, *, player: int = 0, max_nodes: int = 3000, min_repeat: int = 3) -> dict | None:
+    """1手の中で回る回帰（出た時の効果が、場と墓地の同じ札を行き来して自分を再び起動する型。サガなど）。
+    起点を1回選ぶだけで、同じ形の選択のまとまりが min_repeat 回以上続き、その間に山札が減り、
+    場が起点を含み墓地に起点の札の種類が残る手を探す。1周が手の周回に分かれないので chain では見えない。"""
+    c0, g0 = core(eng, player), kinds(eng, "graveyard", player)
+    d0 = counts(eng, player)["deck"]
+    mv, _n = enumerate_moves(eng, origin_key, player=player, max_nodes=max_nodes)
+    best = None
+    for m in mv:
+        if m.get("end") == "result" or not (superset(m["core"], c0) and kinds(m["eng"], "graveyard", player) >= g0):
+            continue
+        n, p = repeat_count(m["keys"])
+        loss = d0 - m["counts"]["deck"]
+        if n < min_repeat or loss < n:
+            continue
+        if best is None or (n, loss) > (best[0], best[1]):
+            best = (n, loss, p, m)
+    if best is None:
+        return None
+    n, loss, p, m = best
+    return {"kind": "finite", "laps": n, "deltas": [-(loss // n)] * n, "deck_start": d0, "est_laps": n,
+            "decks": [d0, m["counts"]["deck"]], "last": (m["counts"]["deck"], m["counts"]["graveyard"], len(m["keys"])),
+            "moves": [m["keys"]], "inner": True, "period": p}
+
+
 def find_loop(eng, origin_key: str, *, player: int = 0, laps_max: int = 6, max_nodes: int = 2500, tries: int = 6) -> dict:
     """合成手の連鎖でループを探し、判定をまとめて返す。
     kind: none（1周も回帰しない） / finite（山札が毎周減る。見積り周回数つき） / infinite（山札が減らない周が続く）。
@@ -176,6 +221,9 @@ def find_loop(eng, origin_key: str, *, player: int = 0, laps_max: int = 6, max_n
     d0 = counts(eng, player)["deck"]
     hist = chain(eng, origin_key, player=player, laps_max=laps_max, max_nodes=max_nodes, tries=tries)
     if not hist:
+        inner = inner_loop(eng, origin_key, player=player, max_nodes=max_nodes)
+        if inner is not None:
+            return inner
         return {"kind": "none", "laps": 0, "deltas": [], "deck_start": d0}
     decks = [d0] + [h[0] for h in hist]
     deltas = [b - a for a, b in zip(decks, decks[1:])]
