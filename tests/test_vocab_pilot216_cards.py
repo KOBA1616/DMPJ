@@ -185,7 +185,7 @@ def test_06a_cip_destroy_and_draw(rules):
     assert len(e.zlist("hand", 0)) == seen["h"] + 1   # 06a が離れて -1、ドロー +2
 
 
-@pytest.mark.xfail(reason="逆転撃の宣言割引＋唱え後ドローが成立しない。原因未特定（調査待ち）", strict=False)
+@pytest.mark.xfail(reason="pilot274 と同じ 112.2b（有色のコスト0でも文明数ぶんタップ）対 第292弾（実効0=支払いなし）の競合。koba の判断待ち", strict=False)
 def test_06a_declaration_discount_and_cast_draw(rules):
     e = build(rules, {"p0": {"bz": ["dm23rp4x-06a"], "hand": ["dm23rp1-036"],
                              "mana": ["T030"] * 4},
