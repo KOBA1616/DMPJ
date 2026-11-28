@@ -1180,6 +1180,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         s = self.s
         c = s.cards[cid]
         frm = c.zone
+        held_from = c.entered_from if frm == "hold" else ""
         if c.zone == "hold":
             s.hold.remove(cid)
         else:
@@ -1198,7 +1199,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.face_up = self.rules.zones[to]["public"]
         c.controller = c.owner if controller is None else controller
         c.entered_turn = s.turn if to == "bz" else -1
-        c.entered_from = frm if to == "bz" else ""
+        c.entered_from = (held_from or frm) if to == "bz" else ""   # 保留を経由した札は保留の前のゾーン
         c.face = -1
         if to == "bz":
             s.seq += 1
@@ -1239,6 +1240,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c = self.s.cards[cid]
         self.zlist(c.zone, c.owner).remove(cid)
         self._note_deck(c)
+        c.entered_from = c.zone   # 保留の前のゾーン（「墓地から出た」の照合用。バトルゾーンに出る時に使う）
         c.zone = "hold"
         self.s.hold.append(cid)
 

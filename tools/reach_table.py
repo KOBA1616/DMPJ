@@ -12,6 +12,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dmsim.base.registry import load_known_combos  # noqa: E402
 from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.discovery.cyclesetup import FILLER, setup_from_cycle  # noqa: E402
 from dmsim.search.reachsearch import reach_rate  # noqa: E402
@@ -55,7 +56,7 @@ def main(argv=None):
     kw = {"width": a.width, "max_turn": a.max_turn}
     seeds = range(1, a.seeds + 1)
     if a.known:
-        y = yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]
+        y = load_known_combos()
         for c in y:
             cores = [p["id"] for p in c["parts"] if p.get("role") == "core" and p.get("id")]
             if c["id"] == "drill_lock":

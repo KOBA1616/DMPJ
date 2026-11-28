@@ -13,6 +13,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from dmsim.base.registry import load_candidates, load_known_combos  # noqa: E402
 from dmsim import load_rules  # noqa: E402
 from dmsim.discovery import basebuild as B  # noqa: E402
 
@@ -22,11 +23,11 @@ OUT = ROOT / "data" / "discovery" / "basebuild"
 
 def core_of(name: str) -> dict:
     """既知コンボの parts の role: core（各4枚）。ID の無い中核があれば、登録簿の候補（data/registry/candidates.yaml）の core を使う。"""
-    kc = {c["id"]: c for c in yaml.safe_load((ROOT / "data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
+    kc = {c["id"]: c for c in load_known_combos()}
     parts = [p for p in kc[name]["parts"] if p.get("role") == "core"]
     if all(p.get("id") for p in parts):
         return {p["id"]: B.COPIES for p in parts}
-    cands = {c["id"]: c for c in yaml.safe_load((ROOT / "data/registry/candidates.yaml").read_text(encoding="utf-8"))["candidates"]}
+    cands = {c["id"]: c for c in load_candidates()}
     return {c["id"]: B.COPIES for c in cands[name]["core"]}
 
 

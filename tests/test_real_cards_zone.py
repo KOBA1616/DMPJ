@@ -187,3 +187,4 @@ def test_magnum_triggers_on_creature_put_by_effect(rules):
     gy = names(e, "graveyard", 0)
     # 墓地の札が出て、マグナムの誘発で自分のクリーチャーが1体破壊された（呪文＋破壊された1体で2枚。誘発しなければ呪文だけ）
     assert len(gy) == 2 and ("dm20-013" in gy or WATER in gy), gy
+

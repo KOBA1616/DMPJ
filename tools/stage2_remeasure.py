@@ -28,7 +28,7 @@ from dmsim.discovery import basebuild as B  # noqa: E402
 from dmsim.engine import scenario  # noqa: E402
 from dmsim.eval.lockcheck import lock_probe  # noqa: E402
 from dmsim.eval.ruler import judge  # noqa: E402
-from dmsim.search.game import play_game  # noqa: E402
+from dmsim.play_api import play_cheat as play_game  # noqa: E402
 
 # 段1に届いた組（2026-11-14 の確認後）。spell は「つなぎの呪文」の役で、効果データから最も軽い呪文を選ぶ（名前は見ない）。
 GROUPS = {

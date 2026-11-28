@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from dmsim.base.registry import load_candidates_doc  # noqa: E402
 from dmsim.discovery import synergy_hunt as SH  # noqa: E402
 
 
@@ -35,7 +36,7 @@ def main(argv=None) -> int:
         from dmsim.base.store import REPO
         from dmsim.cards.defs import load_rules
         rules = load_rules()
-        st = SH._strong_from_yaml(yaml.safe_load((REPO / "data/registry/candidates.yaml").read_text(encoding="utf-8")), a.strong)
+        st = SH._strong_from_yaml(load_candidates_doc(), a.strong)
         pk = SH.pick(rules, strong=st, limit=a.limit)
         for p in pk["pairs"]:
             print(p["a"], p["b"], p["kinds"], p["turn"], " + ".join(p["names"]))

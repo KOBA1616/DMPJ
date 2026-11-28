@@ -15,10 +15,11 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dmsim.base.registry import load_known_combos  # noqa: E402
 from dmsim.eval import validity  # noqa: E402
 from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.engine.scenario import build  # noqa: E402
-from dmsim.search.game import play_game  # noqa: E402
+from dmsim.play_api import play_cheat as play_game  # noqa: E402
 
 MANA5 = ["T001", "T003", "T004", "T005", "T008"]
 OPP_DECK, OPP_MANA = 30, 6
@@ -85,7 +86,7 @@ def score(rules, cards, seeds=(1, 2), turns=2, key="score") -> float:
 
 
 def control(rules, n_random=300, seed=1) -> list[dict]:
-    y = yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]
+    y = load_known_combos()
     ids = [i for i in rules.cards if not i.startswith(("T", "R", "L"))]
     rng = random.Random(seed)
     out = []

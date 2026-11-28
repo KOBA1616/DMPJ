@@ -151,7 +151,7 @@ def grown_of(delta: dict | None) -> list[str]:
 
 def _play(rules, spec, *, budget: int, max_turn: int, seed: int, value_fn=None):
     from dmsim.eval.lockcheck import lock_probe
-    from dmsim.search.game import play_game
+    from ..play_api import play_cheat as play_game
     start = scenario.build(rules, spec, first_player=0)
     return play_game(rules, [], [], seed, first_player=0, max_turn=max_turn, budget=budget,
                      start=start, lock_judge=lock_probe, value_fn=value_fn)
@@ -281,7 +281,7 @@ def judge_opening(rules, deck: list[str], *, budget: int = 600, max_turn: int = 
                   seeds=(1, 2)) -> dict:
     """開幕検証（2段ふるいの段2）: 通常の開幕から回し、勝ちか、エンジンの周回が実行されるかを見る。"""
     from dmsim.eval.lockcheck import lock_probe
-    from dmsim.search.game import play_game
+    from ..play_api import play_cheat as play_game
     rows = []
     for sd in seeds:
         res, _ = play_game(rules, deck, ["T001"] * 40, sd, first_player=sd % 2,

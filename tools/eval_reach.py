@@ -33,7 +33,7 @@ def start(spec_path, budget, seeds, turns):
     import yaml
     from dmsim.cards.defs import load_rules
     from dmsim.engine.scenario import build
-    from dmsim.search.game import play_game
+    from dmsim.play_api import play_cheat as play_game
     rules = load_rules()
     spec = yaml.safe_load(Path(spec_path).read_text(encoding="utf-8"))
     for seed in range(1, seeds + 1):

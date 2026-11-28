@@ -161,7 +161,7 @@ def measured_bound(rules, deck: list[str], seeds, *, budget: int = 1000, max_tur
     """山札が見える探索で seeds の並び × 先攻・後攻を回し、max_turn 以内の最速勝ち（上限ターン）と内訳を返す。
     opp_level: 相手の段階（search.opponent.resistance）。既定 0 は従来どおり何もしない相手。"""
     from .lockcheck import lock_probe
-    from ..search.game import play_game
+    from ..play_api import play_cheat as play_game
     from ..search.opponent import resistance
     model, lvl_deck = resistance(opp_level)
     if opp_level != 0 and opp_deck is None:
