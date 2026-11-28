@@ -83,8 +83,6 @@ def collect_games_parallel(rules, vocab: Vocab, model: Model, deck_a, deck_b,
                            aggregate: bool = False):
     """collect_games のマルチプロセス版。fork で rules/vocab を引き継ぎ、
     モデルのパラメータだけを各ワーカーへ渡す。結果（batch, winners）は直列版と同形。"""
-    import multiprocessing as mp
-
     per = [games // workers + (1 if i < games % workers else 0) for i in range(workers)]
     jobs = []
     done = 0
@@ -93,15 +91,8 @@ def collect_games_parallel(rules, vocab: Vocab, model: Model, deck_a, deck_b,
             jobs.append((None, None, dict(model.p), deck_a, deck_b, n,
                          seed + i * 1000, aggregate))
             done += n
-    ctx = mp.get_context("fork")
-    # fork した子ではモジュールグローバル経由で rules/vocab を渡す（pickle を避ける）
-    global _PAR_RULES, _PAR_VOCAB
-    _PAR_RULES, _PAR_VOCAB = rules, vocab
-    try:
-        with ctx.Pool(workers) as pool:
-            results = pool.map(_collect_chunk_global, jobs)
-    finally:
-        _PAR_RULES = _PAR_VOCAB = None
+    from ..base.parallel import map_ordered
+    results = map_ordered(lambda job: _collect_chunk(job, rules, vocab), jobs, workers)     # 各組のシードは jobs に明示（上）
     batch, winners = [], []
     for b, w in results:
         batch.extend(b)
@@ -109,21 +100,17 @@ def collect_games_parallel(rules, vocab: Vocab, model: Model, deck_a, deck_b,
     return batch, winners
 
 
-_PAR_RULES = None
-_PAR_VOCAB = None
-
-
-def _collect_chunk_global(job):
+def _collect_chunk(job, rules, vocab):
     _, _, params, deck_a, deck_b, games, seed = job[:7]
     aggregate = job[7] if len(job) > 7 else False
     if "attn_q" in params:
         from .model_attn import AttnModel
-        model = AttnModel(len(_PAR_VOCAB))
+        model = AttnModel(len(vocab))
     else:
-        model = Model(len(_PAR_VOCAB))
+        model = Model(len(vocab))
     for k, v in params.items():
         model.p[k] = v
-    return collect_games(_PAR_RULES, _PAR_VOCAB, model, deck_a, deck_b, games,
+    return collect_games(rules, vocab, model, deck_a, deck_b, games,
                          seed=seed, aggregate=aggregate)
 
 

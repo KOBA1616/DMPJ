@@ -7,7 +7,6 @@ import argparse
 import json
 import os
 import sys
-from concurrent.futures import ProcessPoolExecutor
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -44,9 +43,9 @@ def main():
     a = ap.parse_args()
     jobs = [(d, lv, s, on, a.budget, a.n_det) for d in a.decks for lv in a.levels for on in (False, True) for s in range(a.games)]
     rows = {}
-    with ProcessPoolExecutor(a.workers) as ex:
-        for deck, lv, on, r in ex.map(_one, jobs):
-            rows.setdefault((deck, lv, on), []).append(r)
+    from dmsim.base.parallel import map_ordered
+    for deck, lv, on, r in map_ordered(_one, jobs, a.workers):
+        rows.setdefault((deck, lv, on), []).append(r)
     out = []
     for (deck, lv, on), rs in sorted(rows.items(), key=lambda x: str(x[0])):
         n = len(rs)

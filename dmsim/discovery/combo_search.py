@@ -108,7 +108,6 @@ def search_setup(rules, spec: dict, zone: str, pool: list[str], *, slots: int = 
                  progress=None) -> list[Candidate]:
     """配置 spec を固定し、zone（手札など）に pool から slots 枚（種類）足した局面を、それぞれ games 局ずつ測る。"""
     from ..eval.measure import W as _W
-    from ..eval.measure import init_worker as _init_worker
     _W["rules"] = rules
     cands = []
     for x in enumerate_extras(pool, slots, max_decks, seed):
@@ -118,9 +117,8 @@ def search_setup(rules, spec: dict, zone: str, pool: list[str], *, slots: int = 
     if workers <= 1:
         out = [_setup_job(j) for j in jobs]
     else:
-        from concurrent.futures import ProcessPoolExecutor
-        with ProcessPoolExecutor(workers, initializer=_init_worker, initargs=(None,)) as ex:
-            out = list(ex.map(_setup_job, jobs, chunksize=max(1, len(jobs) // (workers * 8))))
+        from ..base.parallel import map_ordered
+        out = map_ordered(_setup_job, jobs, workers, chunksize=max(1, len(jobs) // (workers * 8)))
     for i, (c, _) in enumerate(cands):
         results = out[i * games:(i + 1) * games]
         summ = summarize(results, turns)

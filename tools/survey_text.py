@@ -19,7 +19,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
+from dmsim.cards.defs import load_rule_table  # noqa: E402
 from convert_cards import load_rows  # noqa: E402
 
 DATA = ROOT / "data"
@@ -54,7 +56,7 @@ def sentences(text: str) -> list[str]:
 
 
 def keyword_names() -> list[str]:
-    kw = yaml.safe_load((DATA / "rules" / "keywords.yaml").read_text(encoding="utf-8"))["keywords"]
+    kw = load_rule_table("keywords.yaml")["keywords"]
     return sorted((v["ja"] for v in kw.values()), key=len, reverse=True)
 
 

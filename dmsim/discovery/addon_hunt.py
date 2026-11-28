@@ -106,7 +106,8 @@ def paired(base: list[dict], new: list[dict], turn: int) -> dict:
 def run(rules, entry: str, deck_file: str, *, seeds: int = 40, turn: int = 4, opp: int = 1, budget: int = 200,
         workers: int = 4, per: int = 6, linked: int = 8, ckpt: Path | None = None, log=print, slot: str | None = None) -> dict:
     from ..eval.api import measure_assembly
-    deck = yaml.safe_load(Path(deck_file).read_text(encoding="utf-8"))["deck"]
+    from ..cards.decks import load_deck
+    deck = load_deck(deck_file)
     core = core_of(entry)
     raw = B._raw_cards(rules)
     fill = B.fillers(rules, core, raw)

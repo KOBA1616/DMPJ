@@ -136,6 +136,11 @@ class Face:
         """G城: 実行するとシールドゾーンに表向きで置かれる（第176弾）。バトルゾーンには出ない。"""
         return "g_castle" in self.types
 
+    def is_tamaseed_creature(self) -> bool:
+        """タマシード/クリーチャー: クリーチャーでもありタマシードでもある（どのゾーンでも両方の種類を持つ）。
+        手札からは召喚でも実行でも出せる（engine の _play_action が選ぶ）。"""
+        return "creature" in self.types and "tamaseed" in self.types
+
 
 @dataclass
 class CardDef:
@@ -210,6 +215,11 @@ class CardDef:
     def is_castle(self) -> bool:
         """G城: 実行するとシールドゾーンに表向きで置かれる（第176弾）。バトルゾーンには出ない。"""
         return "g_castle" in self.types
+
+    def is_tamaseed_creature(self) -> bool:
+        """タマシード/クリーチャー: クリーチャーでもありタマシードでもある（どのゾーンでも両方の種類を持つ）。
+        手札からは召喚でも実行でも出せる（engine の _play_action が選ぶ）。"""
+        return "creature" in self.types and "tamaseed" in self.types
 
     def face(self, i: int | None) -> "CardDef | Face":
         return self if i is None or not self.faces else self.faces[i]
@@ -1358,9 +1368,13 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), tap_entry=bool(raw.get("tap_entry", False)), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), s_max=bool(raw.get("s_max", False)), ace=bool(raw.get("ace", False)), hyper=bool(raw.get("hyper", False)), crystal_soul=int(raw.get("crystal_soul", 0)), mana_boost=raw.get("mana_boost"), launcher=raw.get("launcher"), evo_base_reduce=raw.get("evo_base_reduce"), evolve_total_cost_ge=raw.get("evolve_total_cost_ge"), **{"tap_reduce": 0, "s_back": None, **props})
 
 
+def load_rule_table(name: str) -> dict:
+    """ルール語彙 data/rules/<name>（zones.yaml・keywords.yaml 等）の読み込みの窓口。直に yaml を読まない（tests/test_loading_window.py）。"""
+    return yaml.safe_load((DATA / "rules" / name).read_text(encoding="utf-8"))
+
+
 def load_tables():
-    def y(name):
-        return yaml.safe_load((DATA / "rules" / name).read_text(encoding="utf-8"))
+    y = load_rule_table
     zones = y("zones.yaml")["zones"]
     keywords = y("keywords.yaml")["keywords"]
     macros = y("op_macros.yaml")["macros"]

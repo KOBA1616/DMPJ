@@ -140,33 +140,136 @@ def laps(eng, origin_key: str, keys: list, *, player: int = 0, limit: int = 40):
     return len(seq), seq
 
 
-def chain(eng, origin_key: str, *, player: int = 0, laps_max: int = 8, max_nodes: int = 1500, tries: int = 6):
+def sig_of(m: dict, player: int = 0) -> tuple:
+    """周の候補を同じとみなす指紋。枚数だけでなく、場と墓地の札の名前の多重集合も見る（枚数が同じでも中身が違えば次の周が変わる）。"""
+    e = m["eng"]
+    return (m["counts"]["deck"], m["core"], tuple(sorted(e.s.cards[c].defn for c in e.zlist("graveyard", player))))
+
+
+def repeat_lap(eng, origin_key: str, keys: list, *, player: int = 0, accept: bool = False):
+    """前の周の選択列をもう一度なぞる。枚数が変わって新しく出た任意の置換（decline がある選択）だけは decline で答える。
+    戻り: (終わりの局面, 実際に答えた選択列) か None。同じ手の繰り返しがそのまま次の周になるかを安く確かめる（周ごとの全列挙より前に試す）。"""
+    e = eng.clone()
+    d = e.advance()
+    ks = [o["key"] for o in d["options"]]
+    if d["kind"] != "attack" or origin_key not in ks:
+        return None
+    e.answer([ks.index(origin_key)])
+    i, used = 0, []
+    while True:
+        d = e.advance()
+        if d is None or e.s.result:
+            return None
+        if d["player"] != player:
+            e.answer([0]); continue
+        if d["kind"] in END_KINDS:
+            return (e, used) if i == len(keys) else None
+        have = [o["key"] for o in d["options"]]
+        if i < len(keys) and keys[i][0] == d["kind"] and all(w in have for w in keys[i][1]):
+            want = list(keys[i][1]); i += 1
+        elif d["kind"] == "choose_replacement" and "decline" in have:
+            want = [next(h for h in have if h != "decline")] if accept and len(have) > 1 else ["decline"]
+        elif accept and used and any(u[1][0].startswith("replace:") for u in used):
+            want = [have[i] for i in _pick_default(d)]   # 置換を受けた後の追加の選択は既定（先頭から）で答える
+        else:
+            return None
+        idx, taken = [], set()
+        for w in want:
+            j = next((k for k, h in enumerate(have) if h == w and k not in taken), None)
+            if j is None:
+                return None
+            taken.add(j); idx.append(j)
+        used.append((d["kind"], want))
+        e.answer(idx)
+
+
+def chain(eng, origin_key: str, *, player: int = 0, laps_max: int = 8, max_nodes: int = 1500, tries: int = 6, accept_first: bool = False):
     """周ごとに合成手を作り直して回帰を続ける（深さ優先。ある周の候補から次の周が作れなければ、同じ周の別の候補に戻る）。
     各周は「場の札の名前が起点と同じ・墓地に起点の札の種類が残る・同じ攻撃をもう一度選べる」手。
     候補は枚数の組（山札, 墓地）ごとに1つ、山札が多く残る順に最大 tries 個試す。戻り: 最も長く続いた周ごとの (山札, 墓地, 手の長さ)。"""
     c0, g0 = core(eng, player), kinds(eng, "graveyard", player)
     best: list = []
 
-    def rec(cur, hist):
+    def rec(cur, hist, prev_keys=None):
         nonlocal best
         if len(hist) > len(best):
             best = list(hist)
         if len(hist) >= laps_max:
             return True
+        for acc in ((accept_first, False) if prev_keys and accept_first else ((False,) if prev_keys else ())):   # 前の周の繰り返しを最初に試す（既定は新しい任意の置換を断る形。accept_first で受ける形を先に試す）
+            rp = repeat_lap(cur, origin_key, prev_keys, player=player, accept=acc)
+            if rp is not None:
+                e2, used = rp
+                dd = e2.advance()
+                if (superset(core(e2, player), c0) and kinds(e2, "graveyard", player) >= g0 and dd is not None
+                        and origin_key in [o["key"] for o in dd["options"]]):
+                    c2 = counts(e2, player)
+                    if rec(e2, hist + [(c2["deck"], c2["graveyard"], len(used), used)], used):
+                        return True
         mv, _n = enumerate_moves(cur, origin_key, player=player, max_nodes=max_nodes)
         good = [m for m in mv if m.get("again") and superset(m["core"], c0) and kinds(m["eng"], "graveyard", player) >= g0]
         seen, cands = set(), []
         for m in sorted(good, key=lambda m: (-m["counts"]["deck"], len(m["keys"]))):
-            sig = (m["counts"]["deck"], m["counts"]["graveyard"])
+            sig = sig_of(m)
             if sig not in seen:
                 seen.add(sig); cands.append(m)
         for m in cands[:tries]:
-            if rec(m["eng"], hist + [(m["counts"]["deck"], m["counts"]["graveyard"], len(m["keys"]), m["keys"])]):
+            if rec(m["eng"], hist + [(m["counts"]["deck"], m["counts"]["graveyard"], len(m["keys"]), m["keys"])], m["keys"]):
                 return True
         return False
 
     rec(eng, [])
     return best
+
+
+def _sig(step) -> tuple:
+    """選択1つの形（種類と、選んだ札のゾーン）。札名・枚数の違いは見ない（周ごとに捨てる札が違っても同じ形）。"""
+    kind, keys = step
+    return (kind, tuple(k.split(":", 1)[0] for k in keys))
+
+
+def repeat_count(keys: list, max_period: int = 6) -> tuple[int, int]:
+    """選択列の中で、同じ形のまとまりが続けて何回繰り返されるか。戻り: (最大の繰り返し数, その周期)。"""
+    sg = [_sig(k) for k in keys]
+    best = (1, 0)
+    for p in range(2, max_period + 1):
+        for i in range(0, len(sg) - p + 1):
+            n = 1
+            while i + (n + 1) * p <= len(sg) and sg[i + n * p:i + (n + 1) * p] == sg[i:i + p]:
+                n += 1
+            if n > best[0]:
+                best = (n, p)
+    return best
+
+
+def inner_loop(eng, origin_key: str, *, player: int = 0, max_nodes: int = 3000, min_repeat: int = 3) -> dict | None:
+    """1手の中で回る回帰（出た時の効果が、場と墓地の同じ札を行き来して自分を再び起動する型。サガなど）。
+    起点を1回選ぶだけで、同じ形の選択のまとまりが min_repeat 回以上続き、その間に山札が減り、
+    場が起点を含み墓地に起点の札の種類が残る手を探す。1周が手の周回に分かれないので chain では見えない。"""
+    c0, g0 = core(eng, player), kinds(eng, "graveyard", player)
+    d0 = counts(eng, player)["deck"]
+    mv, _n = enumerate_moves(eng, origin_key, player=player, max_nodes=max_nodes)
+    cands = []
+    for m in mv:
+        if m.get("end") == "result" or not (superset(m["core"], c0) and kinds(m["eng"], "graveyard", player) >= g0):
+            continue
+        n, p = repeat_count(m["keys"])
+        loss = d0 - m["counts"]["deck"]
+        if n >= min_repeat and loss >= n:
+            cands.append((n, loss, p, m))
+    hidden = lambda c: any(k.split(":", 1)[0] == "shield" for _kind, ks in c[3]["keys"] for k in ks)   # 盾の選択は再生がずれる
+    cands.sort(key=lambda c: (hidden(c), -c[0], -c[1]))
+    best = None
+    for c in cands[:40]:   # 証明書として選択列から再生できる手だけ（盾など非公開の選択は key が同じで中身が違い、再生がずれる）
+        if check_inner_certificate(eng, origin_key, c[3]["keys"], player=player, min_repeat=min_repeat)["ok"]:
+            best = c
+            break
+    if best is None:
+        return None
+    n, loss, p, m = best
+    return {"kind": "finite", "laps": n, "deltas": [-(loss // n)] * n, "deck_start": d0, "est_laps": n,
+            "decks": [d0, m["counts"]["deck"]], "last": (m["counts"]["deck"], m["counts"]["graveyard"], len(m["keys"])),
+            "moves": [m["keys"]], "inner": True, "period": p}
 
 
 def find_loop(eng, origin_key: str, *, player: int = 0, laps_max: int = 6, max_nodes: int = 2500, tries: int = 6) -> dict:
@@ -176,6 +279,9 @@ def find_loop(eng, origin_key: str, *, player: int = 0, laps_max: int = 6, max_n
     d0 = counts(eng, player)["deck"]
     hist = chain(eng, origin_key, player=player, laps_max=laps_max, max_nodes=max_nodes, tries=tries)
     if not hist:
+        inner = inner_loop(eng, origin_key, player=player, max_nodes=max(2 * max_nodes, 3000))
+        if inner is not None:
+            return inner
         return {"kind": "none", "laps": 0, "deltas": [], "deck_start": d0}
     decks = [d0] + [h[0] for h in hist]
     deltas = [b - a for a, b in zip(decks, decks[1:])]
@@ -191,9 +297,27 @@ def find_loop(eng, origin_key: str, *, player: int = 0, laps_max: int = 6, max_n
             "decks": decks, "last": hist[-1][:3], "moves": [h[3] for h in hist]}
 
 
-def check_certificate(eng, origin_key: str, moves: list, *, player: int = 0) -> dict:
+def check_inner_certificate(eng, origin_key: str, keys: list, *, player: int = 0, min_repeat: int = 3) -> dict:
+    """inner ループの証明書（1手の選択列）を再生して確かめる。終わりで、場が起点を含む・墓地に起点の札の種類が残る・
+    同じ形の選択のまとまりが min_repeat 回以上続き、その回数以上に山札が減る、を見る。戻り: check_certificate と同じ形（laps は繰り返し数）。"""
+    c0, g0 = core(eng, player), kinds(eng, "graveyard", player)
+    d0 = counts(eng, player)["deck"]
+    keys = [(k[0], list(k[1])) for k in keys]
+    r = replay(eng, origin_key, keys, player=player)
+    if r is None:
+        return {"ok": False, "laps": 0, "decks": [d0], "deltas": []}
+    e, end = r
+    n, _p = repeat_count(keys)
+    d1 = counts(e, player)["deck"]
+    ok = end != "result" and superset(core(e, player), c0) and kinds(e, "graveyard", player) >= g0 and n >= min_repeat and d0 - d1 >= n
+    return {"ok": ok, "laps": n if ok else 0, "decks": [d0, d1], "deltas": [-((d0 - d1) // n)] * n if ok else []}
+
+
+def check_certificate(eng, origin_key: str, moves: list, *, player: int = 0, inner: bool = False) -> dict:
     """証明書（周ごとの選択列）を起点の局面から再生して確かめる。各周の終わりで、場が起点を含む・墓地に起点の札の種類が残る・
     同じ攻撃をもう一度選べる、を見る。戻り: {ok, laps, deltas, decks}。ok は1周以上が全部この条件を満たした時。"""
+    if inner:
+        return check_inner_certificate(eng, origin_key, moves[0], player=player) if moves else {"ok": False, "laps": 0, "decks": [], "deltas": []}
     c0, g0 = core(eng, player), kinds(eng, "graveyard", player)
     cur, decks = eng, [counts(eng, player)["deck"]]
     for keys in moves:

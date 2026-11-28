@@ -114,10 +114,12 @@ def _check_cert(rules, ls, cert: dict, measured: dict) -> bool:
     from ..search import compose as C
     try:
         e = le.build(rules, ls, int(cert.get("seed", 1)))
-        while (d := e.advance())["kind"] != "attack":
+        from ..search.origins import origin_key
+        k = origin_key(cert["origin"])   # 札 ID は攻撃の起点、':' を含めば起点キーそのまま（メインの play: など）
+        while (d := e.advance()) is not None and not (d["player"] == 0 and k in [o["key"] for o in d["options"]]):
             ks = [o["key"] for o in d["options"]]
             e.answer([ks.index("pass") if "pass" in ks else 0])
-        r = C.check_certificate(e, f"attack:{cert['origin']}:player", cert.get("moves", []))
+        r = C.check_certificate(e, k, cert.get("moves", []), inner=bool(cert.get("inner")))
     except Exception as ex:   # noqa: BLE001
         r = {"ok": False, "laps": 0, "deltas": [], "error": str(ex)}
     detail = (f"証明書を再生して {r['laps']}/{len(cert.get('moves', []))} 周が回帰（山札の差分 {r['deltas']}）" if r["ok"]
@@ -155,8 +157,8 @@ def _lock_spec(rules, spec: dict, seed: int, opp_level: int):
     from . import resource as rs
     model, odeck = resistance(opp_level)
     if spec.get("deck"):
-        import yaml
-        deck = yaml.safe_load((REPO / spec["deck"]).read_text(encoding="utf-8"))["deck"]
+        from ..cards.decks import load_deck
+        deck = load_deck(spec["deck"])
         out = rs._deal(spec, deck, seed)
         out["p1"] = {"mana": odeck[-int(spec.get("opp_mana", 6)):]}
         out["deck_size"] = len(odeck) - int(spec.get("opp_mana", 6))
@@ -226,7 +228,8 @@ def _contrib(rules, cand: Candidate, measured: dict) -> dict:
     from . import attack as A
     from .contrib import remove_pair
     c = dict(cand.contrib or {})
-    deck = _y.safe_load((REPO / c["deck"]).read_text(encoding="utf-8"))["deck"]
+    from ..cards.decks import load_deck
+    deck = load_deck(c["deck"])
     lvl, t = c.get("opp_level", "2b"), int(c.get("max_turn", 4))
     seeds = range(1, int(c.get("seeds", 20)) + 1)
     core = sorted(cand.core_ids("loop"))

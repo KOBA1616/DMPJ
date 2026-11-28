@@ -27,12 +27,6 @@ class AcceptRule:
 Scorer = Callable[[list[str]], "dict[tuple, int | None]"]
 
 
-_JOB: dict = {}
-
-
-def _run_chunk(i: int) -> dict:
-    return _JOB["fn"](_JOB["deck"], _JOB["chunks"][i])
-
 
 def spec_with_deck(setup: dict, deck: list[str]) -> dict:
     """仕込み済み開始局面（手札・マナ・墓地は固定）の山札を、候補デッキの残り札に差し替える。
@@ -77,11 +71,8 @@ def harness_scorer(rules, opp_deck: list[str], seeds: list[int], rule: AcceptRul
     def score(deck: list[str]) -> dict:
         if workers <= 1 or len(seeds) < 2:
             return one(deck, seeds)
-        import multiprocessing as mp
-        chunks = [seeds[i::workers] for i in range(workers) if seeds[i::workers]]
-        _JOB["fn"], _JOB["deck"], _JOB["chunks"] = one, deck, chunks     # fork で子へ引き継ぐ（クロージャは pickle できない）
-        with mp.get_context("fork").Pool(len(chunks)) as pool:
-            parts = pool.map(_run_chunk, range(len(chunks)))
+        from ..base.parallel import map_ordered, strided_chunks
+        parts = map_ordered(lambda ch: one(deck, ch), strided_chunks(seeds, workers), workers)
         return {k: v for d in parts for k, v in d.items()}
     return score
 

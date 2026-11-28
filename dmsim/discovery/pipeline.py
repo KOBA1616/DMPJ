@@ -76,11 +76,12 @@ def run_candidate(rules, cand: dict, *, shrink: bool = True, submit: bool = True
                 r = C.find_loop(e0, k, **find)
                 break
     cert = {"kind": r["kind"], "origin": k, "seed": seed, "M": {z: sorted(v) for z, v in board.items()}, "laps": r["laps"],
-            "est_laps": r.get("est_laps"), "deltas": r["deltas"], "decks": r.get("decks", [])}
+            "est_laps": r.get("est_laps"), "deltas": r["deltas"], "decks": r.get("decks", []),
+            "moves": r.get("moves", []), "inner": bool(r.get("inner"))}
     rep["certificate"], rep["stage"] = cert, "certified"
     if submit and cert["kind"] in MB.LOOP_KINDS:
         ev, row = S.submit_board(rules, id=cid, name=name, core=core, mana=mana,
                                  note=(cand.get("note", "") + " " + Z.certificate_note(cert)).strip(), path=path, root=root,
-                                 **board, **submit_kw)
+                                 certificate=cert, **board, **submit_kw)
         rep.update(evidence=ev, row=row, stage="registered")
     return rep

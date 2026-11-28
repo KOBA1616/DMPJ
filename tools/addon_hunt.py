@@ -32,7 +32,8 @@ def main(argv=None):
     from dmsim.discovery import addon_hunt as A
     rules = load_rules()
     if a.pick_only:
-        deck = yaml.safe_load(Path(a.deck).read_text(encoding="utf-8"))["deck"]
+        from dmsim.cards.decks import load_deck
+        deck = load_deck(a.deck)
         for c in A.pick(rules, deck, A.core_of(a.entry), per=a.per, linked=a.linked):
             print(c["id"], c["name"], c["why"])
         return 0
