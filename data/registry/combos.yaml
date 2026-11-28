@@ -6632,3 +6632,887 @@ rejected:
     commit: 733837e0
     measured_at: '2026-11-28'
   failed_at: ruler
+- id: jashin_part_a_w1
+  name: ジャシン帝系ループ 部品A + 水上第九院 シャコガイル
+  split: discovered
+  types:
+  - loop
+  core:
+  - id: dm25sd1-001
+    name: 漆黒の深淵 ジャシン帝
+    role: 部品
+    part: loop
+  - id: dm20-013
+    name: 百発人形マグナム
+    role: 部品
+    part: loop
+  - id: dm26ex1-018
+    name: 邪魂龍 ジャビビルブラッド
+    role: 部品
+    part: loop
+  - id: dm25sd1-003
+    name: 邪龍 ジャブラッド
+    role: 部品
+    part: loop
+  - id: dm26ex2-pr004
+    name: アーテル・ゴルギーニ
+    role: 部品
+    part: loop
+  - id: dm25rp4-066
+    name: オア:ナテハ
+    role: 部品
+    part: loop
+  - id: dmrp03-s03
+    name: 水上第九院 シャコガイル
+    role: '勝ち手段（段2の自動選択）: you:deck:- 特殊勝利の条件'
+    part: win
+  win: effect
+  entry: data/loops/entry/auto/jashin_part_a_w1.json
+  procedure: []
+  lock_mode: passive
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 4
+  budget: 1500
+  setup: null
+  policy: []
+  policy_avoid: []
+  opp_levels:
+  - 0
+  route_stages: null
+  note: '合成手の証明書: finite、6周（見積り 6）、山札の差分Δ [-3, -3, -3, -3, -3, -3]、最小盤面M {''bz'': [''dm20-013'', ''dm25sd1-001'', ''dm25sd1-003'', ''dm26ex1-018''], ''graveyard'': [''dm25rp4-066'', ''dm26ex2-pr004''],
+    ''hand'': []}、起点 dm25sd1-001、seed 1'
+  certificate:
+    kind: finite
+    origin: dm25sd1-001
+    seed: 1
+    zone_deltas:
+    - you:
+        deck: -3
+        graveyard: 3
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+      opp:
+        deck: 0
+        graveyard: 0
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+    - you:
+        deck: -3
+        graveyard: 3
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+      opp:
+        deck: 0
+        graveyard: 0
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+    - you:
+        deck: -3
+        graveyard: 3
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+      opp:
+        deck: 0
+        graveyard: 0
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+    - you:
+        deck: -3
+        graveyard: 3
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+      opp:
+        deck: 0
+        graveyard: 0
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+    - you:
+        deck: -3
+        graveyard: 3
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+      opp:
+        deck: 0
+        graveyard: 0
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+    - you:
+        deck: -3
+        graveyard: 3
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+      opp:
+        deck: 0
+        graveyard: 0
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+    M:
+      bz:
+      - dm20-013
+      - dm25sd1-001
+      - dm25sd1-003
+      - dm26ex1-018
+      graveyard:
+      - dm25rp4-066
+      - dm26ex2-pr004
+      hand: []
+    moves:
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    laps: 6
+    est_laps: 6
+    deltas:
+    - -3
+    - -3
+    - -3
+    - -3
+    - -3
+    - -3
+    decks:
+    - 19
+    - 16
+    - 13
+    - 10
+    - 7
+    - 4
+    - 1
+  digest: e5f19b584baaa176
+  checks:
+  - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: true
+    detail: loop として段1・段2で測る
+  - name: entry
+    ok: true
+    detail: data/loops/entry/auto/jashin_part_a_w1.json（ジャシン帝系ループ 部品A + 水上第九院 シャコガイル（入口））
+  - name: stage1_cert
+    ok: true
+    detail: 証明書を再生して 6/6 周が回帰（山札の差分 [-3, -3, -3, -3, -3, -3]）
+  - name: ruler
+    ok: false
+    detail: '段1 0/8・段2 0/8（基準 0.8）勝ち方 {''beat'': 8}'
+  measured:
+    stage1_cert:
+      ok: true
+      laps: 6
+      deltas:
+      - -3
+      - -3
+      - -3
+      - -3
+      - -3
+      - -3
+      origin: dm25sd1-001
+      detail: 証明書を再生して 6/6 周が回帰（山札の差分 [-3, -3, -3, -3, -3, -3]）
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    max_turn: 4
+    budget: 1500
+    stage1: 0/8
+    stage2: 0/8
+    stage2_rate: 0.0
+    via:
+      beat: 8
+    win_turns: []
+    threshold: 0.8
+    rows:
+    - seed: 1
+      start: 096394a110b1
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 2
+      start: cbe967b63c4c
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 3
+      start: d9dacacd03e5
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 4
+      start: 7d8e2c58bd36
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 5
+      start: f7b9e686dfb0
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 6
+      start: 087096777ae6
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 7
+      start: fa85d3b0e44b
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 8
+      start: f8e8b58b6c26
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+  version:
+    fingerprint: 3e36dc7e6cffc78f
+    commit: 6518ed67
+    measured_at: '2026-11-28'
+  failed_at: ruler
+- id: jashin_part_a_w2
+  name: ジャシン帝系ループ 部品A + 無量大龍 トゥリナーツァッチ
+  split: discovered
+  types:
+  - loop
+  core:
+  - id: dm25sd1-001
+    name: 漆黒の深淵 ジャシン帝
+    role: 部品
+    part: loop
+  - id: dm20-013
+    name: 百発人形マグナム
+    role: 部品
+    part: loop
+  - id: dm26ex1-018
+    name: 邪魂龍 ジャビビルブラッド
+    role: 部品
+    part: loop
+  - id: dm25sd1-003
+    name: 邪龍 ジャブラッド
+    role: 部品
+    part: loop
+  - id: dm26ex2-pr004
+    name: アーテル・ゴルギーニ
+    role: 部品
+    part: loop
+  - id: dm25rp4-066
+    name: オア:ナテハ
+    role: 部品
+    part: loop
+  - id: dmrp16-s08
+    name: 無量大龍 トゥリナーツァッチ
+    role: '勝ち手段（段2の自動選択）: you:graveyard:+ 特殊勝利の条件'
+    part: win
+  win: effect
+  entry: data/loops/entry/auto/jashin_part_a_w2.json
+  procedure: []
+  lock_mode: passive
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 4
+  budget: 1500
+  setup: null
+  policy: []
+  policy_avoid: []
+  opp_levels:
+  - 0
+  route_stages: null
+  note: '合成手の証明書: finite、6周（見積り 6）、山札の差分Δ [-3, -3, -3, -3, -3, -3]、最小盤面M {''bz'': [''dm20-013'', ''dm25sd1-001'', ''dm25sd1-003'', ''dm26ex1-018''], ''graveyard'': [''dm25rp4-066'', ''dm26ex2-pr004''],
+    ''hand'': []}、起点 dm25sd1-001、seed 1'
+  certificate:
+    kind: finite
+    origin: dm25sd1-001
+    seed: 1
+    zone_deltas:
+    - you:
+        deck: -3
+        graveyard: 3
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+      opp:
+        deck: 0
+        graveyard: 0
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+    - you:
+        deck: -3
+        graveyard: 3
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+      opp:
+        deck: 0
+        graveyard: 0
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+    - you:
+        deck: -3
+        graveyard: 3
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+      opp:
+        deck: 0
+        graveyard: 0
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+    - you:
+        deck: -3
+        graveyard: 3
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+      opp:
+        deck: 0
+        graveyard: 0
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+    - you:
+        deck: -3
+        graveyard: 3
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+      opp:
+        deck: 0
+        graveyard: 0
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+    - you:
+        deck: -3
+        graveyard: 3
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+      opp:
+        deck: 0
+        graveyard: 0
+        hand: 0
+        mana: 0
+        shield: 0
+        bz: 0
+    M:
+      bz:
+      - dm20-013
+      - dm25sd1-001
+      - dm25sd1-003
+      - dm26ex1-018
+      graveyard:
+      - dm25rp4-066
+      - dm26ex2-pr004
+      hand: []
+    moves:
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    - - - order_pending
+        - - pending:normal:dm25sd1-001:2
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm26ex2-pr004:0
+      - - order_pending
+        - - pending:normal:dm25sd1-003:2
+      - - yes_no
+        - - 'yes'
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm25sd1-001:1
+      - - choose_replacement
+        - - decline
+      - - choose_mode
+        - - mode:0
+      - - choose_mode
+        - - mode:2
+      - - choose_cards
+        - - graveyard:dm25sd1-001:0
+      - - order_pending
+        - - pending:normal:dm20-013:0
+      - - choose_cards
+        - - bz:dm26ex2-pr004:0
+      - - choose_replacement
+        - - decline
+    laps: 6
+    est_laps: 6
+    deltas:
+    - -3
+    - -3
+    - -3
+    - -3
+    - -3
+    - -3
+    decks:
+    - 19
+    - 16
+    - 13
+    - 10
+    - 7
+    - 4
+    - 1
+  digest: 0f89ec1d6277623d
+  checks:
+  - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: true
+    detail: loop として段1・段2で測る
+  - name: entry
+    ok: true
+    detail: data/loops/entry/auto/jashin_part_a_w2.json（ジャシン帝系ループ 部品A + 無量大龍 トゥリナーツァッチ（入口））
+  - name: stage1_cert
+    ok: true
+    detail: 証明書を再生して 6/6 周が回帰（山札の差分 [-3, -3, -3, -3, -3, -3]）
+  - name: ruler
+    ok: false
+    detail: '段1 0/8・段2 0/8（基準 0.8）勝ち方 {''beat'': 8}'
+  measured:
+    stage1_cert:
+      ok: true
+      laps: 6
+      deltas:
+      - -3
+      - -3
+      - -3
+      - -3
+      - -3
+      - -3
+      origin: dm25sd1-001
+      detail: 証明書を再生して 6/6 周が回帰（山札の差分 [-3, -3, -3, -3, -3, -3]）
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    max_turn: 4
+    budget: 1500
+    stage1: 0/8
+    stage2: 0/8
+    stage2_rate: 0.0
+    via:
+      beat: 8
+    win_turns: []
+    threshold: 0.8
+    rows:
+    - seed: 1
+      start: ea3fabcc089b
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 2
+      start: a9701db75971
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 3
+      start: 734f905c825c
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 4
+      start: 40b028743cc8
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 5
+      start: e528bb5a5e05
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 6
+      start: c0b5555442ce
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 7
+      start: 1bb48954e249
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+    - seed: 8
+      start: 1208c86db3d3
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 1
+  version:
+    fingerprint: 3e36dc7e6cffc78f
+    commit: 6518ed67
+    measured_at: '2026-11-28'
+  failed_at: ruler

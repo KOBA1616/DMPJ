@@ -18,6 +18,28 @@ from . import submit as S
 REPO = S.REPO
 
 
+ZONES = ("deck", "graveyard", "hand", "mana", "shield", "bz")
+
+
+def _zone_counts(e) -> dict:
+    return {who: {z: len(e.zlist(z, p)) for z in ZONES} for who, p in (("you", 0), ("opp", 1))}
+
+
+def zone_deltas(eng, origin_key: str, moves: list) -> list[dict]:
+    """証明書の周ごとの、各ゾーンの枚数の増減（自分 you・相手 opp）。段2が「この蓄積を勝ちに変える札」を引く材料。"""
+    out, cur = [], eng
+    prev = _zone_counts(cur)
+    for keys in moves:
+        r = C.replay(cur, origin_key, [tuple(k) for k in keys])
+        if r is None:
+            break
+        cur = r[0]
+        now = _zone_counts(cur)
+        out.append({w: {z: now[w][z] - prev[w][z] for z in ZONES} for w in now})
+        prev = now
+    return out
+
+
 def make_certificate(rules, *, origin: str, bz=(), graveyard=(), hand=(), seed: int = 1, entry_json: str,
                      laps_max: int = 6, max_nodes: int = 2500, tries: int = 6, root: Path = REPO) -> dict:
     """入口局面 JSON から盤面を作り、origin（札 ID なら攻撃の起点、':' を含めば起点キーそのまま）から find_loop を回して証明書を返す。"""
@@ -27,7 +49,8 @@ def make_certificate(rules, *, origin: str, bz=(), graveyard=(), hand=(), seed: 
         ks = [o["key"] for o in d["options"]]
         e.answer([ks.index("pass") if "pass" in ks else 0])
     r = C.find_loop(e, origin_key(origin), laps_max=laps_max, max_nodes=max_nodes, tries=tries)
-    return {"kind": r["kind"], "origin": origin, "seed": seed,
+    zd = zone_deltas(e, f"attack:{origin}:player", r.get("moves", []))
+    return {"kind": r["kind"], "origin": origin, "seed": seed, "zone_deltas": zd,
             "M": {"bz": sorted(bz), "graveyard": sorted(graveyard), "hand": sorted(hand)},
             "moves": r.get("moves", []), "laps": r["laps"], "est_laps": r.get("est_laps"), "deltas": r["deltas"], "decks": r.get("decks", [])}
 
