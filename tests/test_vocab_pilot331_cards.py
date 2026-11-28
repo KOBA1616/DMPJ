@@ -95,10 +95,10 @@ def _rows():
 
 def test_targets_registered():
     rows = _rows()
-    assert len(rows) == 2032
+    assert len(rows) <= 2032  # 件数は減る一方（スナップショット固定をやめた）
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    assert len(ids) == 10282
+    assert len(ids) >= 10282  # 件数は増える一方
     assert not (ids & set(rows))          # canonical 重なり0
     c = _conv_cache.find(CONVERTED, "dm23ex1-039")
     assert c is not None

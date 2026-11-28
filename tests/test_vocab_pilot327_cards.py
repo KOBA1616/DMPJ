@@ -76,10 +76,10 @@ def _rows():
 
 def test_targets_registered():
     rows = _rows()
-    assert len(rows) == 2039
+    assert len(rows) <= 2039  # 件数は減る一方（スナップショット固定をやめた）
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    assert len(ids) == 10276
+    assert len(ids) >= 10276  # 件数は増える一方
     assert not (ids & set(rows))          # canonical 重なり0
     for tid in ("dm26ex4-cho025", "dm26sd1-i004"):
         assert tid not in rows, tid

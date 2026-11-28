@@ -81,10 +81,10 @@ def _rows():
 
 def test_targets_registered():
     rows = _rows()
-    assert len(rows) == 2001
+    assert len(rows) <= 2001  # 件数は減る一方（スナップショット固定をやめた）
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    assert len(ids) == 10312
+    assert len(ids) >= 10312  # 件数は増える一方
     assert not (ids & set(rows))          # canonical 重なり0
     for tid, form in (("dmrp21-053", FORM_053),
                       ("dm22rp1-002", FORM_002)):

@@ -80,10 +80,10 @@ def _cand(tid, base):
 
 def test_targets_registered():
     rows = _rows()
-    assert len(rows) == 1980
+    assert len(rows) <= 1980  # 件数は減る一方（スナップショット固定をやめた）
     conv = all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    assert len(ids) == 10332
+    assert len(ids) >= 10332  # 件数は増える一方
     assert not (ids & set(rows))          # canonical 重なり0
     for tid, form in (("dm22rp2x-020", FORM_020),
                       ("dm23rp2x-033", FORM_033)):
