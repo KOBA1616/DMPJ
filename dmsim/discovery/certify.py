@@ -29,7 +29,7 @@ def make_certificate(rules, *, origin: str, bz=(), graveyard=(), hand=(), seed: 
     r = C.find_loop(e, origin_key(origin), laps_max=laps_max, max_nodes=max_nodes, tries=tries)
     return {"kind": r["kind"], "origin": origin, "seed": seed,
             "M": {"bz": sorted(bz), "graveyard": sorted(graveyard), "hand": sorted(hand)},
-            "moves": r.get("moves", []), "laps": r["laps"], "est_laps": r.get("est_laps"), "deltas": r["deltas"], "decks": r.get("decks", [])}
+            "moves": r.get("moves", []), "inner": bool(r.get("inner")), "laps": r["laps"], "est_laps": r.get("est_laps"), "deltas": r["deltas"], "decks": r.get("decks", [])}
 
 
 def certificate_note(cert: dict) -> str:
