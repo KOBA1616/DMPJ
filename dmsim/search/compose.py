@@ -28,12 +28,20 @@ def _pick_default(d):
     return [i for i in range(max(d["min"], 0))]
 
 
-def _subsets(n: int, k: int, cap: int) -> list[list[int]]:
-    allc = [list(c) for c in combinations(range(n), k)]
-    if len(allc) <= cap:
-        return allc
-    step = len(allc) / cap
-    return [allc[int(i * step)] for i in range(cap)]
+def _subsets(options: list, k: int, cap: int) -> list[list[int]]:
+    """複数枚を選ぶ点の候補。選ぶ札の名前の多重集合が同じ選び方は1つにまとめる（同名の札や、結果が同じ選び方を区別しない）。
+    それでも cap を超える時は等間隔に間引く。札の名前や効果の名前はコードに書かない（key の札名部分だけを見る）。"""
+    names = [o["key"].rsplit(":", 1)[0] for o in options]
+    seen, out = set(), []
+    for c in combinations(range(len(options)), k):
+        sig = tuple(sorted(names[i] for i in c))
+        if sig not in seen:
+            seen.add(sig)
+            out.append(list(c))
+    if len(out) <= cap:
+        return out
+    step = len(out) / cap
+    return [out[int(i * step)] for i in range(cap)]
 
 
 def enumerate_moves(eng, origin_key: str, *, player: int = 0, max_nodes: int = 3000, max_depth: int = 60,
@@ -70,7 +78,7 @@ def enumerate_moves(eng, origin_key: str, *, player: int = 0, max_nodes: int = 3
         elif d["min"] == 0 and d["max"] <= 1:
             ans = [[]] + [[i] for i in range(n)]
         elif d["min"] == d["max"] and 1 < d["min"] < n:
-            ans = _subsets(n, d["min"], max_subsets)   # 複数枚を選ぶ点は組み合わせを展開（多い時は等間隔に間引く）
+            ans = _subsets(d["options"], d["min"], max_subsets)   # 複数枚を選ぶ点は、名前の多重集合ごとに1つへまとめて展開
         else:
             ans = [list(range(k))]
         for a in ans:
