@@ -102,8 +102,10 @@ def test_targets_registered():
     left = {rid for rid, r in rows.items()
             if (r.get("gaps") or []) == [GAP]}
     assert left == set(), left
-    assert rows["dmex15-b019"].get("gaps") == ["filter_not_race",
-                                               "first_attack_end"]
+    # 後続の再変換で登録済みになってもよい（残っているなら当時のギャップのまま）
+    if "dmex15-b019" in rows:
+        assert rows["dmex15-b019"].get("gaps") == ["filter_not_race",
+                                                   "first_attack_end"]
 
 
 def test_proto_forms_match():

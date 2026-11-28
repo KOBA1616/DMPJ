@@ -76,7 +76,9 @@ def test_targets_registered():
         assert not (c.get("source") or {}).get("unsupported")
         parse_card(c, TABLES)
     # dm23rp4x-tf03 は対象外のまま残る
-    assert rows["dm23rp4x-tf03"].get("gaps") == ["up_to_cost_reduction"]
+    # （後続の再変換で登録済みになってもよい）
+    if "dm23rp4x-tf03" in rows:
+        assert rows["dm23rp4x-tf03"].get("gaps") == ["up_to_cost_reduction"]
 
 
 def test_proto_forms_match():

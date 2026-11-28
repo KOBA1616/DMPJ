@@ -156,6 +156,8 @@ def test_aliases_folded():
 def test_still_rejected_with_refined_gaps():
     rej = _reject_rows()
     for cid, gaps in STILL_REJECTED.items():
-        assert cid in rej, cid
+        if cid not in rej:      # 後続の再変換で登録済みになった札は対象外
+            assert _conv_cache.find(CONVERTED, cid) is not None, cid
+            continue
         assert rej[cid].get("gaps") == gaps, (cid, rej[cid].get("gaps"))
         assert _conv_cache.find(CONVERTED, cid) is None, cid
