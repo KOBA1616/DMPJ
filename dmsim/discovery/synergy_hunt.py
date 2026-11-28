@@ -189,7 +189,7 @@ def measure(rules, pairs, *, seeds: int = 40, opp=1, ref="2b", turn: int = 4, bu
             ckpt: Path | None = None, log=print) -> dict:
     """4デッキ比較。ckpt を渡すと相手ごとの局の結果を途中保存し、あれば読み直す。"""
     from ..eval import attack as A
-    from ..eval.parallel import map_ordered
+    from ..base.parallel import map_ordered
     pool = vanillas(rules)
     decks, meta = {}, {}
     for p in pairs:

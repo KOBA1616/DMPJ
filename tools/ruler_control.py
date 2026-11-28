@@ -37,7 +37,7 @@ def main(argv=None):
         rc.KNOWN = tuple(a.known.split(","))
     seeds = list(range(1, a.seeds + 1))
     t0 = time.time()
-    from dmsim.eval.parallel import map_ordered
+    from dmsim.base.parallel import map_ordered
     groups = [g for n in rc.KNOWN for g in rc.make_randoms(rules, n, a.per_core)]
     removal = [c for n in rc.KNOWN for c in rc.removal_cases(rules, n)]
     jobs = [("k", n, le.load(n), sd) for n in rc.KNOWN for sd in seeds] + \

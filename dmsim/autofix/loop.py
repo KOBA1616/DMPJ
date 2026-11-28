@@ -151,22 +151,10 @@ def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_sp
     def measure(k: Knobs) -> dict:
         if workers <= 1 or len(seeds) < workers * 2:
             return measure_seeds(k, seeds)
-        import multiprocessing as mp
-        global _JOB
-        chunks = [seeds[i::workers] for i in range(workers)]       # 飛び飛びに割ると重い局が偏らない
-        _JOB = (measure_seeds, k, chunks)
-        with mp.get_context("fork").Pool(workers) as pool:
-            parts = pool.map(_run_chunk, range(workers))
+        from ..base.parallel import map_ordered, strided_chunks
+        parts = map_ordered(lambda ch: measure_seeds(k, ch), strided_chunks(seeds, workers), workers)      # 飛び飛びに割ると重い局が偏らない
         return _merge(parts)       # 分け方は毎回同じなので、測定間の対比較は同じ順で対応する
     return measure
-
-
-_JOB = None
-
-
-def _run_chunk(i):
-    fn, k, chunks = _JOB
-    return fn(k, chunks[i])
 
 
 def _merge(parts):

@@ -14,6 +14,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from dmsim.cards.decks import load_deck  # noqa: E402
 from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.eval.lockcheck import lock_probe  # noqa: E402
 from dmsim.play_api import play_cheat as play_game  # noqa: E402
@@ -24,7 +25,7 @@ def main():
     budget = int(sys.argv[4]) if len(sys.argv) > 4 else 1000
     max_turn = int(sys.argv[5]) if len(sys.argv) > 5 else 4
     rules = load_rules()
-    deck = yaml.safe_load(Path(deck_path).read_text(encoding="utf-8"))["deck"]
+    deck = load_deck(deck_path)
     for seed in range(lo, hi):
         for first in (0, 1):
             res, eng = play_game(rules, deck, ["T001"] * 40, seed, first_player=first, max_turn=max_turn,

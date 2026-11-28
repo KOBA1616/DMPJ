@@ -9,7 +9,8 @@ from dmsim.eval.api import measure_assembly
 OUT = sys.argv[3] if len(sys.argv) > 3 else "runs/saga_variants.json"   # 途中結果（続きから回す）
 rules = load_rules()
 ls = L.load("saga")
-base = yaml.safe_load(open("data/decks/basebuild_saga.yaml"))["deck"]
+from dmsim.cards.decks import load_deck
+base = load_deck("data/decks/basebuild_saga.yaml")
 drop = ["dm22ex1-cho47", "dm22ex1-cho14"]
 rows = [r for r in json.load(open(sys.argv[2] if len(sys.argv) > 2 else "runs/hunt/latest/measure.json"))["rows"] if r["stage1"] > 0]
 items = [("元のサガ（basebuild_saga）", [], base)]

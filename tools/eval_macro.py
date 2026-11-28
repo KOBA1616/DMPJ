@@ -48,7 +48,8 @@ def main(argv=None):
     a = ap.parse_args(argv)
     rules = load_rules()
     stages, _ = load_stage_file(a.stages)
-    deck = yaml.safe_load(Path(a.deck).read_text(encoding="utf-8"))["deck"]
+    from dmsim.cards.decks import load_deck
+    deck = load_deck(a.deck)
     for pw in a.plan_w:
         res = [run(rules, deck, stages, sd, pw, a.width, a.max_turn, a.force) for sd in range(1, a.seeds + 1)]
         print(f"plan_w={pw}: 到達段数 {res} 平均 {sum(res)/len(res):.2f} / {len(stages)}", flush=True)
