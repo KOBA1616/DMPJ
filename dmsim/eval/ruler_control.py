@@ -29,6 +29,7 @@ from pathlib import Path
 
 import yaml
 
+from ..base.registry import load_known_combos
 from ..base.store import REPO
 from . import loop_entry as le
 from .ruler import judge
@@ -47,9 +48,8 @@ COMBOS = Path("data/known_combos/combos.yaml")
 
 
 def core_ids(path: Path = COMBOS) -> set[str]:
-    d = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     out = set()
-    for c in d.get("combos", []):
+    for c in load_known_combos(path):
         for p in c.get("parts", []):
             if p.get("role") == "core" and p.get("id"):
                 out.add(p["id"])

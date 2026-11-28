@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from auto_fix import _prep_ids  # noqa: E402
 import exec_tier  # noqa: E402
+from dmsim.base.registry import load_known_combos  # noqa: E402
 from dmsim.autofix import Knobs, Rule, harness_measure  # noqa: E402
 from dmsim.autofix.batch import default_board, default_need  # noqa: E402
 from dmsim.autofix import partdiscovery as PD  # noqa: E402
@@ -47,7 +48,7 @@ def main(argv=None):
     ap.add_argument("--history", default="data/autofix/tune_history.yaml", help="対象ごとの前回実行の記録。前回時間切れで回せなかった対象を次回の先頭にする")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
-    combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
+    combos = {c["id"]: c for c in load_known_combos()}
     ts = yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"]
     only = set(a.only.split(",")) if a.only else None
     rules, specs = load_rules(), load_specs()

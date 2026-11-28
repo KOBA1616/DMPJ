@@ -27,6 +27,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from dmsim.base.registry import load_candidates  # noqa: E402
 from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.engine import zone_graph as Z  # noqa: E402
 from dmsim.eval import attack as A  # noqa: E402
@@ -152,9 +153,8 @@ def cmd_control(a):
 
 def known_pairs() -> dict:
     """既知デッキの中核（ループ・エンジンの札、勝ち手段は除く）。登録簿の候補 data/registry/candidates.yaml から。"""
-    y = yaml.safe_load((ROOT / "data/registry/candidates.yaml").read_text(encoding="utf-8"))
     out = {}
-    for c in y.get("candidates") or y.get("combos") or []:
+    for c in load_candidates():
         if c.get("id") in KNOWN_DECKS:
             out[c["id"]] = [x["id"] for x in c.get("core") or [] if x.get("part", "loop") != "win"]
     return out

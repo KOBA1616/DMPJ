@@ -173,3 +173,24 @@ def test_route_stages():
     assert st and st[-1]["entry"] == "saga" and "all" in st[0]
     assert registry.route_stages("data/loops/route/akashic.yaml")
     assert registry.route_stages(None) is None and registry.route_stages([{"entry": "x"}]) == [{"entry": "x"}]
+
+
+def test_load_candidates_known_combos_window():
+    """候補台帳・既知コンボの読みは registry の窓口を通る（各所で yaml を直に読まない）。"""
+    from dmsim.base import registry as R
+    cands = R.load_candidates()
+    assert cands and all("id" in c for c in cands)
+    assert any(c["id"] == "saga" for c in R.load_known_combos())
+    assert R.load_candidates(R.PATH.parent / "none.yaml") == []
+
+
+def test_no_direct_yaml_read_of_candidates_or_known_combos():
+    import re
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    allow = {"dmsim/base/registry.py", "dmsim/search/leaf_parts.py", "dmsim/discovery/synergy_hunt.py",
+             "tools/attack_screen.py", "tools/synergy_hunt.py", "tools/registry.py"}
+    pat = re.compile(r"safe_load\([^\n]*(candidates|known_combos/combos)\.yaml")
+    bad = [str(p.relative_to(root)) for d in ("dmsim", "tools") for p in (root / d).rglob("*.py")
+           if str(p.relative_to(root)) not in allow and pat.search(p.read_text(encoding="utf-8"))]
+    assert not bad, bad

@@ -26,6 +26,8 @@ SPLITS = ("tuning", "holdout", "discovered")         # discovered = システム
 WINS = ("opp_deck_out", "effect", "lock", "beat")
 ISSUER = "dmsim.eval.verify"
 PATH = store.REPO / "data" / "registry" / "combos.yaml"
+CANDIDATES_PATH = store.REPO / "data" / "registry" / "candidates.yaml"      # 検証に出す候補の台帳（読むのはここの load_candidates だけ）
+KNOWN_COMBOS_PATH = store.REPO / "data" / "known_combos" / "combos.yaml"    # 既知コンボの定義（読むのはここの load_known_combos だけ）
 
 
 class RegistryError(ValueError):
@@ -114,6 +116,19 @@ def load(path: Path = PATH) -> dict:
         return {"entries": [], "rejected": []}
     d = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
     return {"entries": d.get("entries") or [], "rejected": d.get("rejected") or []}
+
+
+def load_candidates(path: Path = CANDIDATES_PATH) -> list[dict]:
+    """候補台帳 data/registry/candidates.yaml の candidates（無ければ空）。読み込みの窓口。"""
+    p = Path(path)
+    if not p.exists():
+        return []
+    return list((yaml.safe_load(p.read_text(encoding="utf-8")) or {}).get("candidates") or [])
+
+
+def load_known_combos(path: Path = KNOWN_COMBOS_PATH) -> list[dict]:
+    """既知コンボ定義 data/known_combos/combos.yaml の combos。読み込みの窓口。"""
+    return list((yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}).get("combos") or [])
 
 
 def record(cand: Candidate, ev: Evidence, *, path: Path = PATH, purpose: str = "eval") -> dict:
