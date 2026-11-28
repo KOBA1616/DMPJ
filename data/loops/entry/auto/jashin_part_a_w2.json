@@ -1,0 +1,197 @@
+{
+ "deck_floor": 1,
+ "delta": {},
+ "goal": [],
+ "hazards": [
+  "field_removal",
+  "counter"
+ ],
+ "kind": "deterministic",
+ "limit": null,
+ "minimal": [
+  {
+   "match": {
+    "name": "dm20-013"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "bz",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm25sd1-001"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "bz",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm25sd1-003"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "bz",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm26ex1-018"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "bz",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm25rp4-066"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "graveyard",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm26ex2-pr004"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "graveyard",
+   "zones": []
+  }
+ ],
+ "name": "ジャシン帝系ループ 部品A + 無量大龍 トゥリナーツァッチ（入口）",
+ "routes": [],
+ "source": {
+  "board": {
+   "opp_deck": 26,
+   "opp_deck_total": 40,
+   "p0": {
+    "bz": [
+     "dm25sd1-001",
+     "dm20-013",
+     "dm26ex1-018",
+     "dm25sd1-003"
+    ],
+    "graveyard": [
+     "dm26ex2-pr004",
+     "dm25rp4-066"
+    ],
+    "hand": [
+     "dmrp16-s08",
+     "dm25sd1-001",
+     "dm26ex2-pr004",
+     "dm25rp4-066",
+     "dm25sd1-003"
+    ],
+    "mana": [
+     "dmrp16-s08",
+     "dm25sd1-003",
+     "dm26ex1-018",
+     "dm01-090",
+     "dm26ex2-pr004"
+    ],
+    "shield": [
+     "dm01-090",
+     "dm26ex1-018",
+     "dm01-090",
+     "dm26ex1-018",
+     "dm20-013"
+    ]
+   },
+   "p1": {
+    "hand": [
+     "T001",
+     "T001",
+     "T001",
+     "T001",
+     "T001"
+    ],
+    "mana": [
+     "T001",
+     "T001",
+     "T001",
+     "T001"
+    ]
+   }
+  },
+  "budget": 1500,
+  "core": [
+   {
+    "any": [
+     {
+      "dm25sd1-001": 1
+     }
+    ],
+    "part": "loop",
+    "role": "部品"
+   },
+   {
+    "any": [
+     {
+      "dm20-013": 1
+     }
+    ],
+    "part": "loop",
+    "role": "部品"
+   },
+   {
+    "any": [
+     {
+      "dm26ex1-018": 1
+     }
+    ],
+    "part": "loop",
+    "role": "部品"
+   },
+   {
+    "any": [
+     {
+      "dm25sd1-003": 1
+     }
+    ],
+    "part": "loop",
+    "role": "部品"
+   },
+   {
+    "any": [
+     {
+      "dm26ex2-pr004": 1
+     }
+    ],
+    "part": "loop",
+    "role": "部品"
+   },
+   {
+    "any": [
+     {
+      "dm25rp4-066": 1
+     }
+    ],
+    "part": "loop",
+    "role": "部品"
+   },
+   {
+    "any": [
+     {
+      "dmrp16-s08": 1
+     }
+    ],
+    "part": "win",
+    "role": "勝ち手段（段2の自動選択）: you:graveyard:+ 特殊勝利の条件"
+   }
+  ],
+  "deck": "data/decks/auto/jashin_part_a_w2.yaml",
+  "note": "合成手の証明書: finite、6周（見積り 6）、山札の差分Δ [-3, -3, -3, -3, -3, -3]、最小盤面M {'bz': ['dm20-013', 'dm25sd1-001', 'dm25sd1-003', 'dm26ex1-018'], 'graveyard': ['dm25rp4-066', 'dm26ex2-pr004'], 'hand': []}、起点 dm25sd1-001、seed 1"
+ }
+}
